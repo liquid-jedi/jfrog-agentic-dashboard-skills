@@ -1,0 +1,21 @@
+.DS_Store
+.claude/
+.remember/
+*.log
+
+# Internal sample reports
+/samples/
+
+# Generated local report artifacts (run outputs written under LOCAL_ROOT)
+**/report.html
+**/data.json
+**/snapshot.json
+**/run-meta.json
+**/rerun-*/
+
+# Root-level legacy generated reports (scope to root only — does NOT affect samples/)
+/ciso-report-*.html
+
+# Root-level one-off scripts (not part of the project)
+/ciso-build-data.py
+/ciso-collect-may2026.sh
