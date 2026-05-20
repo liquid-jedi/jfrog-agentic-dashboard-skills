@@ -708,6 +708,119 @@
             Low: 'var(--lowbg)'
         }[s] || 'var(--alt)');
 
+        function normalizeDataShape() {
+            DATA.meta = DATA.meta || {};
+            DATA.platform = DATA.platform || {};
+            DATA.curation = DATA.curation || {};
+            DATA.violations = DATA.violations || {};
+            DATA.license = DATA.license || {};
+            DATA.operational = DATA.operational || {};
+            DATA.benefit = DATA.benefit || {};
+            DATA.governance = DATA.governance || {};
+            DATA.comparison = DATA.comparison || {};
+
+            const meta = DATA.meta;
+            if (!meta.url && meta.server_url) meta.url = meta.server_url;
+            if (!meta.host && meta.server_url) {
+                try {
+                    meta.host = new URL(meta.server_url).host;
+                } catch {
+                    meta.host = meta.server_url;
+                }
+            }
+            if (!meta.date_from && meta.period_start) meta.date_from = meta.period_start;
+            if (!meta.date_to && meta.period_end) meta.date_to = meta.period_end;
+
+            const c = DATA.curation;
+            c.by_reason = c.by_reason || { malicious: 0, security: 0, license: 0, operational: 0 };
+            if (!Array.isArray(c.by_type) && c.by_package_type && typeof c.by_package_type === 'object') {
+                const blockedByType = c.blocked_by_type || {};
+                c.by_type = Object.entries(c.by_package_type).map(([type, total]) => ({
+                    type,
+                    total: Number(total) || 0,
+                    blocked: Number(blockedByType[type] || 0) || 0
+                }));
+            }
+            if (!Array.isArray(c.top_blocked) && Array.isArray(c.top_blocked_packages)) {
+                c.top_blocked = c.top_blocked_packages.map((item) => ({
+                    package: item.package || 'unknown',
+                    ecosystem: item.ecosystem || item.type || 'unknown',
+                    count: Number(item.count) || 0,
+                    policies: item.policies || item.reason || '—',
+                    malicious: Boolean(item.malicious)
+                }));
+            }
+
+            const v = DATA.violations;
+            v.by_severity = v.by_severity || { critical: 0, high: 0, medium: 0, low: 0 };
+            v.by_type = v.by_type || {};
+            if (v.by_type.operational === undefined && v.by_type.operational_risk !== undefined) {
+                v.by_type.operational = v.by_type.operational_risk;
+            }
+            if (Array.isArray(v.critical_issues)) {
+                v.critical_issues = v.critical_issues.map((issue) => ({
+                    ...issue,
+                    hits: issue.hits !== undefined ? issue.hits : issue.count
+                }));
+            }
+
+            const l = DATA.license;
+            if (!Array.isArray(l.licenses) && Array.isArray(l.violations)) {
+                const grouped = new Map();
+                l.violations.forEach((item) => {
+                    const spdx = item.license || 'Unknown';
+                    const current = grouped.get(spdx) || { spdx, name: '', count: 0, severity: item.severity || 'High' };
+                    current.count += 1;
+                    grouped.set(spdx, current);
+                });
+                l.licenses = Array.from(grouped.values());
+            }
+
+            const o = DATA.operational;
+            if (Array.isArray(o.top_components)) {
+                o.top_components = o.top_components.map((item) => ({
+                    component: item.component || item.name || item.path || 'unknown',
+                    hits: item.hits !== undefined ? item.hits : item.count || 1
+                }));
+            }
+            if (!Array.isArray(o.top_locations) && Array.isArray(o.top_components)) {
+                o.top_locations = [];
+            }
+
+            const b = DATA.benefit;
+            if (!b.curation_headline) b.curation_headline = `Stopped ${n(c.blocked || 0)} packages before entering any repository`;
+            if (!b.xray_headline) b.xray_headline = `Surfaced ${n(v.total || 0)} violations across indexed repositories`;
+            if (b.cves_prevented === undefined) b.cves_prevented = c.blocked || 0;
+            if (b.upgrade_rate === undefined) b.upgrade_rate = 0;
+            if (b.xray_coverage === undefined) b.xray_coverage = DATA.governance.repo_watch_coverage || 0;
+            if (!b.compare_line) b.compare_line = b.observation || '';
+
+            const g = DATA.governance;
+            if (!Array.isArray(g.policy_effectiveness)) g.policy_effectiveness = [];
+            if (!Array.isArray(g.repo_watch_coverage)) g.repo_watch_coverage = [];
+
+            if (Array.isArray(DATA.recommendations)) {
+                DATA.recommendations = DATA.recommendations.map((item) => ({
+                    ...item,
+                    detail: item.detail || item.description || ''
+                }));
+            }
+        }
+
+        function safeRender(sectionTitle, renderFn) {
+            try {
+                return renderFn();
+            } catch (error) {
+                console.error(`Render failure in ${sectionTitle}`, error);
+                return `
+                    <div class="sec red">${sectionTitle}</div>
+                    <div class="callout warn">
+                        <strong>Section render failed</strong>
+                        ${error && error.message ? error.message : 'Unknown render error'}
+                    </div>`;
+            }
+        }
+
         function getMethodology() {
             const m = DATA.methodology || {};
             const risk = m.risk_score || {};
@@ -1603,23 +1716,24 @@
 
         /* ═══ RENDER ALL SECTIONS ═══ */
 
+        normalizeDataShape();
         buildSidebar();
 
         document.getElementById('content').innerHTML = [
-            buildHeader(),
-            buildExecutiveSummary(),
-            buildKPIs(),
-            buildScoringGuide(),
-            buildCuration(),
-            buildViolations(),
-            buildLicense(),
-            buildOperational(),
-            buildBenefit(),
-            buildGovernance(),
-            buildComparison(),
-            buildThreatVelocity(),
-            buildRecommendations(),
-            buildAuditTrail(),
+            safeRender('Report Header', buildHeader),
+            safeRender('Executive Summary', buildExecutiveSummary),
+            safeRender('Executive KPIs', buildKPIs),
+            safeRender('Severity and Risk Method', buildScoringGuide),
+            safeRender('Curation — Supply Chain Defense', buildCuration),
+            safeRender('Xray — Security Posture', buildViolations),
+            safeRender('License Compliance', buildLicense),
+            safeRender('Operational Risk', buildOperational),
+            safeRender('Combined Security Value', buildBenefit),
+            safeRender('Governance Effectiveness', buildGovernance),
+            safeRender('Period Comparison', buildComparison),
+            safeRender('Threat Velocity', buildThreatVelocity),
+            safeRender('Recommendations', buildRecommendations),
+            safeRender('Curation Audit Trail', buildAuditTrail),
             `<div class="footer">JFrog CISO Report — ${DATA.meta.server_id} — Generated by Jfrog Dashboard Skills</div>`
         ].join('');
     </script>
