@@ -143,11 +143,32 @@ can open in any browser, email to stakeholders, or archive in Artifactory.
 
 ## Installation
 
-Recommended installation method: register the skill directly from this
-repository in development mode.
+For consumers installing directly from GitHub, use the repository URL and
+select the skill by name:
 
 ```bash
-npx skills add /absolute/path/to/dashboard-report-skills -g -y
+npx skills add git@github.com:liquid-jedi/jfrog-agentic-dashboard-skills.git -g --skill jfrog-ciso-report
+```
+
+Optional installs from the same repo:
+
+```bash
+npx skills add git@github.com:liquid-jedi/jfrog-agentic-dashboard-skills.git -g --skill jfrog-dashboard-blueprint
+npx skills add git@github.com:liquid-jedi/jfrog-agentic-dashboard-skills.git -g --skill jfrog-head-of-engineering-report
+```
+
+For development, register the skill from a local clone so edits take effect
+immediately:
+
+```bash
+npx skills add /absolute/path/to/jfrog-ciso-dashboard -g --skill jfrog-ciso-report
+```
+
+Equivalent local-clone installs for the other skills:
+
+```bash
+npx skills add /absolute/path/to/jfrog-ciso-dashboard -g --skill jfrog-dashboard-blueprint
+npx skills add /absolute/path/to/jfrog-ciso-dashboard -g --skill jfrog-head-of-engineering-report
 ```
 
 Why this is the recommended approach:
