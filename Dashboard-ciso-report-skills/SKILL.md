@@ -516,7 +516,7 @@ This is the ONLY way to produce the report. Run this exact command:
 
 ```bash
 SKILL_DIR="$(find ~/.agents/skills -name 'jfrog-ciso-report' -type d 2>/dev/null | head -1)"
-[ -z "$SKILL_DIR" ] && SKILL_DIR="./dashboard-report-skills"
+[ -z "$SKILL_DIR" ] && SKILL_DIR="./Dashboard-ciso-report-skills"
 REPORT_DATE=$(date +%Y-%m-%d)
 SERVER_SLUG=$(echo "$SERVER_ID" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g')
 REPORT_TYPE_SLUG=$(echo "$REPORT_TYPE" | tr '[:upper:]' '[:lower:]')

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CISO_SKILL_PATH="$REPO_ROOT/dashboard-report-skills"
+CISO_SKILL_PATH="$REPO_ROOT/Dashboard-ciso-report-skills"
 AUTO_FIX=false
 ASSUME_YES=false
 
