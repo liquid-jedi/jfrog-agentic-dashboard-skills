@@ -19,7 +19,7 @@ field. Neither changes the other's job.
     "schema_version": "string — e.g., 2.0-beta",
     "server_id": "string — jf config server ID",
     "url": "string — full platform URL with https",
-    "host": "string — hostname only (e.g., solenglatest.jfrog.io)",
+    "host": "string — hostname only (e.g., <server-id>.jfrog.io)",
     "generated": "string — YYYY-MM-DD",
     "date_from": "string — display format (e.g., Apr 1, 2026)",
     "date_to": "string — display format",

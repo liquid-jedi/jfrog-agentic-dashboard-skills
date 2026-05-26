@@ -525,7 +525,7 @@ REPORT_TYPE_SLUG=$(echo "$REPORT_TYPE" | tr '[:upper:]' '[:lower:]')
 
 # LOCAL_ROOT resolution order from Step 3:
 # 1) explicit prompt path, 2) CISO_LOCAL_ROOT env, 3) first-run bootstrap prompt
-# Example: LOCAL_ROOT="/Users/avinashg/jfrog-ciso-dashboard/reports"
+# Example: LOCAL_ROOT="/path/to/ciso-reports"
 if [ -z "$LOCAL_ROOT" ]; then
   LOCAL_ROOT="${CISO_LOCAL_ROOT:-}"
 fi
@@ -730,11 +730,11 @@ same cleanup command before exiting so failed runs do not leak stale data.
 
 Tell the user:
 ```
-Report saved: /<local-root>/solenglatest/weekly/2026-04-24/report.html
-Data saved: /<local-root>/solenglatest/weekly/2026-04-24/data.json (only when SAVE_DATA_JSON is on)
-Snapshot saved: /<local-root>/solenglatest/weekly/2026-04-24/snapshot.json
-Run metadata: /<local-root>/solenglatest/weekly/2026-04-24/run-meta.json (includes token_usage.total_tokens when available)
-Uploaded to:  ${REPORT_REPO}/solenglatest/weekly/2026-04-24/
+Report saved: /<local-root>/<server-id>/weekly/2026-04-24/report.html
+Data saved: /<local-root>/<server-id>/weekly/2026-04-24/data.json (only when SAVE_DATA_JSON is on)
+Snapshot saved: /<local-root>/<server-id>/weekly/2026-04-24/snapshot.json
+Run metadata: /<local-root>/<server-id>/weekly/2026-04-24/run-meta.json (includes token_usage.total_tokens when available)
+Uploaded to:  ${REPORT_REPO}/<server-id>/weekly/2026-04-24/
 ```
 
 ## Edge cases
@@ -766,7 +766,7 @@ Uploaded to:  ${REPORT_REPO}/solenglatest/weekly/2026-04-24/
 
 Include server and storage in the prompt for zero interaction:
 ```bash
-claude -p "Generate a weekly CISO report for solenglatest. Save to Artifactory." \
+claude -p "Generate a weekly CISO report for <server-id>. Save to Artifactory." \
   --allowedTools "Bash(jf *)" "Bash(jq *)" "Bash(eval *)" \
   "Bash(cat *)" "Bash(echo *)" "Bash(date *)" "Bash(sed *)" \
   "Bash(cp *)" "Bash(mkdir *)" "Bash(python3 *)" "Bash(wc *)" \

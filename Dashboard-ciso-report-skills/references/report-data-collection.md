@@ -638,7 +638,7 @@ print('Recommendation metadata valid')
 ### Snapshot JSON (saved for future comparison)
 ```json
 {
-  "date": "2026-04-24", "type": "weekly", "server_id": "solenglatest",
+  "date": "2026-04-24", "type": "weekly", "server_id": "<server-id>",
   "curation": { "total": 9959, "blocked": 82, "approved": 116 },
   "violations": { "total": 141, "critical": 15, "high": 95, "medium": 29, "low": 2 },
   "components": 88, "secrets": 2
@@ -650,12 +650,12 @@ print('Recommendation metadata valid')
 ### Folder structure
 ```
 ${REPORT_REPO}/
-├── LiquidJedi/
+├── <server-id-a>/
 │   ├── weekly/2026-04-14/snapshot.json, report.html
 │   ├── weekly/2026-04-21/snapshot.json, report.html
 │   ├── monthly/2026-04/snapshot.json, report.html
 │   └── manifest.json
-├── solenglatest/
+├── <server-id-b>/
 │   ├── weekly/...
 │   └── manifest.json
 ```

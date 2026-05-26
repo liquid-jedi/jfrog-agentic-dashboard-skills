@@ -50,13 +50,19 @@ Single HTML file — open in a browser, email to stakeholders, or archive in Art
 
 **1. Prerequisites** — JFrog Platform with Xray, `jf` CLI, `jq`, `python3`, and the base [`jfrog`](https://github.com/jfrog/jfrog-skills) skill.
 
-**2. Install the base skill:**
+**2. Configure JFrog CLI server access:**
+
+```bash
+jf config add --interactive
+```
+
+**3. Install the base skill:**
 
 ```bash
 npx skills add jfrog -g -y
 ```
 
-**3. Install `jfrog-ciso-report`**
+**4. Install `jfrog-ciso-report`**
 
 From GitHub:
 
@@ -71,7 +77,7 @@ REPO_ROOT="$(pwd)"
 npx skills add "$REPO_ROOT" -g --skill jfrog-ciso-report
 ```
 
-**4. Verify the install:**
+**5. Verify the install:**
 
 ```bash
 npx skills list -g
@@ -81,14 +87,14 @@ Expected result: the global skills list includes both `jfrog` and `jfrog-ciso-re
 
 **Current shipped versions:** `jfrog-ciso-report` `2.1.0`, `jfrog-dashboard-blueprint` `2.1.0`.
 
-**5. Run the readiness check** (recommended for local-clone installs):
+**6. Run the readiness check** (recommended for local-clone installs):
 
 ```bash
 REPO_ROOT="$(pwd)"
 bash "$REPO_ROOT/scripts/agentic-dashboard-prechecks.sh"
 ```
 
-**6. Run** — ask your agent:
+**7. Run** — ask your agent:
 
 ```
 Generate a weekly CISO report
@@ -98,35 +104,39 @@ Generate a weekly CISO report
 
 If your agent keeps asking for confirmation on every tool call, start it in an auto-approval mode first, then paste your report prompt.
 
-Claude Code:
+Examples:
 
-```bash
-claude --permission-mode dontAsk
-```
+Claude:
 
-Codex CLI:
+Start: `claude --permission-mode dontAsk`
+Then paste: `Generate a weekly CISO report for server <server-id>. Local only. Save local artifacts under /path/to/ciso-reports.`
 
-```bash
-codex -a never
-```
+Codex:
 
-Gemini CLI:
+Start: `codex -a never`
+Then paste: `Generate a weekly CISO report for server <server-id>. Local only. Save local artifacts under /path/to/ciso-reports.`
 
-```bash
-gemini --approval-mode yolo
-```
+Gemini:
+
+Start: `gemini --approval-mode yolo`
+Then paste: `Generate a weekly CISO report for server <server-id>. Local only. Save local artifacts under /path/to/ciso-reports.`
 
 Other agent runtimes (Cursor/Cline/Windsurf/Amp): use each tool's workspace approval setting and switch from manual confirmations to auto-approve for non-destructive runs.
 
 Safety note: these modes reduce or skip confirmations. Use only in trusted repositories/workspaces.
 
-**7. Review shipped example reports** — open any HTML file under `samples/` in a browser to see the output format before connecting to a live JFrog Platform instance.
+Hands-free example prompt (server + local-only storage resolved up front):
+
+```text
+Generate a weekly CISO report for server <server-id>. Local only. Save local artifacts under /path/to/ciso-reports.
+```
+
+**8. Review shipped example reports** — open any HTML file under `samples/` in a browser to see the output format before connecting to a live JFrog Platform instance.
 
 Examples in this repo:
 
 - `samples/ciso-report-2026-04-26.html`
-- `samples/ciso-report-liquidjedi-2026-05-mtd.html`
-- `samples/ciso-report-solenglatest-april-2026-monthly.html`
+- `samples/` (additional sample outputs)
 
 Full install options, GitHub installs, and verification → **[docs/INSTALL.md](docs/INSTALL.md)**
 

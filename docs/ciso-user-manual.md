@@ -273,8 +273,8 @@ Restart your IDEs after running this. Every report run will then write to a cons
 For example:
 
 ```text
-~/ciso-reports/solenglatest/weekly/2026-05-20/
-~/ciso-reports/avi-jf-demo/monthly/2026-05-01/
+~/ciso-reports/<server-id>/weekly/2026-05-20/
+~/ciso-reports/<another-server-id>/monthly/2026-05-01/
 ```
 
 Without a stable `LOCAL_ROOT`, each run that defaults to `$PWD` lands in whatever directory the agent is launched from, and the local snapshot lookup for trend comparison will fail to find prior runs.
@@ -285,7 +285,7 @@ Server name is optional.
 
 - `Generate a weekly CISO report.`
 - `Generate a monthly CISO report. Local only.`
-- `Generate a weekly CISO report for solenglatest. Save to Artifactory.`
+- `Generate a weekly CISO report for <server-id>. Save to Artifactory.`
 - `Generate a weekly CISO report. Local only. Save local artifacts under /Users/me/security-reports.`
 - `Generate a monthly CISO report for May 2026.`
 - `Generate a CISO report for 2026-05-01 to 2026-05-20.`

@@ -124,8 +124,7 @@ Runtime defaults:
 If you want to see the output format before running the skill against your own instance, open one of the shipped sample reports from the repository:
 
 - `samples/ciso-report-2026-04-26.html`
-- `samples/ciso-report-liquidjedi-2026-05-mtd.html`
-- `samples/ciso-report-solenglatest-april-2026-monthly.html`
+- `samples/` (additional sample outputs)
 
 These files are static reference artifacts. They are useful for reviewing the generated dashboard layout and narrative style, but they are not live data and are not updated automatically.
 
