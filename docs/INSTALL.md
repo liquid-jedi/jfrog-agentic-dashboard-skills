@@ -28,6 +28,11 @@ jf config add --interactive
 
 ### Current skill versions in this repository
 
+- `jfrog-ciso-report` — `2.1.1`
+- `jfrog-dashboard-blueprint` — `2.1.1`
+
+Previous release:
+
 - `jfrog-ciso-report` — `2.1.0`
 - `jfrog-dashboard-blueprint` — `2.1.0`
 

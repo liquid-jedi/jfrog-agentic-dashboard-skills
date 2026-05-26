@@ -85,7 +85,8 @@ npx skills list -g
 
 Expected result: the global skills list includes both `jfrog` and `jfrog-ciso-report`.
 
-**Current shipped versions:** `jfrog-ciso-report` `2.1.0`, `jfrog-dashboard-blueprint` `2.1.0`.
+**Current shipped versions:** `jfrog-ciso-report` `2.1.1`, `jfrog-dashboard-blueprint` `2.1.1`.
+**Previous release versions:** `jfrog-ciso-report` `2.1.0`, `jfrog-dashboard-blueprint` `2.1.0`.
 
 **6. Run the readiness check** (recommended for local-clone installs):
 
