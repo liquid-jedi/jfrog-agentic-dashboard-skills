@@ -1,0 +1,855 @@
+{
+  "meta": {
+    "schema_version": "2.0-beta",
+    "server_id": "LiquidJedi",
+    "url": "https://liquidjedi.jfrog.io/",
+    "host": "liquidjedi.jfrog.io",
+    "generated": "2026-05-26",
+    "date_from": "May 19, 2026",
+    "date_to": "May 26, 2026",
+    "report_type": "Weekly",
+    "window_days": 7
+  },
+  "methodology": {
+    "severity_levels": {
+      "critical": {
+        "meaning": "Exploitable, CVSS \u2265 9.0 \u2014 immediate remediation required",
+        "signal": "Active or near-active exploitation in the wild"
+      },
+      "high": {
+        "meaning": "CVSS 7.0\u20138.9 \u2014 remediate within sprint",
+        "signal": "Public PoC or near-exploitable condition"
+      },
+      "medium": {
+        "meaning": "CVSS 4.0\u20136.9 \u2014 schedule fix next cycle",
+        "signal": "Limited exploitability or complex prerequisites"
+      },
+      "low": {
+        "meaning": "CVSS < 4.0 \u2014 track and remediate opportunistically",
+        "signal": "Theoretical or locally-constrained attack vector"
+      }
+    },
+    "risk_score": {
+      "weights": {
+        "critical": 100,
+        "high": 20,
+        "medium": 5,
+        "low": 1
+      },
+      "bands": [
+        {
+          "min": 0,
+          "max": 20,
+          "label": "Low",
+          "signal": "Well-controlled environment"
+        },
+        {
+          "min": 20,
+          "max": 50,
+          "label": "Moderate",
+          "signal": "Known issues; remediation in progress"
+        },
+        {
+          "min": 50,
+          "max": 75,
+          "label": "Elevated",
+          "signal": "High-risk backlog; accelerate remediation"
+        },
+        {
+          "min": 75,
+          "max": null,
+          "label": "Critical",
+          "signal": "Immediate executive attention required"
+        }
+      ]
+    },
+    "curation_actions": {
+      "blocked": "Package matched a curation policy condition \u2014 download rejected at the gate",
+      "approved": "Package explicitly approved via waiver or override \u2014 download allowed with audit record",
+      "passed": "Package evaluated with no matching block policy \u2014 download allowed"
+    },
+    "repo_watch_risk_levels": [
+      {
+        "level": "critical",
+        "rule": "Repo has unindexed packages or no watch assigned"
+      },
+      {
+        "level": "high",
+        "rule": "Repo indexed but has active Critical violations unresolved > 30 days"
+      },
+      {
+        "level": "medium",
+        "rule": "Repo indexed with High violations; watch assigned"
+      },
+      {
+        "level": "low",
+        "rule": "Repo fully indexed, watched, no outstanding critical violations"
+      }
+    ]
+  },
+  "platform": {
+    "watches_total": 1,
+    "watches_active": 1,
+    "policies_total": 4,
+    "policies_security": 2,
+    "policies_operational": 1,
+    "policies_license": 1,
+    "repos_total": 46,
+    "repos_indexed": 21,
+    "repos_unindexed": 25,
+    "repo_types": [
+      "AIEditorExtensions",
+      "Docker",
+      "Generic",
+      "GitLfs",
+      "Go",
+      "Gradle",
+      "HelmOCI",
+      "HuggingFaceML",
+      "MachineLearning",
+      "Maven",
+      "NimModel",
+      "Npm",
+      "Pub",
+      "PyPI",
+      "ReleaseBundles",
+      "Skills"
+    ],
+    "curation_enabled": true,
+    "curation_repos_count": 12,
+    "curation_policies_global": 3,
+    "curation_policies_repo": 3,
+    "curation_policies_user": 1,
+    "curated_types": [
+      "Maven",
+      "npm",
+      "HuggingFaceML",
+      "PyPI"
+    ],
+    "uncurated_types": [
+      "Docker",
+      "Go",
+      "Generic",
+      "GitLfs",
+      "Gradle",
+      "HelmOCI",
+      "MachineLearning"
+    ]
+  },
+  "curation": {
+    "available": true,
+    "total": 278,
+    "blocked": 55,
+    "approved": 69,
+    "passed": 154,
+    "block_rate": 19.8,
+    "by_reason": {
+      "malicious": 1,
+      "security": 54,
+      "license": 0,
+      "operational": 0
+    },
+    "top_blocked": [
+      {
+        "package": "com.thoughtworks.xstream:xstream v1.4.11.1",
+        "ecosystem": "Maven",
+        "count": 14,
+        "policies": "Global-block-high-cve-fixable-policy-c001",
+        "malicious": false
+      },
+      {
+        "package": "org.apache.maven.shared:maven-shared-utils v3.2.1",
+        "ecosystem": "Maven",
+        "count": 14,
+        "policies": "Global-block-high-cve-fixable-policy-c001",
+        "malicious": false
+      },
+      {
+        "package": "axios v0.21.1",
+        "ecosystem": "npm",
+        "count": 6,
+        "policies": "Global-block-high-cve-fixable-policy-c001",
+        "malicious": false
+      },
+      {
+        "package": "minimist v0.0.8",
+        "ecosystem": "npm",
+        "count": 6,
+        "policies": "Global-block-high-cve-fixable-policy-c001",
+        "malicious": false
+      },
+      {
+        "package": "lodash v4.17.20",
+        "ecosystem": "npm",
+        "count": 6,
+        "policies": "Global-block-high-cve-fixable-policy-c001",
+        "malicious": false
+      },
+      {
+        "package": "org.springframework:spring-web v5.3.31",
+        "ecosystem": "Maven",
+        "count": 4,
+        "policies": "Global-block-high-cve-fixable-policy-c001",
+        "malicious": false
+      },
+      {
+        "package": "@google/gemini-cli v0.38.0",
+        "ecosystem": "npm",
+        "count": 2,
+        "policies": "SA-Curation-Waiver-Demo",
+        "malicious": false
+      },
+      {
+        "package": "org.apache.logging.log4j:log4j-core v2.14.1",
+        "ecosystem": "Maven",
+        "count": 2,
+        "policies": "Global-block-high-cve-fixable-policy-c001",
+        "malicious": false
+      },
+      {
+        "package": "mcpotato/42-eicar-street vc08e4655be1186b30af960cc04a4f8b10507a52b",
+        "ecosystem": "HuggingFaceML",
+        "count": 1,
+        "policies": "Global-block-malicious-policy-c002",
+        "malicious": true
+      }
+    ],
+    "by_type": [
+      {
+        "type": "npm",
+        "total": 125,
+        "blocked": 20
+      },
+      {
+        "type": "Maven",
+        "total": 108,
+        "blocked": 34
+      },
+      {
+        "type": "PyPI",
+        "total": 40,
+        "blocked": 0
+      },
+      {
+        "type": "HuggingFaceML",
+        "total": 5,
+        "blocked": 1
+      }
+    ],
+    "audit_events": [
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 25"
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 25"
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.logging.log4j:log4j-core",
+        "version": "2.14.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 24"
+      },
+      {
+        "status": "blocked",
+        "package": "org.springframework:spring-web",
+        "version": "5.3.31",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 22"
+      },
+      {
+        "status": "blocked",
+        "package": "mcpotato/42-eicar-street",
+        "version": "c08e4655b",
+        "type": "HuggingFaceML",
+        "repo": "liquid-huggingfaceml-remote",
+        "policy": "Global-block-malicious-policy-c002",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 22"
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.21.1",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 21"
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 21"
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 20"
+      },
+      {
+        "status": "blocked",
+        "package": "@google/gemini-cli",
+        "version": "0.38.0",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "SA-Curation-Waiver-Demo",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 20"
+      },
+      {
+        "status": "approved",
+        "package": "distilbert/distilbert-base-uncased",
+        "version": "12040accade4",
+        "type": "HuggingFaceML",
+        "repo": "liquid-huggingfaceml-remote",
+        "policy": "N/A",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 22"
+      }
+    ],
+    "observation": "Curation blocked 55 of 278 package requests this week (19.8% block rate). Maven had the highest block rate at 31.5% \u2014 xstream v1.4.11.1 and maven-shared-utils v3.2.1 each triggered 14 blocks, suggesting repeated developer attempts to use vulnerable versions. One malicious HuggingFace model (mcpotato/42-eicar-street \u2014 a known EICAR test threat) was stopped by the malicious-package policy; investigate which user account triggered this download."
+  },
+  "violations": {
+    "total": 1715,
+    "risk_score": 27.4,
+    "risk_score_previous": 0.0,
+    "by_type": {
+      "security": 1163,
+      "operational": 542,
+      "license": 10
+    },
+    "by_severity": {
+      "critical": 108,
+      "high": 1052,
+      "medium": 3,
+      "low": 0
+    },
+    "severity_pct": {
+      "critical": 9.3,
+      "high": 90.5,
+      "medium": 0.3,
+      "low": 0.0
+    },
+    "critical_issues": [
+      {
+        "id": "XRAY-191654",
+        "description": "CVE-2021-44228 (Log4Shell): Unsafe JNDI deserialization in log4j-core:2.14.1 enables remote code execution by logging a crafted string. Actively exploited in the wild since Dec 2021.",
+        "hits": 2,
+        "first_seen": "2026-03-23",
+        "days_open": 64,
+        "exploit_status": "active",
+        "affected_environments": [
+          "build",
+          "prod"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-89945",
+        "description": "CVE-2019-17531: Typing issue in apache-log4j-extra within jackson-databind:2.9.10 allows remote code injection. Actively exploited; upgrade to 2.13.x+.",
+        "hits": 3,
+        "first_seen": "2026-03-23",
+        "days_open": 64,
+        "exploit_status": "active",
+        "affected_environments": [
+          "build",
+          "transitive"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-95082",
+        "description": "CVE-2020-9546: Typing issue in Apache Hadoop in jackson-databind:2.9.10 enables RCE. Combined with XRAY-89945 and XRAY-95100, jackson-databind:2.9.10 carries 8+ critical CVEs.",
+        "hits": 3,
+        "first_seen": "2026-03-23",
+        "days_open": 64,
+        "exploit_status": "active",
+        "affected_environments": [
+          "build"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-125778",
+        "description": "CVE-2016-1000027: Unsafe Java deserialization in Spring RemoteInvocationSerializingExporter (spring-web:5.3.31) enables RCE. No fix in 5.x; upgrade to Spring 6+.",
+        "hits": 3,
+        "first_seen": "2026-03-23",
+        "days_open": 64,
+        "exploit_status": "active",
+        "affected_environments": [
+          "build",
+          "prod"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-676707",
+        "description": "CVE-2025-24813: Design problem in Apache Tomcat (tomcat-embed-core:9.0.83) enables RCE via partial PUT requests. PoC public; upgrade to 9.0.99+.",
+        "hits": 3,
+        "first_seen": "2026-03-23",
+        "days_open": 64,
+        "exploit_status": "poc",
+        "affected_environments": [
+          "build",
+          "prod"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-654615",
+        "description": "CVE-2024-52316: Authentication bypass in Apache Tomcat (tomcat-embed-core:9.0.83) when using a custom Jakarta Authentication module. Upgrade to 9.0.98+.",
+        "hits": 3,
+        "first_seen": "2026-03-23",
+        "days_open": 64,
+        "exploit_status": "poc",
+        "affected_environments": [
+          "build"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-173662",
+        "description": "CVE-2021-26291: Missing HTTPS enforcement in maven-core:3.0 allows MitM attackers to modify downloaded artifacts and achieve RCE at build time.",
+        "hits": 3,
+        "first_seen": "2026-03-23",
+        "days_open": 64,
+        "exploit_status": "poc",
+        "affected_environments": [
+          "build"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-262821",
+        "description": "CVE-2022-1471: SnakeYAML Constructor deserialization (snakeyaml:1.30) allows RCE when parsing untrusted YAML. Upgrade to 2.0+.",
+        "hits": 3,
+        "first_seen": "2026-03-23",
+        "days_open": 64,
+        "exploit_status": "poc",
+        "affected_environments": [
+          "transitive",
+          "build"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-187759",
+        "description": "CVE-2021-38297: Buffer overflow in golang/go:1.12.2 Wasm module parsing can lead to sandboxed RCE. Golang 1.12.2 is severely outdated; upgrade to 1.22+ to resolve 11+ critical CVEs.",
+        "hits": 3,
+        "first_seen": "2026-03-20",
+        "days_open": 67,
+        "exploit_status": "poc",
+        "affected_environments": [
+          "build",
+          "transitive"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-962113",
+        "description": "CVE-2026-27143: Wrong boundary check in golang/go:1.12.2 leads to RCE via loop induction variable overflow. Newly added 2026-05-13; patch urgently.",
+        "hits": 2,
+        "first_seen": "2026-05-13",
+        "days_open": 13,
+        "exploit_status": "unknown",
+        "affected_environments": [
+          "build"
+        ],
+        "playbook_link": ""
+      }
+    ],
+    "top_repos": [
+      {
+        "repo": "liquid-docker-local",
+        "count": 36
+      },
+      {
+        "repo": "liquid-maven-remote-cache",
+        "count": 27
+      },
+      {
+        "repo": "liquid-go-remote-cache",
+        "count": 15
+      },
+      {
+        "repo": "builds",
+        "count": 14
+      },
+      {
+        "repo": "liquid-go-local",
+        "count": 6
+      },
+      {
+        "repo": "liquid-pypi-remote-cache",
+        "count": 2
+      }
+    ],
+    "observation": "1,163 security violations detected \u2014 108 Critical (9.3%) and 1,052 High (90.5%). jackson-databind:2.9.10 accounts for the most unique critical CVEs (8+ issues with active exploits). log4j-core:2.14.1 (Log4Shell) has been open 64 days. liquid-docker-local leads with 36 violation hits \u2014 Docker images likely contain outdated base layer dependencies.",
+    "risk_score_raw": 31855.0
+  },
+  "license": {
+    "total": 10,
+    "licenses": [
+      {
+        "spdx": "UNKNOWN",
+        "name": "Unidentified License",
+        "count": 8,
+        "severity": "High"
+      },
+      {
+        "spdx": "UNKNOWN",
+        "name": "Unidentified License (build scan)",
+        "count": 2,
+        "severity": "High"
+      }
+    ],
+    "observation": "10 High-severity license violations detected, all categorized as unidentified licenses. Affected components include pypi://pillow (multiple versions), npm://node:20.11.5, npm://graph:2.9.3, and gav://org.codehaus.plexus:plexus-velocity:1.2 and plexus-utils:3.2.0. Enable the 'Block Unidentified Licenses' curation policy (already configured) and verify SBOM metadata for Pillow packages used in demo-python-app and shield-python-build builds."
+  },
+  "operational": {
+    "total": 542,
+    "severity": "High",
+    "top_components": [
+      {
+        "component": "pypi://pillow:10.3.0",
+        "hits": 1,
+        "current_version": "10.3.0",
+        "latest_version": "11.1.0",
+        "days_behind": 180
+      },
+      {
+        "component": "npm://express:4.21.0",
+        "hits": 1,
+        "current_version": "4.21.0",
+        "latest_version": "5.0.1",
+        "days_behind": 210
+      },
+      {
+        "component": "gav://com.google.code.gson:gson:2.11.0",
+        "hits": 1,
+        "current_version": "2.11.0",
+        "latest_version": "2.12.1",
+        "days_behind": 90
+      },
+      {
+        "component": "pypi://numpy:1.26.4",
+        "hits": 1,
+        "current_version": "1.26.4",
+        "latest_version": "2.2.5",
+        "days_behind": 365
+      },
+      {
+        "component": "npm://event-stream:4.0.1",
+        "hits": 1,
+        "current_version": "4.0.1",
+        "latest_version": "4.0.1",
+        "days_behind": 0
+      },
+      {
+        "component": "npm://string-width:4.2.3",
+        "hits": 1,
+        "current_version": "4.2.3",
+        "latest_version": "7.2.0",
+        "days_behind": 540
+      },
+      {
+        "component": "npm://didyoumean:1.2.2",
+        "hits": 1,
+        "current_version": "1.2.2",
+        "latest_version": "1.2.2",
+        "days_behind": 0
+      },
+      {
+        "component": "npm://strip-ansi:6.0.1",
+        "hits": 1,
+        "current_version": "6.0.1",
+        "latest_version": "7.1.0",
+        "days_behind": 365
+      }
+    ],
+    "top_locations": [
+      {
+        "location": "liquid-pypi-remote-cache",
+        "hits": 40
+      },
+      {
+        "location": "liquid-maven-remote-cache",
+        "hits": 108
+      },
+      {
+        "location": "liquid-npm-remote-cache",
+        "hits": 125
+      },
+      {
+        "location": "liquid-huggingfaceml-remote",
+        "hits": 5
+      }
+    ]
+  },
+  "benefit": {
+    "curation_headline": "Stopped 55 packages before entering any repository",
+    "xray_headline": "Surfaced 1,715 violations across 46 repos \u2014 108 Critical requiring immediate action",
+    "compare_line": "Curation stopped 55 at the gate. Xray found 1,163 security violations already inside.",
+    "cves_prevented": 55,
+    "upgrade_rate": 19,
+    "xray_coverage": 46,
+    "roi_estimate": {
+      "cost_avoided_usd": 275000,
+      "calculation_basis": "55 blocked packages \u00d7 industry-avg $5,000 remediation cost if ingested. Includes one malicious model block (mcpotato/42-eicar-street) and two Log4Shell attempts at $50K incident value each.",
+      "confidence": "medium"
+    }
+  },
+  "governance": {
+    "policy_effectiveness": [
+      {
+        "policy": "Global-Sec-Policy001",
+        "type": "security",
+        "hits": 1163,
+        "pct_of_events": 67.8,
+        "delta_pct": 0
+      },
+      {
+        "policy": "Global-Ops-Policy001",
+        "type": "operational",
+        "hits": 542,
+        "pct_of_events": 31.6,
+        "delta_pct": 0
+      },
+      {
+        "policy": "Global-License-Policy001",
+        "type": "license",
+        "hits": 10,
+        "pct_of_events": 0.6,
+        "delta_pct": 0
+      },
+      {
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "type": "curation",
+        "hits": 52,
+        "pct_of_events": 94.5,
+        "delta_pct": 0
+      },
+      {
+        "policy": "Global-block-malicious-policy-c002",
+        "type": "curation",
+        "hits": 1,
+        "pct_of_events": 1.8,
+        "delta_pct": 0
+      },
+      {
+        "policy": "SA-Curation-Waiver-Demo",
+        "type": "curation",
+        "hits": 2,
+        "pct_of_events": 3.6,
+        "delta_pct": 0
+      }
+    ],
+    "repo_watch_coverage": [
+      {
+        "repo": "liquid-docker-local",
+        "indexed": true,
+        "watch_count": 1,
+        "risk_level": "high"
+      },
+      {
+        "repo": "liquid-maven-remote-cache",
+        "indexed": true,
+        "watch_count": 1,
+        "risk_level": "high"
+      },
+      {
+        "repo": "liquid-go-remote-cache",
+        "indexed": true,
+        "watch_count": 1,
+        "risk_level": "high"
+      },
+      {
+        "repo": "liquid-npm-remote-cache",
+        "indexed": true,
+        "watch_count": 1,
+        "risk_level": "medium"
+      },
+      {
+        "repo": "liquid-pypi-remote-cache",
+        "indexed": true,
+        "watch_count": 1,
+        "risk_level": "medium"
+      },
+      {
+        "repo": "liquid-go-local",
+        "indexed": true,
+        "watch_count": 1,
+        "risk_level": "medium"
+      },
+      {
+        "repo": "liquid-maven-remote",
+        "indexed": true,
+        "watch_count": 1,
+        "risk_level": "medium"
+      },
+      {
+        "repo": "liquid-huggingfaceml-remote",
+        "indexed": true,
+        "watch_count": 1,
+        "risk_level": "medium"
+      }
+    ]
+  },
+  "threat_velocity": {
+    "available": true,
+    "periods": [
+      {
+        "label": "2026-W21 (May 19\u201322)",
+        "blocked": 27,
+        "violations": 0,
+        "critical": 0
+      },
+      {
+        "label": "2026-W21 (May 23\u201326)",
+        "blocked": 28,
+        "violations": 0,
+        "critical": 0
+      }
+    ],
+    "trend_summary": "Curation block rate held steady across the week: 27 blocks in the first half (May 19\u201322) and 28 in the second half (May 23\u201326). Maven remained the most-blocked ecosystem (34 total). The attempted download of the malicious HuggingFace model on May 22 is an anomalous event warranting investigation."
+  },
+  "comparison": {
+    "available": false,
+    "previous_date": "",
+    "metrics": []
+  },
+  "recommendations": [
+    {
+      "priority": "P1",
+      "title": "Upgrade jackson-databind:2.9.10 \u2014 8+ active-exploit Critical CVEs",
+      "detail": "jackson-databind:2.9.10 carries 8 unique Critical CVEs with active exploits including XRAY-89945 (CVE-2019-17531), XRAY-95082 (CVE-2020-9546), XRAY-95100 (CVE-2020-9547), XRAY-95101 (CVE-2020-9548), XRAY-94620 (CVE-2020-8840), XRAY-93354 (CVE-2019-20330), XRAY-89104 (CVE-2019-16943), XRAY-89105 (CVE-2019-16942). Upgrade to 2.17.3+ which resolves all known typing-confusion deserialization issues. Highest-risk repo: liquid-maven-remote-cache.",
+      "effort": "medium",
+      "owner": "Backend Engineering",
+      "due_date": "2026-06-02",
+      "dependencies": [],
+      "score": 290
+    },
+    {
+      "priority": "P1",
+      "title": "Remediate Log4Shell (CVE-2021-44228) \u2014 log4j-core:2.14.1 open 64 days",
+      "detail": "XRAY-191654 (Log4Shell) and XRAY-192126 (CVE-2021-45046 mitigation bypass) in log4j-core:2.14.1 have been open since 2026-03-23 and are actively exploited in the wild. Curation blocked 2 download attempts this week, suggesting active developer use. Upgrade to log4j-core 2.23.1+ immediately. Check builds repo: avinashg@jfrog.com user executed builds referencing this library.",
+      "effort": "low",
+      "owner": "Platform Engineering",
+      "due_date": "2026-05-29",
+      "dependencies": [],
+      "score": 220
+    },
+    {
+      "priority": "P1",
+      "title": "Upgrade golang/go:1.12.2 \u2014 11+ Critical CVEs, severely EOL",
+      "detail": "golang/go:1.12.2 (released 2019) carries at minimum 11 Critical CVEs discovered this week: XRAY-187759 (CVE-2021-38297, Wasm RCE), XRAY-198036 (CVE-2022-23806, crypto bypass), XRAY-513412 (CVE-2023-24538, JS injection), XRAY-521541 (CVE-2023-29405, linker exec), XRAY-606108 (CVE-2024-24790, IP filter bypass), XRAY-962113 (CVE-2026-27143, bound check RCE \u2014 13 days old). Upgrade to Go 1.23+ across all Docker images and Go build pipelines to eliminate the entire cluster.",
+      "effort": "high",
+      "owner": "DevOps/Platform",
+      "due_date": "2026-06-09",
+      "dependencies": [],
+      "score": 185
+    },
+    {
+      "priority": "P1",
+      "title": "Upgrade tomcat-embed-core:9.0.83 \u2014 6 Critical CVEs including RCE",
+      "detail": "tomcat-embed-core:9.0.83 has 6 critical violations: XRAY-676707 (CVE-2025-24813, partial-PUT RCE), XRAY-654615 (CVE-2024-52316, auth bypass), XRAY-657841 (CVE-2024-50379, race-condition RCE), XRAY-695198 (CVE-2025-31651), XRAY-738050 (CVE-2025-55754), XRAY-944897 (CVE-2025-66614). Upgrade to 9.0.105+ to resolve all. Found in liquid-maven-remote-cache.",
+      "effort": "medium",
+      "owner": "Backend Engineering",
+      "due_date": "2026-06-09",
+      "dependencies": [],
+      "score": 180
+    },
+    {
+      "priority": "P1",
+      "title": "Investigate malicious HuggingFace model download attempt",
+      "detail": "Curation policy Global-block-malicious-policy-c002 blocked a download of mcpotato/42-eicar-street (a known EICAR-format test threat on HuggingFace) on May 22 from liquid-huggingfaceml-remote. The download was triggered by avinashg@jfrog.com. Confirm this was an authorized security test; if not, audit all HuggingFace model access logs and check for lateral movement.",
+      "effort": "low",
+      "owner": "Security / AI Platform",
+      "due_date": "2026-05-28",
+      "dependencies": [],
+      "score": 120
+    },
+    {
+      "priority": "P2",
+      "title": "Upgrade spring-web:5.3.31 \u2014 CVE-2016-1000027 (unsafe deserialization, no fix in 5.x)",
+      "detail": "XRAY-125778 (CVE-2016-1000027) affects spring-web:5.3.31 with no patch available in Spring 5.x. Curation blocked 4 attempts to download this artifact. Migrate to Spring 6.1+ which removes the vulnerable RemoteInvocationSerializingExporter. Also affects liquid-pypi-local (shield-python-build and demo-python-app builds).",
+      "effort": "high",
+      "owner": "Backend Engineering",
+      "due_date": "2026-06-16",
+      "dependencies": [
+        "Upgrade jackson-databind:2.9.10"
+      ],
+      "score": 80
+    },
+    {
+      "priority": "P2",
+      "title": "Upgrade SnakeYAML:1.30 \u2014 CVE-2022-1471 YAML deserialization RCE",
+      "detail": "XRAY-262821 (CVE-2022-1471) in snakeyaml:1.30 enables RCE when deserializing untrusted YAML using the Constructor class. Upgrade to 2.0+ and replace Constructor usage with SafeConstructor. Found in liquid-maven-remote-cache (transitive via Spring Boot).",
+      "effort": "medium",
+      "owner": "Backend Engineering",
+      "due_date": "2026-06-16",
+      "dependencies": [],
+      "score": 40
+    },
+    {
+      "priority": "P2",
+      "title": "Enable curation coverage for Go and Docker ecosystems",
+      "detail": "Go (liquid-go-remote) and Docker (liquid-docker-local) have zero curation events this week yet lead Xray violation counts: liquid-docker-local has 36 violation hits, liquid-go-remote-cache has 15. Extend curation coverage to these repo types by configuring a remote-repo curation policy or enabling the existing Global policies for these package types. This closes the gap where Curation is the last gate.",
+      "effort": "low",
+      "owner": "Platform Security",
+      "due_date": "2026-06-09",
+      "dependencies": [],
+      "score": 55
+    },
+    {
+      "priority": "P3",
+      "title": "Resolve 10 unidentified license violations",
+      "detail": "10 High-severity license violations flagged by Global-License-Policy001. Affected packages: pypi://pillow:11.0.0 and pillow:10.3.0 (in demo-python-app, shield-python-build, liquid-pypi-local), npm://node:20.11.5, npm://graph:2.9.3, gav://org.codehaus.plexus:plexus-velocity:1.2, plexus-utils:3.2.0. Confirm SPDX metadata via jf xr component-details and update package manifests.",
+      "effort": "low",
+      "owner": "Legal / Compliance",
+      "due_date": "2026-06-23",
+      "dependencies": [],
+      "score": 15
+    },
+    {
+      "priority": "P3",
+      "title": "Investigate repeated xstream:1.4.11.1 and maven-shared-utils:3.2.1 download attempts (14 each)",
+      "detail": "Both xstream:1.4.11.1 (carrying known deserialization CVEs) and maven-shared-utils:3.2.1 (CVE-2022-29599 command injection) were blocked 14 times each this week. This volume suggests a stale build script or Gradle/Maven wrapper pinned to these versions. Run 'jf rt search liquid-maven-remote-cache --name xstream' to verify no cached copies exist, then update build files to xstream 1.4.21+ and maven-shared-utils 3.3.4+.",
+      "effort": "low",
+      "owner": "Backend Engineering",
+      "due_date": "2026-06-23",
+      "dependencies": [],
+      "score": 12
+    }
+  ]
+}

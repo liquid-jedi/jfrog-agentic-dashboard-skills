@@ -13,6 +13,13 @@
 **/run-meta.json
 **/rerun-*/
 
+# Keep curated example run outputs under Example Reports/ tracked
+!/Example Reports/
+!/Example Reports/**/report.html
+!/Example Reports/**/data.json
+!/Example Reports/**/snapshot.json
+!/Example Reports/**/run-meta.json
+
 # Root-level legacy generated reports (scope to root only — does NOT affect samples/)
 /ciso-report-*.html
 

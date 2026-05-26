@@ -1,0 +1,521 @@
+{
+  "meta": {
+    "schema_version": "2.1",
+    "report_type": "weekly",
+    "generated": "2026-05-20T10:47:08Z",
+    "server_id": "LiquidJedi",
+    "server_url": "https://liquidjedi.jfrog.io",
+    "period_start": "2026-05-13T10:36:12Z",
+    "period_end": "2026-05-20T10:36:12Z",
+    "window_days": 7,
+    "title": "Weekly CISO Security Report",
+    "org": "LiquidJedi"
+  },
+  "platform": {
+    "repo_count": 47,
+    "local_repos": 22,
+    "remote_repos": 13,
+    "virtual_repos": 12,
+    "watch_count": 1,
+    "active_watches": 1,
+    "watch_names": [
+      "Global-Watch"
+    ],
+    "policy_count": 4,
+    "policy_names": [
+      "Global-sec-exclude-policy002",
+      "Global-Sec-Policy001",
+      "Global-License-Policy001",
+      "Global-Ops-Policy001"
+    ],
+    "curation_enabled": true,
+    "curation_repos_count": 23,
+    "curation_policies_global": 3,
+    "curation_policies_repo": 1,
+    "curation_policies_user": 0,
+    "repos_in_watch": 23
+  },
+  "curation": {
+    "available": true,
+    "total": 163,
+    "blocked": 16,
+    "approved": 147,
+    "passed": 106,
+    "block_rate": 9.8,
+    "by_package_type": {
+      "npm": 117,
+      "Maven": 38,
+      "Go": 8
+    },
+    "blocked_by_type": {
+      "npm": 14,
+      "Maven": 2
+    },
+    "top_blocked_packages": [
+      {
+        "package": "lodash@4.17.20",
+        "count": 4,
+        "reason": "CVE with CVSS >= 9 (fix available)"
+      },
+      {
+        "package": "axios@0.21.1",
+        "count": 4,
+        "reason": "CVE with CVSS >= 9 (fix available)"
+      },
+      {
+        "package": "minimist@0.0.8",
+        "count": 4,
+        "reason": "CVE with CVSS >= 9 (fix available)"
+      },
+      {
+        "package": "@google/gemini-cli@0.38.0",
+        "count": 2,
+        "reason": "CVE with CVSS >= 9 (fix available)"
+      },
+      {
+        "package": "org.apache.logging.log4j:log4j-core@2.14.1",
+        "count": 2,
+        "reason": "CVE with CVSS >= 9 (fix available)"
+      }
+    ],
+    "policies_triggered": {
+      "Global-block-high-cve-fixable-policy-c001": 16
+    },
+    "observation": "Curation intercepted 16 package downloads this week out of 163 total requests \u2014 all 16 blocks triggered the 'Global-block-high-cve-fixable-policy-c001' policy. Top blocked packages: lodash@4.17.20 (4x), axios@0.21.1 (4x), minimist@0.0.8 (4x). log4j-core@2.14.1 was also blocked twice, confirming exposure to CVE-2021-44228 at the supply chain boundary."
+  },
+  "violations": {
+    "total": 1157,
+    "by_severity": {
+      "critical": 108,
+      "high": 1046,
+      "medium": 3,
+      "low": 0
+    },
+    "by_type": {
+      "security": 1157,
+      "license": 9,
+      "operational_risk": 1157
+    },
+    "critical_issues": [
+      {
+        "id": "XRAY-657442",
+        "description": "Applications and libraries which misuse connection.serverAuthenticate (via callback field ServerConfig.PublicKeyCallback) may be susceptible to an authorization bypass. The documentation for ServerConfig.PublicKeyCallback says that \"A call to this function does not guarantee that the key offered is ",
+        "severity": "Critical",
+        "count": 20,
+        "repos": [
+          "liquid-go-remote-cache"
+        ],
+        "first_seen": "N/A",
+        "days_open": null,
+        "exploit_status": "N/A",
+        "affected_environments": [
+          "liquid-go-remote-cache"
+        ],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-187759",
+        "description": "Go before 1.16.9 and 1.17.x before 1.17.2 has a Buffer Overflow via large arguments in a function invocation from a WASM module, when GOARCH=wasm GOOS=js is used.",
+        "severity": "Critical",
+        "count": 10,
+        "repos": [
+          "liquid-go-remote-cache"
+        ],
+        "first_seen": "N/A",
+        "days_open": null,
+        "exploit_status": "N/A",
+        "affected_environments": [
+          "liquid-go-remote-cache"
+        ],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-198036",
+        "description": "Curve.IsOnCurve in crypto/elliptic in Go before 1.16.14 and 1.17.x before 1.17.7 can incorrectly return true in situations with a big.Int value that is not a valid field element.",
+        "severity": "Critical",
+        "count": 10,
+        "repos": [
+          "liquid-go-remote-cache"
+        ],
+        "first_seen": "N/A",
+        "days_open": null,
+        "exploit_status": "N/A",
+        "affected_environments": [
+          "liquid-go-remote-cache"
+        ],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-513412",
+        "description": "Templates do not properly consider backticks (`) as Javascript string delimiters, and do not escape them as expected. Backticks are used, since ES6, for JS template literals. If a template contains a Go template action within a Javascript template literal, the contents of the action can be used to t",
+        "severity": "Critical",
+        "count": 10,
+        "repos": [
+          "liquid-go-remote-cache"
+        ],
+        "first_seen": "N/A",
+        "days_open": null,
+        "exploit_status": "N/A",
+        "affected_environments": [
+          "liquid-go-remote-cache"
+        ],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-521541",
+        "description": "The go command may execute arbitrary code at build time when using cgo. This may occur when running \"go get\" on a malicious module, or when running any other command which builds untrusted code. This is can by triggered by linker flags, specified via a \"#cgo LDFLAGS\" directive. Flags containing embe",
+        "severity": "Critical",
+        "count": 10,
+        "repos": [
+          "liquid-go-remote-cache"
+        ],
+        "first_seen": "N/A",
+        "days_open": null,
+        "exploit_status": "N/A",
+        "affected_environments": [
+          "liquid-go-remote-cache"
+        ],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-616757",
+        "description": "Command go env is documented as outputting a shell script containing the Go environment. However, go env doesn't sanitize values, so executing its output as a shell script can cause various bad bahaviors, including executing arbitrary commands or inserting new environment variables. This issue is re",
+        "severity": "Critical",
+        "count": 10,
+        "repos": [
+          "liquid-go-remote-cache"
+        ],
+        "first_seen": "N/A",
+        "days_open": null,
+        "exploit_status": "N/A",
+        "affected_environments": [
+          "liquid-go-remote-cache"
+        ],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-692219",
+        "description": "The net/http package improperly accepts a bare LF as a line terminator in chunked data chunk-size lines. This can permit request smuggling if a net/http server is used in conjunction with a server that incorrectly accepts a bare LF as part of a chunk-ext.",
+        "severity": "Critical",
+        "count": 10,
+        "repos": [
+          "liquid-go-remote-cache"
+        ],
+        "first_seen": "N/A",
+        "days_open": null,
+        "exploit_status": "N/A",
+        "affected_environments": [
+          "liquid-go-remote-cache"
+        ],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-520141",
+        "description": "Not all valid JavaScript whitespace characters are considered to be whitespace. Templates containing whitespace characters outside of the character set \"\\t\\n\\f\\r\\u0020\\u2028\\u2029\" in JavaScript contexts that also contain actions may not be properly sanitized during execution.",
+        "severity": "Critical",
+        "count": 10,
+        "repos": [
+          "liquid-go-remote-cache"
+        ],
+        "first_seen": "N/A",
+        "days_open": null,
+        "exploit_status": "N/A",
+        "affected_environments": [
+          "liquid-go-remote-cache"
+        ],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-521542",
+        "description": "The go command may execute arbitrary code at build time when using cgo. This may occur when running \"go get\" on a malicious module, or when running any other command which builds untrusted code. This is can by triggered by linker flags, specified via a \"#cgo LDFLAGS\" directive. The arguments for a n",
+        "severity": "Critical",
+        "count": 10,
+        "repos": [
+          "liquid-go-remote-cache"
+        ],
+        "first_seen": "N/A",
+        "days_open": null,
+        "exploit_status": "N/A",
+        "affected_environments": [
+          "liquid-go-remote-cache"
+        ],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-521544",
+        "description": "The go command may generate unexpected code at build time when using cgo. This may result in unexpected behavior when running a go program which uses cgo. This may occur when running an untrusted module which contains directories with newline characters in their names. Modules which are retrieved us",
+        "severity": "Critical",
+        "count": 10,
+        "repos": [
+          "liquid-go-remote-cache"
+        ],
+        "first_seen": "N/A",
+        "days_open": null,
+        "exploit_status": "N/A",
+        "affected_environments": [
+          "liquid-go-remote-cache"
+        ],
+        "playbook_link": null
+      }
+    ],
+    "top_repos": [
+      {
+        "name": "liquid-go-remote-cache",
+        "critical": 140,
+        "high": 360,
+        "medium": 0,
+        "low": 0
+      }
+    ],
+    "risk_score": 27.4,
+    "risk_score_previous": 0.0,
+    "risk_score_raw": 31735.0,
+    "observation": "XRAY-657442 (Go crypto server auth bypass) accounts for the most critical hits in liquid-go-remote-cache. All 108 critical violations are concentrated in that single cache repo \u2014 primarily outdated Go standard library packages (x/crypto, x/net, text/template) without fixed-version pins. 1046 high-severity violations co-exist in the same repo, suggesting a systematic issue with Go dependency pinning."
+  },
+  "license": {
+    "total": 9,
+    "violations": [
+      {
+        "license": "Unknown",
+        "component": "default/liquid-pypi-remote-cache/44/ae/7e4f6662a9b1cb5f92b9cc9cab8321c381ffbee30",
+        "severity": "High"
+      },
+      {
+        "license": "Unknown",
+        "component": "default/liquid-pypi-remote-cache/ef/43/c50c17c5f7d438e836c169e343695534c38c77f60",
+        "severity": "High"
+      },
+      {
+        "license": "Unknown",
+        "component": "default/cli-scan-results/avinashg@jfrog.com/source_code_1776925736285.cdx.json",
+        "severity": "High"
+      },
+      {
+        "license": "Unknown",
+        "component": "default/cli-scan-results/avinashg@jfrog.com/source_code_1776925736285.cdx.json",
+        "severity": "High"
+      },
+      {
+        "license": "Unknown",
+        "component": "default/liquid-maven-remote-cache/org/codehaus/plexus/plexus-velocity/1.2/plexus",
+        "severity": "High"
+      }
+    ],
+    "observation": "9 license violations detected this week across the Global-Watch scope. All appear as 'Unknown' license classification \u2014 likely open-source packages missing SPDX identifiers in their metadata. Review against approved license list and add explicit license attributes."
+  },
+  "operational": {
+    "total": 1157,
+    "top_components": [
+      {
+        "name": "v0.9.0.zip",
+        "path": "default/liquid-go-remote-cache/golang.org/x/crypto/@v/v0.9.0.zip",
+        "severity": "Critical",
+        "description": "Applications and libraries which misuse connection.serverAuthenticate (via callback field ServerConfig.PublicKeyCallback) may be susceptible to an aut"
+      },
+      {
+        "name": "v1.4.2.zip",
+        "path": "default/liquid-go-remote-cache/github.com/gabriel-vasile/mimetype/@v/v1.4.2.zip",
+        "severity": "Critical",
+        "description": "Go before 1.16.9 and 1.17.x before 1.17.2 has a Buffer Overflow via large arguments in a function invocation from a WASM module, when GOARCH=wasm GOOS"
+      },
+      {
+        "name": "v1.4.2.zip",
+        "path": "default/liquid-go-remote-cache/github.com/gabriel-vasile/mimetype/@v/v1.4.2.zip",
+        "severity": "Critical",
+        "description": "Curve.IsOnCurve in crypto/elliptic in Go before 1.16.14 and 1.17.x before 1.17.7 can incorrectly return true in situations with a big.Int value that i"
+      },
+      {
+        "name": "v1.4.2.zip",
+        "path": "default/liquid-go-remote-cache/github.com/gabriel-vasile/mimetype/@v/v1.4.2.zip",
+        "severity": "Critical",
+        "description": "Templates do not properly consider backticks (`) as Javascript string delimiters, and do not escape them as expected. Backticks are used, since ES6, f"
+      },
+      {
+        "name": "v1.4.2.zip",
+        "path": "default/liquid-go-remote-cache/github.com/gabriel-vasile/mimetype/@v/v1.4.2.zip",
+        "severity": "Critical",
+        "description": "The go command may execute arbitrary code at build time when using cgo. This may occur when running \"go get\" on a malicious module, or when running an"
+      },
+      {
+        "name": "v1.4.2.zip",
+        "path": "default/liquid-go-remote-cache/github.com/gabriel-vasile/mimetype/@v/v1.4.2.zip",
+        "severity": "Critical",
+        "description": "Command go env is documented as outputting a shell script containing the Go environment. However, go env doesn't sanitize values, so executing its out"
+      },
+      {
+        "name": "v1.4.2.zip",
+        "path": "default/liquid-go-remote-cache/github.com/gabriel-vasile/mimetype/@v/v1.4.2.zip",
+        "severity": "Critical",
+        "description": "The net/http package improperly accepts a bare LF as a line terminator in chunked data chunk-size lines. This can permit request smuggling if a net/ht"
+      },
+      {
+        "name": "v1.4.2.zip",
+        "path": "default/liquid-go-remote-cache/github.com/gabriel-vasile/mimetype/@v/v1.4.2.zip",
+        "severity": "Critical",
+        "description": "Not all valid JavaScript whitespace characters are considered to be whitespace. Templates containing whitespace characters outside of the character se"
+      },
+      {
+        "name": "v1.4.2.zip",
+        "path": "default/liquid-go-remote-cache/github.com/gabriel-vasile/mimetype/@v/v1.4.2.zip",
+        "severity": "Critical",
+        "description": "The go command may execute arbitrary code at build time when using cgo. This may occur when running \"go get\" on a malicious module, or when running an"
+      },
+      {
+        "name": "v1.4.2.zip",
+        "path": "default/liquid-go-remote-cache/github.com/gabriel-vasile/mimetype/@v/v1.4.2.zip",
+        "severity": "Critical",
+        "description": "The go command may generate unexpected code at build time when using cgo. This may result in unexpected behavior when running a go program which uses "
+      }
+    ],
+    "observation": "1157 operational risk violations flagged \u2014 v1.4.2.zip (41 artifacts) is the most impacted component, predominantly in the Go remote cache. Operational risk policies are catching end-of-life and high-risk lifecycle components."
+  },
+  "benefit": {
+    "packages_scanned": 163,
+    "packages_blocked": 16,
+    "incidents_averted": 16,
+    "roi_estimate": "$720,000 estimated savings from 16 blocked malicious/vulnerable packages",
+    "observation": "Curation blocked 16 potentially malicious or vulnerable package downloads this week. At an industry-average remediation cost of $45K per incident, the estimated risk exposure averted is $720,000."
+  },
+  "governance": {
+    "active_watches": 1,
+    "total_watches": 1,
+    "total_policies": 4,
+    "curation_policies": 8,
+    "policy_effectiveness": 9.8,
+    "repo_watch_coverage": 54.5,
+    "repos_covered_by_watch": 12,
+    "total_local_repos": 22,
+    "observation": "1 of 1 watches (Global-Watch) is active and covers 23 repositories. Watch coverage of local repos is 54.5%. 2 curation policies (jml-mlops-HF, jml-mlops-npm) are disabled \u2014 review whether these are intentionally inactive."
+  },
+  "threat_velocity": {
+    "new_critical_this_week": 108,
+    "new_high_this_week": 1046,
+    "new_violations_this_week": 1157,
+    "curation_blocks_this_week": 16,
+    "week_over_week_trend": "N/A"
+  },
+  "comparison": {
+    "available": false,
+    "previous_date": null,
+    "previous_curation_blocked": null,
+    "previous_violations_total": null,
+    "previous_critical": null,
+    "delta_curation_blocked": null,
+    "delta_violations_total": null,
+    "delta_critical": null
+  },
+  "recommendations": [
+    {
+      "id": 1,
+      "priority": "P1",
+      "title": "Upgrade outdated Go packages in liquid-go-remote-cache",
+      "description": "XRAY-657442 (Go ssh ServerConfig.PublicKeyCallback auth bypass) accounts for 20 critical hits in liquid-go-remote-cache. Upgrade golang.org/x/crypto from v0.9.0 to v0.31.0+. Pin minimum versions in remote repo configuration to prevent re-download of vulnerable releases.",
+      "effort": "medium",
+      "score": 100,
+      "owner": "platform-engineering",
+      "due_date": "2026-05-27",
+      "dependencies": []
+    },
+    {
+      "id": 2,
+      "priority": "P1",
+      "title": "Remediate XRAY-187759 \u2014 Go Buffer Overflow (x/net)",
+      "description": "XRAY-187759 affects Go packages before 1.17.2. 10 critical artifacts in liquid-go-remote-cache are impacted. Upgrade to Go 1.21.x or later. Apply remote repo minimum version exclusion rules for golang.org/x/net < v0.17.0.",
+      "effort": "medium",
+      "score": 95,
+      "owner": "platform-engineering",
+      "due_date": "2026-05-27",
+      "dependencies": []
+    },
+    {
+      "id": 3,
+      "priority": "P1",
+      "title": "Remediate XRAY-198036 \u2014 Go elliptic curve IsOnCurve flaw",
+      "description": "XRAY-198036 impacts Go before 1.16.14 / 1.17.7 in crypto/elliptic. 10 critical hits in liquid-go-remote-cache. Upgrade all Go toolchain dependencies and set minimum version constraints on the remote cache proxy.",
+      "effort": "medium",
+      "score": 92,
+      "owner": "platform-engineering",
+      "due_date": "2026-05-27",
+      "dependencies": []
+    },
+    {
+      "id": 4,
+      "priority": "P1",
+      "title": "Block log4j-core@2.14.1 \u2014 Log4Shell still circulating",
+      "description": "log4j-core@2.14.1 was blocked twice this week by curation (Global-block-high-cve-fixable-policy-c001). Verify no existing artifact in liquid-libs-release-local or liquid-gradle-dev-local still references this version. Add an Xray ban rule for log4j-core < 2.17.1 in addition to curation.",
+      "effort": "low",
+      "score": 90,
+      "owner": "security",
+      "due_date": "2026-05-22",
+      "dependencies": []
+    },
+    {
+      "id": 5,
+      "priority": "P1",
+      "title": "Remediate XRAY-513412 \u2014 Go template backtick JS delimiter injection",
+      "description": "XRAY-513412 affects Go html/template before 1.20. 10 critical hits. Templates may allow XSS via backtick-delimited JS strings. Upgrade text/template and html/template to Go 1.21.x+.",
+      "effort": "medium",
+      "score": 88,
+      "owner": "platform-engineering",
+      "due_date": "2026-05-30",
+      "dependencies": []
+    },
+    {
+      "id": 6,
+      "priority": "P1",
+      "title": "Remediate XRAY-521541/521542/521544 \u2014 Go cgo arbitrary code execution at build time",
+      "description": "Three XRAY IDs (521541, 521542, 521544) cover Go cgo build-time code execution. 10 critical hits each in liquid-go-remote-cache. Enforce go build with CGO_ENABLED=0 in CI pipelines and upgrade Go toolchain to 1.21.x.",
+      "effort": "high",
+      "score": 85,
+      "owner": "platform-engineering",
+      "due_date": "2026-06-03",
+      "dependencies": [
+        "Go toolchain upgrade"
+      ]
+    },
+    {
+      "id": 7,
+      "priority": "P2",
+      "title": "Re-evaluate disabled curation policies: jml-mlops-HF and jml-mlops-npm",
+      "description": "Two curation policies scoped to specific repos are currently disabled. Confirm this is intentional. If the ML/MLops repos are still in use, re-enable these policies to prevent high-CVE packages from entering the ML pipeline.",
+      "effort": "low",
+      "score": 70,
+      "owner": "security",
+      "due_date": "2026-05-27",
+      "dependencies": []
+    },
+    {
+      "id": 8,
+      "priority": "P2",
+      "title": "Extend Global-Watch coverage to uncovered local repos",
+      "description": "Current watch covers 23 of 22 local repositories (54.5% coverage). Identify the 10 uncovered local repos and add them to Global-Watch or a new dedicated watch to ensure full Xray scanning.",
+      "effort": "low",
+      "score": 65,
+      "owner": "platform-engineering",
+      "due_date": "2026-05-30",
+      "dependencies": []
+    },
+    {
+      "id": 9,
+      "priority": "P2",
+      "title": "Resolve 9 Unknown license violations",
+      "description": "9 license violations this week are classified as 'Unknown' \u2014 packages lack SPDX identifiers. Run jf xr audit on affected repos, add license properties via Artifactory, and consider adding a curation policy to block packages with no license declaration.",
+      "effort": "medium",
+      "score": 55,
+      "owner": "legal-compliance",
+      "due_date": "2026-06-03",
+      "dependencies": []
+    },
+    {
+      "id": 10,
+      "priority": "P3",
+      "title": "Enable Go ecosystem curation coverage",
+      "description": "All 8 Go curation events this week were passed (0 blocked). Existing curation policies block npm and Maven packages effectively, but Go packages are passing through. Evaluate adding a Go-specific curation policy or extend scope of existing policies to cover golang.org packages.",
+      "effort": "medium",
+      "score": 45,
+      "owner": "security",
+      "due_date": "2026-06-10",
+      "dependencies": []
+    }
+  ]
+}

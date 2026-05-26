@@ -130,6 +130,8 @@ If you want to see the output format before running the skill against your own i
 
 - `samples/ciso-report-2026-04-26.html`
 - `samples/` (additional sample outputs)
+- `Example Reports/ciso-reports/liquidjedi/weekly/2026-05-20/report.html`
+- `Example Reports/ciso-reports/liquidjedi/weekly/2026-05-26/report.html`
 
 These files are static reference artifacts. They are useful for reviewing the generated dashboard layout and narrative style, but they are not live data and are not updated automatically.
 

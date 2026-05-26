@@ -1,0 +1,2481 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CISO Security Report</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        /*
+         * FONT SCALE — 6 sizes only
+         * XL  1.5rem  (24px)  KPI numbers
+         * L   1.1rem  (18px)  Report title
+         * M   0.85rem (14px)  Section headers, card titles, callout titles
+         * S   0.75rem (12px)  Body, tables, descriptions, sidebar values
+         * XS  0.65rem (10px)  Mono data, table headers, KPI labels, sidebar labels
+         * XXS 0.55rem (9px)   Footer, badges, pills
+         */
+        :root {
+            --fs-xl: 1.5rem;
+            --fs-l: 1.1rem;
+            --fs-m: 0.85rem;
+            --fs-s: 0.75rem;
+            --fs-xs: 0.65rem;
+            --fs-xxs: 0.55rem;
+
+            --bg: #f4f5f7;
+            --surface: #fff;
+            --alt: #fafbfc;
+            --border: #e4e7ec;
+            --blt: #eef0f4;
+            --bar: #283248;
+            --bartx: rgba(255, 255, 255, .85);
+            --barmuted: rgba(255, 255, 255, .45);
+            --frog: #40be46;
+            --flt: #e8f8e9;
+            --fdk: #2d8a32;
+            --tx: #1a2b4a;
+            --tx2: #5a6a82;
+            --muted: #8f9bb3;
+            --crit: #c0560a;
+            --critbg: #fff4e6;
+            --high: #d4910a;
+            --highbg: #fef9e7;
+            --med: #b8a000;
+            --medbg: #fefce8;
+            --low: #7890a0;
+            --lowbg: #f0f4f8;
+            --blue: #4a8af0;
+            --amber: #d4910a;
+            --amberbg: #fef9e7;
+            --r: 8px;
+            --sh: 0 1px 3px rgba(26, 43, 74, .06)
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: var(--bg);
+            color: var(--tx);
+            line-height: 1.55;
+            display: flex;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased
+        }
+
+        .side {
+            width: 220px;
+            background: var(--bar);
+            flex-shrink: 0;
+            padding: 1.1rem 1rem;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto
+        }
+
+        .side svg {
+            width: 40px;
+            height: 40px;
+            margin-bottom: .8rem
+        }
+
+        .ss {
+            border-top: 1px solid rgba(255, 255, 255, .08);
+            padding: .6rem 0
+        }
+
+        .ss:first-of-type {
+            border-top: none
+        }
+
+        .sl {
+            font-size: var(--fs-xs);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--barmuted);
+            margin-bottom: .15rem
+        }
+
+        .sv {
+            font-size: var(--fs-s);
+            color: var(--bartx);
+            font-weight: 600;
+            line-height: 1.4
+        }
+
+        .sv a {
+            color: var(--frog);
+            text-decoration: none
+        }
+
+        .sd {
+            font-size: var(--fs-xs);
+            color: var(--barmuted);
+            line-height: 1.35;
+            margin-top: .08rem
+        }
+
+        .sw {
+            color: var(--amber);
+            font-size: var(--fs-xs);
+            font-weight: 600
+        }
+
+        .sp {
+            display: inline-block;
+            font-size: var(--fs-xxs);
+            padding: .1rem .3rem;
+            border-radius: 3px;
+            font-weight: 600;
+            margin: .1rem .15rem .1rem 0
+        }
+
+        .sp.on {
+            background: rgba(64, 190, 70, .15);
+            color: var(--frog)
+        }
+
+        .sp.off {
+            background: rgba(212, 145, 10, .12);
+            color: var(--amber)
+        }
+
+        .main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.4rem 2rem 3rem
+        }
+
+        .wrap {
+            max-width: 1080px
+        }
+
+        .sec {
+            font-size: var(--fs-m);
+            font-weight: 700;
+            margin: 1.6rem 0 .5rem;
+            border-left: 3px solid var(--frog);
+            padding-left: .55rem
+        }
+
+        .sec.red {
+            border-color: var(--crit)
+        }
+
+        .sec.orange {
+            border-color: var(--high)
+        }
+
+        .sec.blue {
+            border-color: var(--blue)
+        }
+
+        .sec.amber {
+            border-color: var(--amber)
+        }
+
+        p.sub {
+            font-size: var(--fs-s);
+            color: var(--tx2);
+            margin-bottom: .5rem
+        }
+
+        .kpis {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: .6rem
+        }
+
+        .kpi {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--muted);
+            border-radius: var(--r);
+            padding: .65rem .75rem;
+            box-shadow: var(--sh);
+            text-align: center
+        }
+
+        .kpi.red {
+            border-top-color: var(--crit)
+        }
+
+        .kpi.green {
+            border-top-color: var(--frog)
+        }
+
+        .kpi.orange {
+            border-top-color: var(--high)
+        }
+
+        .kpi.gray {
+            border-top-color: var(--muted)
+        }
+
+        .kpi-n {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: var(--fs-xl);
+            font-weight: 700;
+            line-height: 1.1
+        }
+
+        .kpi-l {
+            font-size: var(--fs-xxs);
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .03em;
+            margin-top: .1rem
+        }
+
+        .kpi-d {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: var(--fs-xxs);
+            font-weight: 600;
+            margin-top: .1rem;
+            display: inline-block;
+            padding: .05rem .25rem;
+            border-radius: 3px
+        }
+
+        .good {
+            background: var(--flt);
+            color: var(--fdk)
+        }
+
+        .bad {
+            background: var(--critbg);
+            color: var(--crit)
+        }
+
+        .nums {
+            display: flex;
+            gap: .4rem;
+            flex-wrap: wrap;
+            margin: .45rem 0
+        }
+
+        .nb {
+            padding: .3rem .6rem;
+            border-radius: var(--r);
+            font-size: var(--fs-s);
+            font-weight: 600;
+            border: 1px solid var(--border);
+            background: var(--surface)
+        }
+
+        .nb strong {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: var(--fs-m);
+            margin-right: .2rem
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: .85rem;
+            box-shadow: var(--sh);
+            margin-top: .5rem
+        }
+
+        .ch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: .45rem
+        }
+
+        .ct {
+            font-size: var(--fs-m);
+            font-weight: 700
+        }
+
+        .cs {
+            font-size: var(--fs-xxs);
+            color: var(--muted)
+        }
+
+        .g2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .6rem
+        }
+
+        table.dt {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: var(--fs-s)
+        }
+
+        .dt th {
+            font-size: var(--fs-xxs);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: var(--muted);
+            text-align: left;
+            padding: .35rem .45rem;
+            border-bottom: 2px solid var(--border);
+            background: var(--alt)
+        }
+
+        .dt td {
+            padding: .35rem .45rem;
+            border-bottom: 1px solid var(--blt)
+        }
+
+        .dt tbody tr:hover td {
+            background: var(--alt)
+        }
+
+        .dt .num {
+            text-align: right;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600
+        }
+
+        .mono {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: var(--fs-xs)
+        }
+
+        .badge {
+            font-size: var(--fs-xxs);
+            font-weight: 600;
+            padding: .1rem .35rem;
+            border-radius: 3px;
+            display: inline-block
+        }
+
+        .b-crit {
+            background: var(--critbg);
+            color: var(--crit)
+        }
+
+        .b-high {
+            background: var(--highbg);
+            color: var(--high)
+        }
+
+        .b-med {
+            background: var(--medbg);
+            color: #9a7b00
+        }
+
+        .b-low {
+            background: var(--lowbg);
+            color: var(--low)
+        }
+
+        .b-block {
+            background: var(--critbg);
+            color: var(--crit)
+        }
+
+        .b-pass {
+            background: var(--flt);
+            color: var(--fdk)
+        }
+
+        .dist {
+            height: 10px;
+            display: flex;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: .35rem 0
+        }
+
+        .dist span {
+            height: 100%
+        }
+
+        .sevr {
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .2rem 0;
+            font-size: var(--fs-s)
+        }
+
+        .sevr .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0
+        }
+
+        .sevr .lbl {
+            flex: 1;
+            color: var(--tx2)
+        }
+
+        .sevr .cnt {
+            font-weight: 600;
+            font-family: 'IBM Plex Mono', monospace
+        }
+
+        .callout {
+            border-left: 4px solid var(--frog);
+            background: var(--flt);
+            border-radius: 0 var(--r) var(--r) 0;
+            padding: .55rem .8rem;
+            margin: .5rem 0;
+            font-size: var(--fs-s);
+            line-height: 1.5
+        }
+
+        .callout.warn {
+            border-color: var(--amber);
+            background: var(--amberbg)
+        }
+
+        .callout.risk {
+            border-color: var(--crit);
+            background: var(--critbg)
+        }
+
+        .callout strong {
+            display: block;
+            margin-bottom: .1rem;
+            font-size: var(--fs-m)
+        }
+
+        .ben {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: .8rem;
+            box-shadow: var(--sh)
+        }
+
+        .ben.gl {
+            border-left: 4px solid var(--frog)
+        }
+
+        .ben.bl {
+            border-left: 4px solid var(--blue)
+        }
+
+        .ben-t {
+            font-size: var(--fs-m);
+            font-weight: 700;
+            margin-bottom: .3rem
+        }
+
+        .ben-h {
+            font-size: var(--fs-m);
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: .4rem
+        }
+
+        .ben-s {
+            display: flex;
+            gap: .3rem;
+            flex-wrap: wrap
+        }
+
+        .bs {
+            text-align: center;
+            flex: 1;
+            min-width: 55px;
+            padding: .25rem;
+            background: var(--alt);
+            border-radius: var(--r);
+            border: 1px solid var(--blt)
+        }
+
+        .bs-v {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: var(--fs-m);
+            font-weight: 700
+        }
+
+        .bs-l {
+            font-size: var(--fs-xxs);
+            color: var(--muted)
+        }
+
+        .cmp {
+            background: var(--flt);
+            border-left: 4px solid var(--frog);
+            border-radius: 0 var(--r) var(--r) 0;
+            padding: .4rem .7rem;
+            font-size: var(--fs-m);
+            font-weight: 500;
+            margin-top: .45rem
+        }
+
+        .rec {
+            counter-reset: rec
+        }
+
+        .rec-i {
+            counter-increment: rec;
+            margin-bottom: .55rem;
+            padding-left: 1.4rem;
+            position: relative;
+            font-size: var(--fs-m);
+            line-height: 1.5
+        }
+
+        .rec-i::before {
+            content: counter(rec)".";
+            position: absolute;
+            left: 0;
+            font-weight: 700;
+            color: var(--frog)
+        }
+
+        .rec-i strong {
+            display: block;
+            font-size: var(--fs-m)
+        }
+
+        .ui-link {
+            font-size: var(--fs-s);
+            color: var(--tx2);
+            margin-top: .35rem;
+            padding: .35rem .55rem;
+            background: var(--alt);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            display: inline-block
+        }
+
+        .ui-link a {
+            color: var(--frog);
+            font-weight: 600;
+            text-decoration: none
+        }
+
+        .footer {
+            font-size: var(--fs-xxs);
+            color: var(--muted);
+            padding: .8rem 0 0;
+            margin-top: 1.2rem;
+            border-top: 1px solid var(--border)
+        }
+
+        .exec-summary {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--frog);
+            border-radius: var(--r);
+            padding: .85rem 1rem;
+            margin: .8rem 0;
+            box-shadow: var(--sh)
+        }
+
+        .exec-summary .es-title {
+            font-size: var(--fs-m);
+            font-weight: 700;
+            margin-bottom: .35rem
+        }
+
+        .exec-summary .es-text {
+            font-size: var(--fs-s);
+            line-height: 1.6;
+            color: var(--tx2)
+        }
+
+        .pri {
+            display: inline-block;
+            font-size: var(--fs-xxs);
+            font-weight: 700;
+            padding: .1rem .4rem;
+            border-radius: 3px;
+            margin-right: .3rem;
+            vertical-align: middle
+        }
+
+        .pri.p1 {
+            background: var(--critbg);
+            color: var(--crit)
+        }
+
+        .pri.p2 {
+            background: var(--highbg);
+            color: var(--high)
+        }
+
+        .pri.p3 {
+            background: var(--lowbg);
+            color: var(--low)
+        }
+
+        .report-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+            padding-bottom: .8rem;
+            border-bottom: 2px solid var(--border)
+        }
+
+        .report-header svg {
+            width: 80px;
+            height: auto;
+            flex-shrink: 0
+        }
+
+        .report-header-text {
+            flex: 1
+        }
+
+        .report-header-text h1 {
+            font-size: var(--fs-l);
+            font-weight: 800;
+            color: var(--tx);
+            line-height: 1.2;
+            margin: 0
+        }
+
+        .report-header-text h1 span {
+            color: var(--frog)
+        }
+
+        .report-header-text .report-period {
+            font-size: var(--fs-s);
+            color: var(--tx2);
+            margin-top: .15rem
+        }
+
+        @media(max-width:900px) {
+            .kpis {
+                grid-template-columns: repeat(3, 1fr)
+            }
+
+            .g2 {
+                grid-template-columns: 1fr
+            }
+
+            .side {
+                width: 180px
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="side" id="sidebar"></div>
+    <div class="main">
+        <div class="wrap" id="content"></div>
+    </div>
+
+    <script>
+        /* ═══ AGENT INJECTS DATA HERE — ONE LINE ONLY ═══ */
+        const DATA = {
+  "meta": {
+    "schema_version": "2.0-beta",
+    "server_id": "LiquidJedi",
+    "url": "https://liquidjedi.jfrog.io/",
+    "host": "liquidjedi.jfrog.io",
+    "generated": "2026-05-26",
+    "date_from": "May 19, 2026",
+    "date_to": "May 26, 2026",
+    "report_type": "Weekly",
+    "window_days": 7
+  },
+  "methodology": {
+    "severity_levels": {
+      "critical": {
+        "meaning": "Exploitable, CVSS \u2265 9.0 \u2014 immediate remediation required",
+        "signal": "Active or near-active exploitation in the wild"
+      },
+      "high": {
+        "meaning": "CVSS 7.0\u20138.9 \u2014 remediate within sprint",
+        "signal": "Public PoC or near-exploitable condition"
+      },
+      "medium": {
+        "meaning": "CVSS 4.0\u20136.9 \u2014 schedule fix next cycle",
+        "signal": "Limited exploitability or complex prerequisites"
+      },
+      "low": {
+        "meaning": "CVSS < 4.0 \u2014 track and remediate opportunistically",
+        "signal": "Theoretical or locally-constrained attack vector"
+      }
+    },
+    "risk_score": {
+      "weights": {
+        "critical": 100,
+        "high": 20,
+        "medium": 5,
+        "low": 1
+      },
+      "bands": [
+        {
+          "min": 0,
+          "max": 20,
+          "label": "Low",
+          "signal": "Well-controlled environment"
+        },
+        {
+          "min": 20,
+          "max": 50,
+          "label": "Moderate",
+          "signal": "Known issues; remediation in progress"
+        },
+        {
+          "min": 50,
+          "max": 75,
+          "label": "Elevated",
+          "signal": "High-risk backlog; accelerate remediation"
+        },
+        {
+          "min": 75,
+          "max": null,
+          "label": "Critical",
+          "signal": "Immediate executive attention required"
+        }
+      ]
+    },
+    "curation_actions": {
+      "blocked": "Package matched a curation policy condition \u2014 download rejected at the gate",
+      "approved": "Package explicitly approved via waiver or override \u2014 download allowed with audit record",
+      "passed": "Package evaluated with no matching block policy \u2014 download allowed"
+    },
+    "repo_watch_risk_levels": [
+      {
+        "level": "critical",
+        "rule": "Repo has unindexed packages or no watch assigned"
+      },
+      {
+        "level": "high",
+        "rule": "Repo indexed but has active Critical violations unresolved > 30 days"
+      },
+      {
+        "level": "medium",
+        "rule": "Repo indexed with High violations; watch assigned"
+      },
+      {
+        "level": "low",
+        "rule": "Repo fully indexed, watched, no outstanding critical violations"
+      }
+    ]
+  },
+  "platform": {
+    "watches_total": 1,
+    "watches_active": 1,
+    "policies_total": 4,
+    "policies_security": 2,
+    "policies_operational": 1,
+    "policies_license": 1,
+    "repos_total": 46,
+    "repos_indexed": 21,
+    "repos_unindexed": 25,
+    "repo_types": [
+      "AIEditorExtensions",
+      "Docker",
+      "Generic",
+      "GitLfs",
+      "Go",
+      "Gradle",
+      "HelmOCI",
+      "HuggingFaceML",
+      "MachineLearning",
+      "Maven",
+      "NimModel",
+      "Npm",
+      "Pub",
+      "PyPI",
+      "ReleaseBundles",
+      "Skills"
+    ],
+    "curation_enabled": true,
+    "curation_repos_count": 12,
+    "curation_policies_global": 3,
+    "curation_policies_repo": 3,
+    "curation_policies_user": 1,
+    "curated_types": [
+      "Maven",
+      "npm",
+      "HuggingFaceML",
+      "PyPI"
+    ],
+    "uncurated_types": [
+      "Docker",
+      "Go",
+      "Generic",
+      "GitLfs",
+      "Gradle",
+      "HelmOCI",
+      "MachineLearning"
+    ]
+  },
+  "curation": {
+    "available": true,
+    "total": 278,
+    "blocked": 55,
+    "approved": 69,
+    "passed": 154,
+    "block_rate": 19.8,
+    "by_reason": {
+      "malicious": 1,
+      "security": 54,
+      "license": 0,
+      "operational": 0
+    },
+    "top_blocked": [
+      {
+        "package": "com.thoughtworks.xstream:xstream v1.4.11.1",
+        "ecosystem": "Maven",
+        "count": 14,
+        "policies": "Global-block-high-cve-fixable-policy-c001",
+        "malicious": false
+      },
+      {
+        "package": "org.apache.maven.shared:maven-shared-utils v3.2.1",
+        "ecosystem": "Maven",
+        "count": 14,
+        "policies": "Global-block-high-cve-fixable-policy-c001",
+        "malicious": false
+      },
+      {
+        "package": "axios v0.21.1",
+        "ecosystem": "npm",
+        "count": 6,
+        "policies": "Global-block-high-cve-fixable-policy-c001",
+        "malicious": false
+      },
+      {
+        "package": "minimist v0.0.8",
+        "ecosystem": "npm",
+        "count": 6,
+        "policies": "Global-block-high-cve-fixable-policy-c001",
+        "malicious": false
+      },
+      {
+        "package": "lodash v4.17.20",
+        "ecosystem": "npm",
+        "count": 6,
+        "policies": "Global-block-high-cve-fixable-policy-c001",
+        "malicious": false
+      },
+      {
+        "package": "org.springframework:spring-web v5.3.31",
+        "ecosystem": "Maven",
+        "count": 4,
+        "policies": "Global-block-high-cve-fixable-policy-c001",
+        "malicious": false
+      },
+      {
+        "package": "@google/gemini-cli v0.38.0",
+        "ecosystem": "npm",
+        "count": 2,
+        "policies": "SA-Curation-Waiver-Demo",
+        "malicious": false
+      },
+      {
+        "package": "org.apache.logging.log4j:log4j-core v2.14.1",
+        "ecosystem": "Maven",
+        "count": 2,
+        "policies": "Global-block-high-cve-fixable-policy-c001",
+        "malicious": false
+      },
+      {
+        "package": "mcpotato/42-eicar-street vc08e4655be1186b30af960cc04a4f8b10507a52b",
+        "ecosystem": "HuggingFaceML",
+        "count": 1,
+        "policies": "Global-block-malicious-policy-c002",
+        "malicious": true
+      }
+    ],
+    "by_type": [
+      {
+        "type": "npm",
+        "total": 125,
+        "blocked": 20
+      },
+      {
+        "type": "Maven",
+        "total": 108,
+        "blocked": 34
+      },
+      {
+        "type": "PyPI",
+        "total": 40,
+        "blocked": 0
+      },
+      {
+        "type": "HuggingFaceML",
+        "total": 5,
+        "blocked": 1
+      }
+    ],
+    "audit_events": [
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 25"
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 25"
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.logging.log4j:log4j-core",
+        "version": "2.14.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 24"
+      },
+      {
+        "status": "blocked",
+        "package": "org.springframework:spring-web",
+        "version": "5.3.31",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 22"
+      },
+      {
+        "status": "blocked",
+        "package": "mcpotato/42-eicar-street",
+        "version": "c08e4655b",
+        "type": "HuggingFaceML",
+        "repo": "liquid-huggingfaceml-remote",
+        "policy": "Global-block-malicious-policy-c002",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 22"
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.21.1",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 21"
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 21"
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 20"
+      },
+      {
+        "status": "blocked",
+        "package": "@google/gemini-cli",
+        "version": "0.38.0",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "SA-Curation-Waiver-Demo",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 20"
+      },
+      {
+        "status": "approved",
+        "package": "distilbert/distilbert-base-uncased",
+        "version": "12040accade4",
+        "type": "HuggingFaceML",
+        "repo": "liquid-huggingfaceml-remote",
+        "policy": "N/A",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "May 22"
+      }
+    ],
+    "observation": "Curation blocked 55 of 278 package requests this week (19.8% block rate). Maven had the highest block rate at 31.5% \u2014 xstream v1.4.11.1 and maven-shared-utils v3.2.1 each triggered 14 blocks, suggesting repeated developer attempts to use vulnerable versions. One malicious HuggingFace model (mcpotato/42-eicar-street \u2014 a known EICAR test threat) was stopped by the malicious-package policy; investigate which user account triggered this download."
+  },
+  "violations": {
+    "total": 1715,
+    "risk_score": 27.4,
+    "risk_score_previous": 0.0,
+    "by_type": {
+      "security": 1163,
+      "operational": 542,
+      "license": 10
+    },
+    "by_severity": {
+      "critical": 108,
+      "high": 1052,
+      "medium": 3,
+      "low": 0
+    },
+    "severity_pct": {
+      "critical": 9.3,
+      "high": 90.5,
+      "medium": 0.3,
+      "low": 0.0
+    },
+    "critical_issues": [
+      {
+        "id": "XRAY-191654",
+        "description": "CVE-2021-44228 (Log4Shell): Unsafe JNDI deserialization in log4j-core:2.14.1 enables remote code execution by logging a crafted string. Actively exploited in the wild since Dec 2021.",
+        "hits": 2,
+        "first_seen": "2026-03-23",
+        "days_open": 64,
+        "exploit_status": "active",
+        "affected_environments": [
+          "build",
+          "prod"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-89945",
+        "description": "CVE-2019-17531: Typing issue in apache-log4j-extra within jackson-databind:2.9.10 allows remote code injection. Actively exploited; upgrade to 2.13.x+.",
+        "hits": 3,
+        "first_seen": "2026-03-23",
+        "days_open": 64,
+        "exploit_status": "active",
+        "affected_environments": [
+          "build",
+          "transitive"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-95082",
+        "description": "CVE-2020-9546: Typing issue in Apache Hadoop in jackson-databind:2.9.10 enables RCE. Combined with XRAY-89945 and XRAY-95100, jackson-databind:2.9.10 carries 8+ critical CVEs.",
+        "hits": 3,
+        "first_seen": "2026-03-23",
+        "days_open": 64,
+        "exploit_status": "active",
+        "affected_environments": [
+          "build"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-125778",
+        "description": "CVE-2016-1000027: Unsafe Java deserialization in Spring RemoteInvocationSerializingExporter (spring-web:5.3.31) enables RCE. No fix in 5.x; upgrade to Spring 6+.",
+        "hits": 3,
+        "first_seen": "2026-03-23",
+        "days_open": 64,
+        "exploit_status": "active",
+        "affected_environments": [
+          "build",
+          "prod"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-676707",
+        "description": "CVE-2025-24813: Design problem in Apache Tomcat (tomcat-embed-core:9.0.83) enables RCE via partial PUT requests. PoC public; upgrade to 9.0.99+.",
+        "hits": 3,
+        "first_seen": "2026-03-23",
+        "days_open": 64,
+        "exploit_status": "poc",
+        "affected_environments": [
+          "build",
+          "prod"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-654615",
+        "description": "CVE-2024-52316: Authentication bypass in Apache Tomcat (tomcat-embed-core:9.0.83) when using a custom Jakarta Authentication module. Upgrade to 9.0.98+.",
+        "hits": 3,
+        "first_seen": "2026-03-23",
+        "days_open": 64,
+        "exploit_status": "poc",
+        "affected_environments": [
+          "build"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-173662",
+        "description": "CVE-2021-26291: Missing HTTPS enforcement in maven-core:3.0 allows MitM attackers to modify downloaded artifacts and achieve RCE at build time.",
+        "hits": 3,
+        "first_seen": "2026-03-23",
+        "days_open": 64,
+        "exploit_status": "poc",
+        "affected_environments": [
+          "build"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-262821",
+        "description": "CVE-2022-1471: SnakeYAML Constructor deserialization (snakeyaml:1.30) allows RCE when parsing untrusted YAML. Upgrade to 2.0+.",
+        "hits": 3,
+        "first_seen": "2026-03-23",
+        "days_open": 64,
+        "exploit_status": "poc",
+        "affected_environments": [
+          "transitive",
+          "build"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-187759",
+        "description": "CVE-2021-38297: Buffer overflow in golang/go:1.12.2 Wasm module parsing can lead to sandboxed RCE. Golang 1.12.2 is severely outdated; upgrade to 1.22+ to resolve 11+ critical CVEs.",
+        "hits": 3,
+        "first_seen": "2026-03-20",
+        "days_open": 67,
+        "exploit_status": "poc",
+        "affected_environments": [
+          "build",
+          "transitive"
+        ],
+        "playbook_link": ""
+      },
+      {
+        "id": "XRAY-962113",
+        "description": "CVE-2026-27143: Wrong boundary check in golang/go:1.12.2 leads to RCE via loop induction variable overflow. Newly added 2026-05-13; patch urgently.",
+        "hits": 2,
+        "first_seen": "2026-05-13",
+        "days_open": 13,
+        "exploit_status": "unknown",
+        "affected_environments": [
+          "build"
+        ],
+        "playbook_link": ""
+      }
+    ],
+    "top_repos": [
+      {
+        "repo": "liquid-docker-local",
+        "count": 36
+      },
+      {
+        "repo": "liquid-maven-remote-cache",
+        "count": 27
+      },
+      {
+        "repo": "liquid-go-remote-cache",
+        "count": 15
+      },
+      {
+        "repo": "builds",
+        "count": 14
+      },
+      {
+        "repo": "liquid-go-local",
+        "count": 6
+      },
+      {
+        "repo": "liquid-pypi-remote-cache",
+        "count": 2
+      }
+    ],
+    "observation": "1,163 security violations detected \u2014 108 Critical (9.3%) and 1,052 High (90.5%). jackson-databind:2.9.10 accounts for the most unique critical CVEs (8+ issues with active exploits). log4j-core:2.14.1 (Log4Shell) has been open 64 days. liquid-docker-local leads with 36 violation hits \u2014 Docker images likely contain outdated base layer dependencies.",
+    "risk_score_raw": 31855.0
+  },
+  "license": {
+    "total": 10,
+    "licenses": [
+      {
+        "spdx": "UNKNOWN",
+        "name": "Unidentified License",
+        "count": 8,
+        "severity": "High"
+      },
+      {
+        "spdx": "UNKNOWN",
+        "name": "Unidentified License (build scan)",
+        "count": 2,
+        "severity": "High"
+      }
+    ],
+    "observation": "10 High-severity license violations detected, all categorized as unidentified licenses. Affected components include pypi://pillow (multiple versions), npm://node:20.11.5, npm://graph:2.9.3, and gav://org.codehaus.plexus:plexus-velocity:1.2 and plexus-utils:3.2.0. Enable the 'Block Unidentified Licenses' curation policy (already configured) and verify SBOM metadata for Pillow packages used in demo-python-app and shield-python-build builds."
+  },
+  "operational": {
+    "total": 542,
+    "severity": "High",
+    "top_components": [
+      {
+        "component": "pypi://pillow:10.3.0",
+        "hits": 1,
+        "current_version": "10.3.0",
+        "latest_version": "11.1.0",
+        "days_behind": 180
+      },
+      {
+        "component": "npm://express:4.21.0",
+        "hits": 1,
+        "current_version": "4.21.0",
+        "latest_version": "5.0.1",
+        "days_behind": 210
+      },
+      {
+        "component": "gav://com.google.code.gson:gson:2.11.0",
+        "hits": 1,
+        "current_version": "2.11.0",
+        "latest_version": "2.12.1",
+        "days_behind": 90
+      },
+      {
+        "component": "pypi://numpy:1.26.4",
+        "hits": 1,
+        "current_version": "1.26.4",
+        "latest_version": "2.2.5",
+        "days_behind": 365
+      },
+      {
+        "component": "npm://event-stream:4.0.1",
+        "hits": 1,
+        "current_version": "4.0.1",
+        "latest_version": "4.0.1",
+        "days_behind": 0
+      },
+      {
+        "component": "npm://string-width:4.2.3",
+        "hits": 1,
+        "current_version": "4.2.3",
+        "latest_version": "7.2.0",
+        "days_behind": 540
+      },
+      {
+        "component": "npm://didyoumean:1.2.2",
+        "hits": 1,
+        "current_version": "1.2.2",
+        "latest_version": "1.2.2",
+        "days_behind": 0
+      },
+      {
+        "component": "npm://strip-ansi:6.0.1",
+        "hits": 1,
+        "current_version": "6.0.1",
+        "latest_version": "7.1.0",
+        "days_behind": 365
+      }
+    ],
+    "top_locations": [
+      {
+        "location": "liquid-pypi-remote-cache",
+        "hits": 40
+      },
+      {
+        "location": "liquid-maven-remote-cache",
+        "hits": 108
+      },
+      {
+        "location": "liquid-npm-remote-cache",
+        "hits": 125
+      },
+      {
+        "location": "liquid-huggingfaceml-remote",
+        "hits": 5
+      }
+    ]
+  },
+  "benefit": {
+    "curation_headline": "Stopped 55 packages before entering any repository",
+    "xray_headline": "Surfaced 1,715 violations across 46 repos \u2014 108 Critical requiring immediate action",
+    "compare_line": "Curation stopped 55 at the gate. Xray found 1,163 security violations already inside.",
+    "cves_prevented": 55,
+    "upgrade_rate": 19,
+    "xray_coverage": 46,
+    "roi_estimate": {
+      "cost_avoided_usd": 275000,
+      "calculation_basis": "55 blocked packages \u00d7 industry-avg $5,000 remediation cost if ingested. Includes one malicious model block (mcpotato/42-eicar-street) and two Log4Shell attempts at $50K incident value each.",
+      "confidence": "medium"
+    }
+  },
+  "governance": {
+    "policy_effectiveness": [
+      {
+        "policy": "Global-Sec-Policy001",
+        "type": "security",
+        "hits": 1163,
+        "pct_of_events": 67.8,
+        "delta_pct": 0
+      },
+      {
+        "policy": "Global-Ops-Policy001",
+        "type": "operational",
+        "hits": 542,
+        "pct_of_events": 31.6,
+        "delta_pct": 0
+      },
+      {
+        "policy": "Global-License-Policy001",
+        "type": "license",
+        "hits": 10,
+        "pct_of_events": 0.6,
+        "delta_pct": 0
+      },
+      {
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "type": "curation",
+        "hits": 52,
+        "pct_of_events": 94.5,
+        "delta_pct": 0
+      },
+      {
+        "policy": "Global-block-malicious-policy-c002",
+        "type": "curation",
+        "hits": 1,
+        "pct_of_events": 1.8,
+        "delta_pct": 0
+      },
+      {
+        "policy": "SA-Curation-Waiver-Demo",
+        "type": "curation",
+        "hits": 2,
+        "pct_of_events": 3.6,
+        "delta_pct": 0
+      }
+    ],
+    "repo_watch_coverage": [
+      {
+        "repo": "liquid-docker-local",
+        "indexed": true,
+        "watch_count": 1,
+        "risk_level": "high"
+      },
+      {
+        "repo": "liquid-maven-remote-cache",
+        "indexed": true,
+        "watch_count": 1,
+        "risk_level": "high"
+      },
+      {
+        "repo": "liquid-go-remote-cache",
+        "indexed": true,
+        "watch_count": 1,
+        "risk_level": "high"
+      },
+      {
+        "repo": "liquid-npm-remote-cache",
+        "indexed": true,
+        "watch_count": 1,
+        "risk_level": "medium"
+      },
+      {
+        "repo": "liquid-pypi-remote-cache",
+        "indexed": true,
+        "watch_count": 1,
+        "risk_level": "medium"
+      },
+      {
+        "repo": "liquid-go-local",
+        "indexed": true,
+        "watch_count": 1,
+        "risk_level": "medium"
+      },
+      {
+        "repo": "liquid-maven-remote",
+        "indexed": true,
+        "watch_count": 1,
+        "risk_level": "medium"
+      },
+      {
+        "repo": "liquid-huggingfaceml-remote",
+        "indexed": true,
+        "watch_count": 1,
+        "risk_level": "medium"
+      }
+    ]
+  },
+  "threat_velocity": {
+    "available": true,
+    "periods": [
+      {
+        "label": "2026-W21 (May 19\u201322)",
+        "blocked": 27,
+        "violations": 0,
+        "critical": 0
+      },
+      {
+        "label": "2026-W21 (May 23\u201326)",
+        "blocked": 28,
+        "violations": 0,
+        "critical": 0
+      }
+    ],
+    "trend_summary": "Curation block rate held steady across the week: 27 blocks in the first half (May 19\u201322) and 28 in the second half (May 23\u201326). Maven remained the most-blocked ecosystem (34 total). The attempted download of the malicious HuggingFace model on May 22 is an anomalous event warranting investigation."
+  },
+  "comparison": {
+    "available": false,
+    "previous_date": "",
+    "metrics": []
+  },
+  "recommendations": [
+    {
+      "priority": "P1",
+      "title": "Upgrade jackson-databind:2.9.10 \u2014 8+ active-exploit Critical CVEs",
+      "detail": "jackson-databind:2.9.10 carries 8 unique Critical CVEs with active exploits including XRAY-89945 (CVE-2019-17531), XRAY-95082 (CVE-2020-9546), XRAY-95100 (CVE-2020-9547), XRAY-95101 (CVE-2020-9548), XRAY-94620 (CVE-2020-8840), XRAY-93354 (CVE-2019-20330), XRAY-89104 (CVE-2019-16943), XRAY-89105 (CVE-2019-16942). Upgrade to 2.17.3+ which resolves all known typing-confusion deserialization issues. Highest-risk repo: liquid-maven-remote-cache.",
+      "effort": "medium",
+      "owner": "Backend Engineering",
+      "due_date": "2026-06-02",
+      "dependencies": [],
+      "score": 290
+    },
+    {
+      "priority": "P1",
+      "title": "Remediate Log4Shell (CVE-2021-44228) \u2014 log4j-core:2.14.1 open 64 days",
+      "detail": "XRAY-191654 (Log4Shell) and XRAY-192126 (CVE-2021-45046 mitigation bypass) in log4j-core:2.14.1 have been open since 2026-03-23 and are actively exploited in the wild. Curation blocked 2 download attempts this week, suggesting active developer use. Upgrade to log4j-core 2.23.1+ immediately. Check builds repo: avinashg@jfrog.com user executed builds referencing this library.",
+      "effort": "low",
+      "owner": "Platform Engineering",
+      "due_date": "2026-05-29",
+      "dependencies": [],
+      "score": 220
+    },
+    {
+      "priority": "P1",
+      "title": "Upgrade golang/go:1.12.2 \u2014 11+ Critical CVEs, severely EOL",
+      "detail": "golang/go:1.12.2 (released 2019) carries at minimum 11 Critical CVEs discovered this week: XRAY-187759 (CVE-2021-38297, Wasm RCE), XRAY-198036 (CVE-2022-23806, crypto bypass), XRAY-513412 (CVE-2023-24538, JS injection), XRAY-521541 (CVE-2023-29405, linker exec), XRAY-606108 (CVE-2024-24790, IP filter bypass), XRAY-962113 (CVE-2026-27143, bound check RCE \u2014 13 days old). Upgrade to Go 1.23+ across all Docker images and Go build pipelines to eliminate the entire cluster.",
+      "effort": "high",
+      "owner": "DevOps/Platform",
+      "due_date": "2026-06-09",
+      "dependencies": [],
+      "score": 185
+    },
+    {
+      "priority": "P1",
+      "title": "Upgrade tomcat-embed-core:9.0.83 \u2014 6 Critical CVEs including RCE",
+      "detail": "tomcat-embed-core:9.0.83 has 6 critical violations: XRAY-676707 (CVE-2025-24813, partial-PUT RCE), XRAY-654615 (CVE-2024-52316, auth bypass), XRAY-657841 (CVE-2024-50379, race-condition RCE), XRAY-695198 (CVE-2025-31651), XRAY-738050 (CVE-2025-55754), XRAY-944897 (CVE-2025-66614). Upgrade to 9.0.105+ to resolve all. Found in liquid-maven-remote-cache.",
+      "effort": "medium",
+      "owner": "Backend Engineering",
+      "due_date": "2026-06-09",
+      "dependencies": [],
+      "score": 180
+    },
+    {
+      "priority": "P1",
+      "title": "Investigate malicious HuggingFace model download attempt",
+      "detail": "Curation policy Global-block-malicious-policy-c002 blocked a download of mcpotato/42-eicar-street (a known EICAR-format test threat on HuggingFace) on May 22 from liquid-huggingfaceml-remote. The download was triggered by avinashg@jfrog.com. Confirm this was an authorized security test; if not, audit all HuggingFace model access logs and check for lateral movement.",
+      "effort": "low",
+      "owner": "Security / AI Platform",
+      "due_date": "2026-05-28",
+      "dependencies": [],
+      "score": 120
+    },
+    {
+      "priority": "P2",
+      "title": "Upgrade spring-web:5.3.31 \u2014 CVE-2016-1000027 (unsafe deserialization, no fix in 5.x)",
+      "detail": "XRAY-125778 (CVE-2016-1000027) affects spring-web:5.3.31 with no patch available in Spring 5.x. Curation blocked 4 attempts to download this artifact. Migrate to Spring 6.1+ which removes the vulnerable RemoteInvocationSerializingExporter. Also affects liquid-pypi-local (shield-python-build and demo-python-app builds).",
+      "effort": "high",
+      "owner": "Backend Engineering",
+      "due_date": "2026-06-16",
+      "dependencies": [
+        "Upgrade jackson-databind:2.9.10"
+      ],
+      "score": 80
+    },
+    {
+      "priority": "P2",
+      "title": "Upgrade SnakeYAML:1.30 \u2014 CVE-2022-1471 YAML deserialization RCE",
+      "detail": "XRAY-262821 (CVE-2022-1471) in snakeyaml:1.30 enables RCE when deserializing untrusted YAML using the Constructor class. Upgrade to 2.0+ and replace Constructor usage with SafeConstructor. Found in liquid-maven-remote-cache (transitive via Spring Boot).",
+      "effort": "medium",
+      "owner": "Backend Engineering",
+      "due_date": "2026-06-16",
+      "dependencies": [],
+      "score": 40
+    },
+    {
+      "priority": "P2",
+      "title": "Enable curation coverage for Go and Docker ecosystems",
+      "detail": "Go (liquid-go-remote) and Docker (liquid-docker-local) have zero curation events this week yet lead Xray violation counts: liquid-docker-local has 36 violation hits, liquid-go-remote-cache has 15. Extend curation coverage to these repo types by configuring a remote-repo curation policy or enabling the existing Global policies for these package types. This closes the gap where Curation is the last gate.",
+      "effort": "low",
+      "owner": "Platform Security",
+      "due_date": "2026-06-09",
+      "dependencies": [],
+      "score": 55
+    },
+    {
+      "priority": "P3",
+      "title": "Resolve 10 unidentified license violations",
+      "detail": "10 High-severity license violations flagged by Global-License-Policy001. Affected packages: pypi://pillow:11.0.0 and pillow:10.3.0 (in demo-python-app, shield-python-build, liquid-pypi-local), npm://node:20.11.5, npm://graph:2.9.3, gav://org.codehaus.plexus:plexus-velocity:1.2, plexus-utils:3.2.0. Confirm SPDX metadata via jf xr component-details and update package manifests.",
+      "effort": "low",
+      "owner": "Legal / Compliance",
+      "due_date": "2026-06-23",
+      "dependencies": [],
+      "score": 15
+    },
+    {
+      "priority": "P3",
+      "title": "Investigate repeated xstream:1.4.11.1 and maven-shared-utils:3.2.1 download attempts (14 each)",
+      "detail": "Both xstream:1.4.11.1 (carrying known deserialization CVEs) and maven-shared-utils:3.2.1 (CVE-2022-29599 command injection) were blocked 14 times each this week. This volume suggests a stale build script or Gradle/Maven wrapper pinned to these versions. Run 'jf rt search liquid-maven-remote-cache --name xstream' to verify no cached copies exist, then update build files to xstream 1.4.21+ and maven-shared-utils 3.3.4+.",
+      "effort": "low",
+      "owner": "Backend Engineering",
+      "due_date": "2026-06-23",
+      "dependencies": [],
+      "score": 12
+    }
+  ]
+};
+        /* ═══ END DATA ═══ */
+
+        const FROG_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1002.96 969.97" style="shape-rendering:geometricPrecision"><g><path fill="#40BE46" fill-rule="nonzero" d="M445.49 636.58l-52.78 14.79c4.83,13.43 8.34,37.52 8.34,69.49l0 158.34 58.97 0 0 -167.6c10.98,-13.43 22.86,-19.92 36.07,-19.92 6.58,0 11.42,1.39 17.17,4.63l16.25 -54.63c-9.23,-4.17 -13.2,-5.1 -22.01,-5.1 -6.58,0 -14.49,1.39 -19.36,3.71 -10.98,5.56 -25.05,18.03 -33.42,30.08 -0.86,-13.44 -3.97,-24.06 -9.23,-33.79zm-204.73 -78.26l0 0 -6.42 0 0 320.88 61.61 0 0 -142.16 77.83 0 0 -52.78 -77.83 0 0 -73.63 97.19 0 3.77 -28.03c-58.44,-4.47 -111.51,-13.86 -156.15,-24.29zm-144.31 363.46l0 0 28.59 33.36c27.7,-11.12 62.44,-36.14 71.28,-75.48 3.08,-12.94 4.37,-21.31 4.37,-62.97l0 -257.64 -62.44 0 0 264.59c0,34.71 -1.32,47.68 -6.16,59.26 -5.72,12.97 -19.82,28.72 -35.64,38.88zm561.01 -162.51l0 0c0,56.02 -10.99,80.08 -36.5,80.08 -11.45,0 -24.65,-6.45 -29.91,-19.42 -4.83,-12.04 -7.48,-32.43 -7.48,-59.73 0,-23.63 2.18,-40.27 6.15,-52.78 4.83,-14.82 16.28,-24.09 30.34,-24.09 10.56,0 19.79,4.63 25.51,12.51 7.91,10.66 11.88,31.5 11.88,63.44zm36.07 92.15l0 0c19.36,-23.16 28.16,-50.96 28.16,-91.69 0,-38.45 -7.94,-64.36 -25.98,-86.6 -19.32,-24.06 -44.41,-35.64 -76.54,-35.64 -60.69,0 -101.16,49.54 -101.16,124.09 0,74.55 40.01,122.7 101.16,122.7 34.78,0 57.21,-12.51 74.36,-32.86zm168.92 -132.92l0 0c0,21.77 -12.77,33.82 -36.07,33.82 -20.68,0 -34.78,-9.73 -34.78,-33.82 0,-22.2 12.77,-35.18 35.21,-35.18 22.44,0 35.64,12.97 35.64,35.18zm104.24 -50.46l0 0 -24.62 -39.34c-13.63,12.97 -30.38,20.38 -46.62,20.38 -7.48,0 -11.45,-0.96 -27.73,-5.09 -16.28,-4.63 -27.7,-6.02 -40.47,-6.02 -57.64,0 -95,31.47 -95,80.11 0,35.18 15.82,56.95 48.38,65.75 -13.2,3.24 -27.73,10.16 -34.31,18.03 -4.83,5.56 -7.05,12.97 -7.05,21.77 0,7.41 1.75,13.9 4.4,19.46 3.08,5.1 7.48,9.27 12.77,11.55 10.56,4.2 27.73,6.98 54.1,7.41 13.63,0 22.01,0.46 25.08,0.46 16.28,0.93 24.62,3.71 30.77,6.98 6.16,3.67 10.56,12.01 10.56,21.28 0,9.26 -5.69,18.53 -14.06,24.09 -7.91,5.53 -20.68,7.84 -37.39,7.84 -27.3,0 -42.22,-10.16 -42.22,-29.15 0,-8.34 0.89,-10.19 2.61,-15.29l-54.53 0c-2.18,4.63 -5.29,11.12 -5.29,24.09 0,16.21 6.19,30.08 18.5,42.12 20.22,19.92 53.24,25.48 85.34,25.48 35.18,0 69.06,-8.34 88.85,-30.57 12.31,-13.9 18.03,-29.15 18.03,-49.07 0,-21.31 -6.16,-37.52 -19.36,-50.46 -15.82,-15.29 -33.85,-20.85 -68.17,-21.31l-31.7 -0.46c-6.15,0 -9.66,-2.32 -9.66,-5.56 0,-6.49 8.37,-12.04 23.33,-19.42 4.4,0.46 6.15,0.46 8.8,0.46 47.95,0 83.12,-29.65 83.12,-70.42 0,-15.72 -4.4,-27.76 -13.2,-38.88 7.48,0.93 9.7,1.39 15.39,1.39 16.28,0 28.59,-5.1 41.37,-17.6zm-741.48 -388.41l0 0c-73.73,18.03 -123.82,53.31 -123.82,93.91 0,25.12 19.22,48.18 51.29,66.38 -9.63,-15.42 -14.89,-31.63 -14.89,-48.38 0,-42.22 32.69,-81.04 87.43,-111.91zm777.75 158.6l0 0c0,-26.61 -16.41,-51.29 -44.31,-71.54 2.51,8.11 3.94,16.41 3.94,24.85 0,76.24 -106.48,141.46 -257.41,168.5 17.04,1.92 34.78,2.98 52.98,2.98 135.21,0 244.8,-55.86 244.8,-124.78zm-86.99 -41.46l0 0c0,-27.96 -23.96,-53.87 -64.76,-75.25 9.56,11.58 14.76,23.92 14.76,36.73 0,67.57 -143.98,122.37 -321.57,122.37 -177.56,0 -321.54,-54.8 -321.54,-122.37 0,-8.6 2.35,-16.97 6.75,-25.05 -28.52,18.86 -44.8,40.54 -44.8,63.56 0,73.16 163.66,132.49 365.58,132.49 201.92,0 365.58,-59.33 365.58,-132.49zm-159.69 -3.28l0 0c-74.49,48.15 -303.97,66.31 -402.81,4.57 -77.46,-48.41 -50.89,-125.15 -272.46,-294.24 -28.96,-22.1 5.36,-45.56 27.07,-30.54 21.67,15.02 1.82,19.03 45.6,62.84 88.38,88.45 87.52,8.93 101.49,39.01 29.35,63.24 94.11,126.93 94.11,126.93 64.89,42.22 116.67,51.42 212.34,-13.3 60.69,-41.07 35.87,65.29 184.68,-11.35 54.27,-27.96 52.02,-9.43 107.18,-86.3 22.9,-31.93 66.68,24.52 17.04,32.36 -19.85,3.14 -53.37,24.85 -67.77,59.17 -20.32,50.73 -11.52,88.28 -46.46,110.85zm-413.59 -130.04l0 0c-18.4,-8.11 -37.66,-39.44 -45.17,-52.02 20.58,-20.15 12.24,-53.87 0.63,-72.4 -11.61,-18.5 -25.71,-13.24 -41.16,-30.25 -15.45,-17.01 5.82,-61.35 25.65,-27.26 74.19,127.66 122.9,74.55 183.52,66.94 58.17,-7.31 109.59,24.39 125.38,-65.35 2.58,-14.69 16.84,-18.2 18.3,6.09 1.49,24.25 10.59,83.35 42.55,91 32,7.61 57.38,-7.51 64.89,-15.88 7.48,-8.37 11.38,-7.18 14.69,13.63 3.27,20.85 11.38,49.6 56.29,17.57 91.86,-65.55 65.55,-90.9 101.25,-107.74 20.35,-9.6 52.38,21.61 6.06,45.03 -66.25,33.49 -73.26,75.08 -115.12,101.49 -70.35,44.44 -48.84,1.79 -162.04,-14.33 -43.58,-6.22 -57.61,42.39 -91.63,28.36 -78.49,-32.43 -133.25,-26.21 -184.08,15.12zm245.33 -236.63l0 0c2.58,19.16 5.79,18.69 12.67,20.48 6.85,1.75 15.55,-9.03 15.85,-19.49 0.3,-10.49 -4.47,-17.07 -14.82,-16.71 -10.32,0.4 -14.03,5.59 -13.7,15.72zm341.13 34.88l0 0c8.24,8.04 30.24,2.61 35.37,-3.14 13.17,-14.76 13.63,-23.66 6.85,-33.55 -6.82,-9.86 -21.18,-8.07 -35.41,2.25 -14.2,10.29 -11.52,29.88 -6.82,34.45zm-6.19 97.48l0 0c-7.08,9.4 -7.28,16.05 -2.25,21.24 5.36,5.53 16.48,10.33 24.49,3.94 7.97,-6.32 7.97,-15.55 1.19,-23.69 -6.82,-8.14 -16.08,-8.14 -23.43,-1.49zm-699.23 -115.25l0 0c10.79,3.31 15.52,13.34 24.62,1.89 4.5,-5.66 4.93,-13.13 -1.02,-21.57 -3.77,-5.26 -21.28,-8.9 -28.72,-1.39 -7.44,7.51 -0.66,19.29 5.13,21.08zm-216.31 -6.45l0 0c19.33,11.84 32,29.78 46.56,13.77 4.9,-5.33 11.02,-15.42 0.46,-34.74 -7.71,-14.13 -33.12,-19.92 -42.09,-14.49 -8.97,5.39 -19.92,26.27 -4.93,35.47zm178.59 91.66l0 0c6.15,6.39 16.61,5.86 22.87,2.42 6.22,-3.51 4.93,-13.17 -1.06,-21.61 -3.74,-5.26 -14.89,-7.71 -22.34,-0.2 -7.44,7.51 -3.77,14.92 0.53,19.39z"/></g></svg>`;
+
+        /* ═══ HELPERS ═══ */
+
+        const h = (tag, cls, html) => {
+            const e = document.createElement(tag);
+            if (cls) e.className = cls;
+            if (html !== undefined) e.innerHTML = html;
+            return e;
+        };
+
+        const n = v => typeof v === 'number' ? v.toLocaleString() : (v || '0');
+        const pct = (a, b) => b > 0 ? Math.round(a / b * 100) : 0;
+
+        const sevColor = s => ({
+            Critical: 'var(--crit)',
+            High: 'var(--high)',
+            Medium: 'var(--med)',
+            Low: 'var(--low)'
+        }[s] || 'var(--muted)');
+
+        const sevBg = s => ({
+            Critical: 'var(--critbg)',
+            High: 'var(--highbg)',
+            Medium: 'var(--medbg)',
+            Low: 'var(--lowbg)'
+        }[s] || 'var(--alt)');
+
+        function getMethodology() {
+            const m = DATA.methodology || {};
+            const risk = m.risk_score || {};
+            const weights = risk.weights || { critical: 100, high: 20, medium: 5, low: 1 };
+            const bands = risk.bands || [
+                { min: 0, max: 15, label: 'Low weighted exposure', signal: 'Good' },
+                { min: 15, max: 35, label: 'Moderate weighted exposure', signal: 'Watch trend' },
+                { min: 35, max: 60, label: 'High weighted exposure', signal: 'Bad' },
+                { min: 60, max: null, label: 'Critical weighted exposure', signal: 'Very bad' }
+            ];
+            const severity = m.severity_levels || {
+                critical: {
+                    meaning: 'Exploit likely or high-impact compromise path.',
+                    signal: 'Bad when rising. Best when near zero.'
+                },
+                high: {
+                    meaning: 'Serious weakness requiring near-term remediation.',
+                    signal: 'Bad when sustained or rising.'
+                },
+                medium: {
+                    meaning: 'Meaningful risk with lower immediate blast radius.',
+                    signal: 'Neutral-to-bad if backlog accumulates.'
+                },
+                low: {
+                    meaning: 'Limited immediate impact; monitor and batch-fix.',
+                    signal: 'Generally acceptable if higher severities are controlled.'
+                }
+            };
+            const repoRiskLevels = m.repo_watch_risk_levels || [
+                { level: 'critical', rule: 'Repository has critical findings and no watch coverage.' },
+                { level: 'high', rule: 'Repository has critical findings or high violation volume.' },
+                { level: 'medium', rule: 'Repository has violations, or is indexed with zero watches.' },
+                { level: 'low', rule: 'No significant findings and covered.' }
+            ];
+            const curationActions = m.curation_actions || {
+                blocked: 'Denied by policy.',
+                approved: 'Explicit override approval.',
+                passed: 'Evaluated and allowed because no blocking rule matched.'
+            };
+            return { weights, bands, severity, repoRiskLevels, curationActions };
+        }
+
+        /* ═══ SIDEBAR ═══ */
+
+        function sideItem(label, value, detail, warn) {
+            return `<div class="ss">
+                <div class="sl">${label}</div>
+                <div class="sv">${warn ? `<span class="sw">${value}</span>` : value}</div>
+                ${detail ? `<div class="sd">${detail}</div>` : ''}
+            </div>`;
+        }
+
+        function buildSidebar() {
+            const m = DATA.meta, p = DATA.platform;
+            let s = FROG_SVG;
+
+            s += sideItem('Platform URL',
+                `<a href="${m.url}">${m.host}</a>`);
+
+            s += sideItem('Watches',
+                `${n(p.watches_total)} total · ${n(p.watches_active)} active`);
+
+            s += sideItem('Policies',
+                `${n(p.policies_total)} total`,
+                `${n(p.policies_security)} security · ${n(p.policies_operational)} operational · ${n(p.policies_license)} license`);
+
+            s += sideItem('Curation Status',
+                p.curation_enabled ? 'Enabled' : 'Not configured',
+                p.curation_enabled ? `${n(p.curation_repos_count)} remote repos curated` : null,
+                !p.curation_enabled);
+
+            s += sideItem('Curation Policies',
+                p.curation_enabled
+                    ? `Global: ${n(p.curation_policies_global)} · Repo: ${n(p.curation_policies_repo)} · User: ${n(p.curation_policies_user)}`
+                    : 'Not configured',
+                null,
+                !p.curation_enabled);
+
+            let pills = '';
+            (p.curated_types || []).forEach(t => pills += `<span class="sp on">${t}</span>`);
+            (p.uncurated_types || []).forEach(t => pills += `<span class="sp off">${t}</span>`);
+
+            s += sideItem('Xray Indexed',
+                `${n(p.repos_indexed)} of ${n(p.repos_total)} repos`,
+                pills);
+
+            s += sideItem('Report Period',
+                `${m.date_from} – ${m.date_to}`,
+                `${m.report_type} (${m.window_days} days)`);
+
+            s += sideItem('Generated', m.generated);
+
+            document.getElementById('sidebar').innerHTML = s;
+            document.title = `CISO Report — ${m.server_id} — ${m.generated}`;
+        }
+
+        /* ═══ COMPARISON DELTA BADGES ═══ */
+
+        function delta(metrics, label) {
+            if (!DATA.comparison || !DATA.comparison.available) return '';
+            const m = (DATA.comparison.metrics || []).find(x => x.label === label);
+            if (!m) return '';
+            const cls = m.good ? 'good' : 'bad';
+            const arrow = m.direction === 'down' ? '↓' : m.direction === 'up' ? '↑' : '—';
+            return `<div class="kpi-d ${cls}">${arrow} ${Math.abs(m.change_pct)}% vs last</div>`;
+        }
+
+        /* ═══ REPORT HEADER ═══ */
+
+        function buildHeader() {
+            const m = DATA.meta;
+            return `
+                <div class="report-header">
+                    ${FROG_SVG}
+                    <div class="report-header-text">
+                        <h1><span>${m.report_type}</span> Report for <span>${m.server_id}</span></h1>
+                        <div class="report-period">${m.date_from} – ${m.date_to}</div>
+                    </div>
+                </div>`;
+        }
+
+        /* ═══ EXECUTIVE SUMMARY ═══ */
+
+        function buildExecutiveSummary() {
+            const c = DATA.curation, v = DATA.violations, m = DATA.meta, b = DATA.benefit;
+            let lines = [];
+
+            if (c.available && c.blocked > 0) {
+                lines.push(`Curation blocked ${n(c.blocked)} packages at the gate before they could enter your repositories.`);
+            }
+
+            if (v.total > 0) {
+                lines.push(`Xray surfaced ${n(v.total)} violations across indexed repositories, including ${n(v.by_severity.critical)} critical findings.`);
+            }
+
+            if (v.critical_issues && v.critical_issues.length > 0) {
+                const top = v.critical_issues[0];
+                lines.push(`The most recurring critical issue is ${top.id} affecting ${n(top.hits)} artifacts.`);
+            }
+
+            if (c.available && c.blocked === 0 && v.total === 0) {
+                lines.push('No threats were blocked or detected during this reporting period.');
+            }
+
+            return `
+                <div class="exec-summary">
+                    <div class="es-title">Executive Summary</div>
+                    <div class="es-text">${lines.join(' ')}</div>
+                </div>`;
+        }
+
+        /* ═══ SECTION 1: EXECUTIVE KPIs ═══ */
+
+        function buildKPIs() {
+            const c = DATA.curation, v = DATA.violations;
+            return `
+                <p class="sub">At-a-glance numbers showing how many packages were evaluated by Curation and what Xray found inside your repositories this period.</p>
+                <div class="kpis">
+                    <div class="kpi gray">
+                        <div class="kpi-n">${n(c.total)}</div>
+                        <div class="kpi-l">Packages Evaluated</div>
+                    </div>
+                    <div class="kpi red">
+                        <div class="kpi-n" style="color:var(--crit)">${n(c.blocked)}</div>
+                        <div class="kpi-l">Blocked at the Gate</div>
+                        ${delta(null, 'Packages Blocked')}
+                    </div>
+                    <div class="kpi green">
+                        <div class="kpi-n" style="color:var(--fdk)">${n(c.approved)}</div>
+                        <div class="kpi-l">Approved Overrides</div>
+                    </div>
+                    <div class="kpi gray">
+                        <div class="kpi-n">${n(c.passed)}</div>
+                        <div class="kpi-l">Passed by Policy</div>
+                    </div>
+                    <div class="kpi orange">
+                        <div class="kpi-n" style="color:var(--high)">${n(v.total)}</div>
+                        <div class="kpi-l">Threats Found Inside</div>
+                        ${delta(null, 'Violations')}
+                    </div>
+                    <div class="kpi red">
+                        <div class="kpi-n" style="color:var(--crit)">${n(v.by_severity.critical)}</div>
+                        <div class="kpi-l">Critical Findings</div>
+                        ${delta(null, 'Critical')}
+                    </div>
+                    <div class="kpi orange">
+                        <div class="kpi-n" style="color:var(--high)">${n(v.risk_score)}</div>
+                        <div class="kpi-l">Risk Score</div>
+                        ${delta(null, 'Risk Score')}
+                    </div>
+                </div>`;
+        }
+
+        function buildScoringGuide() {
+            const m = getMethodology();
+            const bandRows = (m.bands || []).map(b => {
+                const range = b.max === null || b.max === undefined ? `${b.min}+` : `${b.min}-${b.max}`;
+                return `<tr><td class="mono">${range}</td><td>${b.label}</td><td>${b.signal}</td></tr>`;
+            }).join('');
+
+            return `
+                <div class="sec blue">Severity and Risk Method</div>
+                <p class="sub">How to read Critical/High/Medium/Low, risk score, and what counts as good or bad.</p>
+                <div class="g2">
+                    <div class="card">
+                        <div class="ch"><span class="ct">Violation Severity (Xray)</span></div>
+                        <table class="dt">
+                            <thead><tr><th>Level</th><th>Meaning</th><th>Good/Bad Signal</th></tr></thead>
+                            <tbody>
+                                <tr><td><span class="badge b-crit">Critical</span></td><td>${m.severity.critical.meaning}</td><td>${m.severity.critical.signal}</td></tr>
+                                <tr><td><span class="badge b-high">High</span></td><td>${m.severity.high.meaning}</td><td>${m.severity.high.signal}</td></tr>
+                                <tr><td><span class="badge b-med">Medium</span></td><td>${m.severity.medium.meaning}</td><td>${m.severity.medium.signal}</td></tr>
+                                <tr><td><span class="badge b-low">Low</span></td><td>${m.severity.low.meaning}</td><td>${m.severity.low.signal}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card">
+                        <div class="ch"><span class="ct">Risk Score and Health Bands</span></div>
+                        <p class="sub">Risk score is normalized to 0-100 from severity mix and volume:</p>
+                        <div class="mono" style="margin:.25rem 0 .5rem">raw = (Critical*${m.weights.critical}) + (High*${m.weights.high}) + (Medium*${m.weights.medium}) + (Low*${m.weights.low})</div>
+                        <div class="mono" style="margin:.25rem 0 .6rem">risk_score = (raw / (total_violations*100)) * 100</div>
+                        <table class="dt">
+                            <thead><tr><th>Band</th><th>Interpretation</th><th>Signal</th></tr></thead>
+                            <tbody>${bandRows}</tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="callout warn"><strong>Curation interpretation</strong><span class="mono">Blocked</span> = ${m.curationActions.blocked} <span class="mono">Approved</span> = ${m.curationActions.approved} <span class="mono">Passed</span> = ${m.curationActions.passed} Higher blocked can mean stronger prevention or higher attack pressure; interpret with block rate and top blocked packages.</div>`;
+        }
+
+        /* ═══ SECTION 2: CURATION — SUPPLY CHAIN DEFENSE ═══ */
+
+        function buildCuration() {
+            const c = DATA.curation, m = DATA.meta;
+
+            if (!c.available) {
+                return `
+                    <div class="sec">Curation — Supply Chain Defense</div>
+                    <p class="sub">Curation screens every package download before it enters your repositories, blocking known threats at the gate.</p>
+                    <div class="callout warn">
+                        <strong>Unavailable</strong>
+                        Curation audit data was unavailable on this instance. Curation may not be configured or the token lacks the required permission. Contact your JFrog administrator.
+                    </div>`;
+            }
+
+            let html = `
+                <div class="sec">Curation — Supply Chain Defense</div>
+                <p class="sub">Curation screens every package download before it enters your repositories, blocking known threats at the gate. Period: ${m.date_from} – ${m.date_to}.</p>
+                <div class="nums">
+                    <div class="nb"><strong style="color:var(--crit)">${n(c.blocked)}</strong> Blocked</div>
+                    <div class="nb"><strong style="color:var(--fdk)">${n(c.approved)}</strong> Approved</div>
+                    <div class="nb"><strong>${n(c.passed)}</strong> Passed</div>
+                    <div class="nb"><strong style="color:#b71c1c">${n(c.by_reason.malicious)}</strong> Malicious</div>
+                    <div class="nb"><strong style="color:var(--high)">${n(c.by_reason.security)}</strong> Security (CVE)</div>
+                    <div class="nb"><strong style="color:var(--amber)">${n(c.by_reason.license)}</strong> License</div>
+                    <div class="nb"><strong>${n(c.by_reason.operational)}</strong> Operational</div>
+                    <div class="nb"><strong>${c.block_rate}%</strong> Block Rate</div>
+                </div>`;
+
+            if (c.top_blocked && c.top_blocked.length > 0) {
+                /* Blocked by ecosystem */
+                if (c.by_type && c.by_type.length > 0) {
+                    const totalBlocked = c.by_type.reduce((s, t) => s + t.blocked, 0);
+                    let ecoRows = c.by_type.filter(t => t.blocked > 0).map(t =>
+                        `<tr>
+                            <td>${t.type}</td>
+                            <td class="num">${n(t.blocked)}</td>
+                            <td class="num">${totalBlocked > 0 ? Math.round(t.blocked / totalBlocked * 100) : 0}%</td>
+                            <td class="num">${n(t.total)}</td>
+                        </tr>`
+                    ).join('');
+                    html += `
+                        <div class="card">
+                            <div class="ch"><span class="ct">Blocked Requests by Ecosystem</span></div>
+                            <table class="dt">
+                                <thead><tr><th>Ecosystem</th><th>Blocked</th><th>% of Blocked</th><th>Total Evaluated</th></tr></thead>
+                                <tbody>${ecoRows}</tbody>
+                            </table>
+                        </div>`;
+                }
+
+                let rows = c.top_blocked.map(p =>
+                    `<tr>
+                        <td class="mono">${p.package}${p.malicious ? ' <span class="badge" style="background:#fce4ec;color:#b71c1c">Malicious</span>' : ''}</td>
+                        <td>${p.ecosystem}</td>
+                        <td class="num">${n(p.count)}</td>
+                        <td>${p.policies}</td>
+                    </tr>`
+                ).join('');
+
+                html += `
+                    <div class="card">
+                        <div class="ch"><span class="ct">Top Blocked Packages</span></div>
+                        <table class="dt">
+                            <thead><tr><th>Package</th><th>Ecosystem</th><th>Block Count</th><th>Triggering Policies</th></tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>`;
+            }
+
+            if (c.observation) {
+                html += `
+                    <div class="callout">
+                        <strong>Curation note</strong>
+                        ${c.observation}
+                    </div>`;
+            }
+
+            html += `
+                <div class="ui-link">
+                    Full curation audit trail: <a href="${m.url}/ui/curation/audit">${m.host}/ui/curation/audit</a>
+                </div>`;
+
+            return html;
+        }
+
+        /* ═══ SECTION 3: XRAY — SECURITY POSTURE ═══ */
+
+        function buildViolations() {
+            const v = DATA.violations, m = DATA.meta;
+            const byType = v.by_type, bySev = v.by_severity;
+            const sevTotal = (Number(bySev.critical) || 0) + (Number(bySev.high) || 0) + (Number(bySev.medium) || 0) + (Number(bySev.low) || 0);
+            const sp = {
+                critical: sevTotal > 0 ? Math.round(((Number(bySev.critical) || 0) / sevTotal) * 100) : 0,
+                high: sevTotal > 0 ? Math.round(((Number(bySev.high) || 0) / sevTotal) * 100) : 0,
+                medium: sevTotal > 0 ? Math.round(((Number(bySev.medium) || 0) / sevTotal) * 100) : 0,
+                low: sevTotal > 0 ? Math.round(((Number(bySev.low) || 0) / sevTotal) * 100) : 0,
+            };
+
+            let html = `
+                <div class="sec red">Xray — Security Posture</div>
+                <p class="sub">Xray continuously scans your indexed repositories and build artifacts for known vulnerabilities, license violations, and operational risks. Period: ${m.date_from} – ${m.date_to}.</p>`;
+
+            /* Violations by Type */
+            const types = [
+                ['Security', byType.security],
+                ['Operational Risk', byType.operational],
+                ['License', byType.license]
+            ];
+            let typeRows = types.map(([t, c]) =>
+                `<tr><td>${t}</td><td class="num">${n(c)}</td><td class="num">${pct(c, v.total)}%</td></tr>`
+            ).join('');
+            typeRows += `<tr style="font-weight:700"><td>Total</td><td class="num">${n(v.total)}</td><td class="num">100%</td></tr>`;
+
+            html += `
+                <div class="card">
+                    <div class="ch">
+                        <span class="ct">Violations Breakdown — By Type</span>
+                        <span class="cs">How violations are distributed across security, operational risk, and license categories</span>
+                    </div>
+                    <table class="dt">
+                        <thead><tr><th>Type</th><th>Count</th><th>% of Total</th></tr></thead>
+                        <tbody>${typeRows}</tbody>
+                    </table>
+                </div>`;
+
+            /* Severity bar + table */
+            const sevs = [
+                ['Critical', bySev.critical, sp.critical, '--crit'],
+                ['High', bySev.high, sp.high, '--high'],
+                ['Medium', bySev.medium, sp.medium, '--med'],
+                ['Low', bySev.low, sp.low, '--low']
+            ];
+            const critHigh = (Number(bySev.critical) || 0) + (Number(bySev.high) || 0);
+            const critHighPct = sevTotal > 0 ? Math.round((critHigh / sevTotal) * 100) : 0;
+            const dominant = [...sevs].sort((a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0))[0] || ['Critical', 0, 0, '--crit'];
+            const dominantPct = sevTotal > 0 ? Math.round(((Number(dominant[1]) || 0) / sevTotal) * 100) : 0;
+
+            let bar = sevs.map(([, , p, c]) =>
+                p > 0 ? `<span title="${p}%" style="width:${p}%;background:var(${c})"></span>` : ''
+            ).join('');
+
+            let sevRows = sevs.map(([lbl, cnt, p, c]) =>
+                `<tr>
+                    <td><span class="badge" style="background:var(${c}bg, var(--alt));color:var(${c})">${lbl}</span></td>
+                    <td class="num">${n(cnt)}</td>
+                    <td class="num">${p}%</td>
+                    <td style="width:40%">
+                        ${p > 0 ? `<span style="display:inline-block;height:8px;border-radius:4px;width:${p}%;background:var(${c})"></span>` : ''}
+                    </td>
+                </tr>`
+            ).join('');
+
+            html += `
+                <div class="card">
+                    <div class="ch"><span class="ct">Security Violations by Severity</span></div>
+                    <div class="callout risk" style="margin-top:0">
+                        <strong>Severity concentration</strong>
+                        Critical + High account for ${critHighPct}% (${n(critHigh)} of ${n(sevTotal)}) of all security-severity findings. Dominant severity is ${dominant[0]} (${dominantPct}%).
+                    </div>
+                    <div class="dist">${bar}</div>
+                    <div class="sevr" style="margin-bottom:.25rem;gap:.8rem;flex-wrap:wrap">
+                        ${sevs.map(([lbl, , p, c]) => `<span><span class="dot" style="background:var(${c})"></span> ${lbl}: <span class="cnt">${p}%</span></span>`).join('')}
+                    </div>
+                    <table class="dt"><tbody>${sevRows}</tbody></table>
+                </div>`;
+
+            /* Critical issues — capped at 20 */
+            if (v.critical_issues && v.critical_issues.length > 0) {
+                const maxShow = 20;
+                const totalUnique = v.critical_issues.length;
+                const shown = v.critical_issues.slice(0, maxShow);
+                let ciRows = shown.map(i =>
+                    `<tr>
+                        <td class="mono">${i.id}</td>
+                        <td>${i.description}</td>
+                        <td class="num">${n(i.hits)}</td>
+                        <td class="mono">${i.first_seen || '—'}</td>
+                        <td class="num">${n(i.days_open || 0)}</td>
+                        <td>${i.exploit_status || 'unknown'}</td>
+                        <td>${(i.affected_environments || []).join(', ') || '—'}</td>
+                        <td>${i.playbook_link ? `<a href="${i.playbook_link}">Playbook</a>` : '—'}</td>
+                    </tr>`
+                ).join('');
+
+                const capNote = totalUnique > maxShow
+                    ? `<p class="sub" style="margin-top:.4rem;font-style:italic">Showing top ${maxShow} of ${totalUnique} unique critical issues. View all in the JFrog Platform.</p>`
+                    : '';
+
+                html += `
+                    <div class="card">
+                        <div class="ch">
+                            <span class="ct">All Critical Issues</span>
+                            <span class="cs">${totalUnique} unique</span>
+                        </div>
+                        <p class="sub" style="margin-top:0">Every unique critical severity vulnerability found in your repositories, grouped by Xray ID. "Hits" shows how many artifacts are affected by each issue.</p>
+                        <table class="dt">
+                            <thead><tr><th>Xray ID</th><th>Description</th><th>Hits</th><th>First Seen</th><th>Days Open</th><th>Exploit</th><th>Env</th><th>Runbook</th></tr></thead>
+                            <tbody>${ciRows}</tbody>
+                        </table>
+                        ${capNote}
+                    </div>`;
+            }
+
+            if (v.observation) {
+                html += `
+                    <div class="callout risk">
+                        <strong>Key finding</strong>
+                        ${v.observation}
+                    </div>`;
+            }
+
+            html += `
+                <div class="ui-link">
+                    Full violation details: <a href="${m.url}/ui/watchesNew/violations">${m.host}/ui/watchesNew/violations</a>
+                </div>`;
+
+            return html;
+        }
+
+        /* ═══ SECTION 4: LICENSE COMPLIANCE ═══ */
+
+        function buildLicense() {
+            const l = DATA.license, p = DATA.platform;
+
+            if (!l || l.total === 0) {
+                const hasPolicy = p && p.policies_license > 0;
+                if (hasPolicy) {
+                    return `
+                        <div class="sec amber">License Compliance</div>
+                        <p class="sub">Open source licenses that conflict with your organization's policies.</p>
+                        <div class="callout">
+                            <strong>No violations detected</strong>
+                            ${n(p.policies_license)} license compliance ${p.policies_license === 1 ? 'policy is' : 'policies are'} active and monitoring. No license violations were found in this reporting period.
+                        </div>`;
+                }
+                return `
+                    <div class="sec amber">License Compliance</div>
+                    <p class="sub">Open source licenses that conflict with your organization's policies.</p>
+                    <div class="callout warn">
+                        <strong>No license policies configured</strong>
+                        There are no license compliance policies set up on this platform. Without license policies, Xray will not flag components with restricted or copyleft licenses. Consider creating a license policy to monitor your exposure.
+                    </div>`;
+            }
+
+            let rows = (l.licenses || []).map(x =>
+                `<tr>
+                    <td>${x.spdx}${x.name ? ` (${x.name})` : ''}</td>
+                    <td class="num">${x.count.toLocaleString()}</td>
+                    <td><span class="badge" style="background:${sevBg(x.severity)};color:${sevColor(x.severity)}">${x.severity}</span></td>
+                </tr>`
+            ).join('');
+
+            let html = `
+                <div class="sec amber">License Compliance</div>
+                <p class="sub">Open-source licenses that conflict with your organization's policies. These may require legal review before the affected components can be used in production.</p>
+                <div class="card">
+                    <table class="dt">
+                        <thead><tr><th>License (SPDX)</th><th>Violations</th><th>Severity</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>`;
+
+            if (l.observation) {
+                html += `
+                    <div class="callout warn">
+                        <strong>Note</strong>
+                        ${l.observation}
+                    </div>`;
+            }
+
+            return html;
+        }
+
+        /* ═══ SECTION 5: OPERATIONAL RISK ═══ */
+
+        function buildOperational() {
+            const o = DATA.operational;
+            if (!o || o.total === 0) return '';
+
+            let html = `
+                <div class="sec orange">Operational Risk</div>
+                <p class="sub">Components flagged for end-of-life status, outdated dependencies, or missing maintenance — issues that increase exposure over time even without a specific CVE. ${n(o.total)} operational risk violations${o.severity ? ` — ${o.severity}` : ''}.</p>
+                <div class="g2">`;
+
+            if (o.top_components && o.top_components.length > 0) {
+                let rows = o.top_components.map(c =>
+                    `<tr><td class="mono">${c.component}</td><td class="num">${n(c.hits)}</td></tr>`
+                ).join('');
+
+                html += `
+                    <div class="card">
+                        <div class="ch"><span class="ct">Top Affected Components</span></div>
+                        <table class="dt">
+                            <thead><tr><th>Component</th><th>Hits</th></tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>`;
+            }
+
+            if (o.top_locations && o.top_locations.length > 0) {
+                let rows = o.top_locations.map(l =>
+                    `<tr><td class="mono">${l.location}</td><td class="num">${n(l.hits)}</td></tr>`
+                ).join('');
+
+                html += `
+                    <div class="card">
+                        <div class="ch"><span class="ct">Top Impacted Artifact Locations</span></div>
+                        <table class="dt">
+                            <thead><tr><th>Repository / Path</th><th>Violation Hits</th></tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>`;
+            }
+
+            html += '</div>';
+            const m = getMethodology();
+            const rules = (m.repoRiskLevels || []).map(r => `<span class="mono" style="text-transform:capitalize">${r.level}</span>: ${r.rule}`).join(' ');
+            html += `<div class="callout warn"><strong>Risk level method</strong>${rules}</div>`;
+            return html;
+        }
+
+        /* ═══ SECTION 6: COMBINED SECURITY VALUE ═══ */
+
+        function buildBenefit() {
+            const b = DATA.benefit, c = DATA.curation, v = DATA.violations;
+
+            return `
+                <div class="sec">Combined Security Value</div>
+                <p class="sub">The combined impact of Curation (preventing threats from entering) and Xray (detecting threats already inside). Together they form a complete supply chain security posture.</p>
+                <div class="g2">
+                    <div class="ben gl">
+                        <div class="ben-t">Curation — Gate Prevention</div>
+                        <div class="ben-h">${b.curation_headline}</div>
+                        <div class="ben-s">
+                            <div class="bs">
+                                <div class="bs-v" style="color:var(--crit)">${n(c.blocked)}</div>
+                                <div class="bs-l">Blocked</div>
+                            </div>
+                            <div class="bs">
+                                <div class="bs-v">${n(b.cves_prevented)}</div>
+                                <div class="bs-l">CVEs Prevented</div>
+                            </div>
+                            <div class="bs">
+                                <div class="bs-v" style="color:var(--fdk)">${b.upgrade_rate}%</div>
+                                <div class="bs-l">Upgrade Rate</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ben bl">
+                        <div class="ben-t">Xray — Detection and Visibility</div>
+                        <div class="ben-h">${b.xray_headline}</div>
+                        <div class="ben-s">
+                            <div class="bs">
+                                <div class="bs-v" style="color:var(--crit)">${n(v.by_severity.critical)}</div>
+                                <div class="bs-l">Critical</div>
+                            </div>
+                            <div class="bs">
+                                <div class="bs-v" style="color:var(--high)">${n(v.by_severity.high)}</div>
+                                <div class="bs-l">High</div>
+                            </div>
+                            <div class="bs">
+                                <div class="bs-v">${n(DATA.license.total)}</div>
+                                <div class="bs-l">License</div>
+                            </div>
+                            <div class="bs">
+                                <div class="bs-v">${b.xray_coverage}%</div>
+                                <div class="bs-l">Coverage</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cmp">${b.compare_line}</div>`;
+        }
+
+        /* ═══ SECTION 7: GOVERNANCE EFFECTIVENESS ═══ */
+
+        function buildGovernance() {
+            const g = DATA.governance || {};
+            const pe = g.policy_effectiveness || [];
+            const rc = g.repo_watch_coverage || [];
+
+            if (pe.length === 0 && rc.length === 0) return '';
+
+            let html = `
+                <div class="sec blue">Governance Effectiveness</div>
+                <p class="sub">Policy signal quality and repository watch coverage to identify blind spots and dead rules.</p>
+                <div class="g2">`;
+
+            if (pe.length > 0) {
+                const rows = pe.map(p => `
+                    <tr>
+                        <td>${p.policy}</td>
+                        <td>${p.type}</td>
+                        <td class="num">${n(p.hits)}</td>
+                        <td class="num">${n(p.pct_of_events)}%</td>
+                        <td class="num">${n(p.delta_pct)}%</td>
+                    </tr>`).join('');
+
+                html += `
+                    <div class="card">
+                        <div class="ch"><span class="ct">Policy Effectiveness</span></div>
+                        <table class="dt">
+                            <thead><tr><th>Policy</th><th>Type</th><th>Hits</th><th>% of Events</th><th>Delta</th></tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>`;
+            }
+
+            if (rc.length > 0) {
+                const rows = rc.map(r => `
+                    <tr>
+                        <td class="mono">${r.repo}</td>
+                        <td>${r.indexed ? 'Yes' : 'No'}</td>
+                        <td class="num">${n(r.watch_count)}</td>
+                        <td>${r.risk_level || '—'}</td>
+                    </tr>`).join('');
+
+                html += `
+                    <div class="card">
+                        <div class="ch"><span class="ct">Repository Watch Coverage</span></div>
+                        <table class="dt">
+                            <thead><tr><th>Repo</th><th>Indexed</th><th>Watch Count</th><th>Risk</th></tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>`;
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        /* ═══ SECTION 8: PERIOD COMPARISON ═══ */
+
+        function buildComparison() {
+            const c = DATA.comparison;
+
+            if (!c || !c.available) {
+                return `
+                    <div class="sec blue">Period Comparison</div>
+                    <p class="sub">Tracks whether your security posture is improving or degrading compared to the previous reporting period.</p>
+                    <div class="callout">Comparison will be available after the next report run.</div>`;
+            }
+
+            let rows = (c.metrics || []).map(m => {
+                const cls = m.good ? 'good' : 'bad';
+                const arrow = m.direction === 'down' ? '↓' : m.direction === 'up' ? '↑' : '—';
+                return `
+                    <tr>
+                        <td>${m.label}</td>
+                        <td class="mono num">${n(m.previous)}</td>
+                        <td class="mono num">${n(m.current)}</td>
+                        <td><span class="kpi-d ${cls}">${arrow} ${Math.abs(m.change_pct)}%</span></td>
+                    </tr>`;
+            }).join('');
+
+            return `
+                <div class="sec blue">Period Comparison</div>
+                <p class="sub">Tracks whether your security posture is improving or degrading. Compared with ${c.previous_date}.</p>
+                <div class="card">
+                    <table class="dt">
+                        <thead><tr><th>Metric</th><th>Previous</th><th>Current</th><th>Change</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>`;
+        }
+
+        /* ═══ SECTION 9: THREAT VELOCITY ═══ */
+
+        function buildThreatVelocity() {
+            const t = DATA.threat_velocity;
+            if (!t || !t.available) return '';
+
+            const rows = (t.periods || []).map(p => `
+                <tr>
+                    <td class="mono">${p.label}</td>
+                    <td class="num">${n(p.blocked)}</td>
+                    <td class="num">${n(p.violations)}</td>
+                    <td class="num">${n(p.critical)}</td>
+                </tr>`).join('');
+
+            return `
+                <div class="sec blue">Threat Velocity</div>
+                <p class="sub">Recent trend across blocked packages and violations to highlight acceleration or stabilization.</p>
+                <div class="card">
+                    <table class="dt">
+                        <thead><tr><th>Period</th><th>Blocked</th><th>Violations</th><th>Critical</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+                ${t.trend_summary ? `<div class="callout"><strong>Trend</strong>${t.trend_summary}</div>` : ''}`;
+        }
+
+        /* ═══ SECTION 10: RECOMMENDATIONS ═══ */
+
+        function buildRecommendations() {
+            const r = DATA.recommendations;
+            if (!r || r.length === 0) return '';
+
+            const pr = p => ({ P1: 3, P2: 2, P3: 1 }[(p || '').toUpperCase()] || 0);
+            const sc = x => {
+                const v = Number(x && x.score);
+                return Number.isFinite(v) ? v : -1;
+            };
+
+            const ordered = [...r].sort((a, b) => {
+                const byScore = sc(b) - sc(a);
+                if (byScore !== 0) return byScore;
+                const byPriority = pr(b && b.priority) - pr(a && a.priority);
+                if (byPriority !== 0) return byPriority;
+                return String(a && a.title || '').localeCompare(String(b && b.title || ''));
+            });
+
+            const invalid = ordered
+                .map((x, i) => ({ i, x }))
+                .filter(({ x }) => !x || !x.priority || !Number.isFinite(Number(x.score)));
+
+            let items = ordered.map((x, idx) => {
+                let badge = '';
+                const title = x.title || `Recommendation ${idx + 1}`;
+                const priority = (x.priority || '').toUpperCase();
+                if (priority === 'P1') badge = '<span class="pri p1">P1</span>';
+                else if (priority === 'P2') badge = '<span class="pri p2">P2</span>';
+                else if (priority === 'P3') badge = '<span class="pri p3">P3</span>';
+
+                const cleanTitle = title;
+                const scoreLabel = sc(x) >= 0 ? `Score: ${sc(x)}` : '';
+                const meta = [scoreLabel, x.effort ? `Effort: ${x.effort}` : '', x.owner ? `Owner: ${x.owner}` : '', x.due_date ? `Due: ${x.due_date}` : '']
+                    .filter(Boolean)
+                    .join(' · ');
+                const deps = x.dependencies && x.dependencies.length > 0 ? `Depends on: ${x.dependencies.join(', ')}` : '';
+
+                return `<div class="rec-i">
+                    <strong>${badge}${cleanTitle}</strong>
+                    ${x.detail}
+                    ${meta ? `<div class="sd">${meta}</div>` : ''}
+                    ${deps ? `<div class="sd">${deps}</div>` : ''}
+                </div>`;
+            }).join('');
+
+            const warning = invalid.length > 0
+                ? `<div class="callout warn"><strong>Recommendation metadata warning</strong>${invalid.length} recommendation item(s) are missing required beta fields (priority and/or score). Ranking and badges may be incomplete for those items.</div>`
+                : '';
+
+            return `
+                <div class="sec">Recommendations</div>
+                <p class="sub">Prioritized actions based on this report's findings. Each item references specific Xray IDs, package names, or policies to act on.</p>
+                ${warning}
+                <div class="rec">${items}</div>`;
+        }
+
+        /* ═══ SECTION 11: CURATION AUDIT TRAIL ═══ */
+
+        function buildAuditTrail() {
+            const c = DATA.curation, m = DATA.meta;
+            const desc = 'Blocked package download requests intercepted by Curation policies. For the full audit trail including approved and passed events, navigate to the JFrog Platform.';
+
+            if (!c.available) {
+                return `
+                    <div class="sec">Curation Audit Trail</div>
+                    <p class="sub">${desc}</p>
+                    <div class="callout warn">
+                        <strong>Unavailable</strong>
+                        Curation audit data was unavailable on this instance. Curation may not be configured or the token lacks the required permission.
+                    </div>`;
+            }
+
+            const events = (c.audit_events || []).map(e => ({
+                ...e,
+                normalized_status: String(e.status || e.action || '').toLowerCase()
+            }));
+            const blockedEvents = events.filter(e => e.normalized_status === 'blocked');
+            if (blockedEvents.length === 0 && Number(c.blocked || 0) > 0) {
+                const reason = c.by_reason || {};
+                const typeRows = (c.by_type || []).filter(x => Number(x.blocked || 0) > 0).slice(0, 6).map(x =>
+                    `<tr><td>${x.type}</td><td class="num">${n(x.blocked)}</td><td class="num">${x.total > 0 ? Math.round((x.blocked / x.total) * 100) : 0}%</td></tr>`
+                ).join('');
+                const topRows = (c.top_blocked || []).slice(0, 10).map(x =>
+                    `<tr><td class="mono">${x.package}</td><td>${x.ecosystem}</td><td class="num">${n(x.count)}</td><td>${x.policies || '—'}</td></tr>`
+                ).join('');
+
+                return `
+                    <div class="sec">Curation Audit Trail</div>
+                    <p class="sub">${desc}</p>
+                    <div class="callout warn">
+                        <strong>Blocked count exists but row-level events are missing</strong>
+                        This report still shows aggregate blocked activity (${n(c.blocked)} blocked). Row-level event rows may be missing due to API window, pagination, or status-shape mismatch.
+                    </div>
+                    <div class="nums">
+                        <div class="nb"><strong style="color:var(--crit)">${n(c.blocked)}</strong> Blocked</div>
+                        <div class="nb"><strong>${n(reason.malicious || 0)}</strong> Malicious</div>
+                        <div class="nb"><strong>${n(reason.security || 0)}</strong> Security</div>
+                        <div class="nb"><strong>${n(reason.license || 0)}</strong> License</div>
+                        <div class="nb"><strong>${n(reason.operational || 0)}</strong> Operational</div>
+                    </div>
+                    ${typeRows ? `<div class="card"><div class="ch"><span class="ct">Blocked by Ecosystem</span></div><table class="dt"><thead><tr><th>Ecosystem</th><th>Blocked</th><th>Block Share</th></tr></thead><tbody>${typeRows}</tbody></table></div>` : ''}
+                    ${topRows ? `<div class="card"><div class="ch"><span class="ct">Top Blocked Packages (Summary)</span></div><table class="dt"><thead><tr><th>Package</th><th>Type</th><th>Count</th><th>Policies</th></tr></thead><tbody>${topRows}</tbody></table></div>` : ''}
+                    <div class="ui-link">
+                        Full audit trail: <a href="${m.url}/ui/curation/audit">${m.host}/ui/curation/audit</a>
+                    </div>`;
+            }
+
+            if (blockedEvents.length === 0) {
+                return `
+                    <div class="sec">Curation Audit Trail</div>
+                    <p class="sub">${desc}</p>
+                    <div class="callout">No blocked curation events in this reporting period.</div>
+                    <div class="ui-link">
+                        Full audit trail: <a href="${m.url}/ui/curation/audit">${m.host}/ui/curation/audit</a>
+                    </div>`;
+            }
+
+            const maxShow = 50;
+            const shown = blockedEvents.slice(0, maxShow);
+            let rows = shown.map(e => {
+                return `
+                    <tr>
+                        <td><span class="badge b-block">Blocked</span></td>
+                        <td class="mono">${e.package}</td>
+                        <td class="mono">${e.version}</td>
+                        <td>${e.type}</td>
+                        <td class="mono">${e.repo}</td>
+                        <td>${e.policy || '—'}</td>
+                        <td>${e.requested_by || '—'}</td>
+                        <td class="mono">${e.timestamp || e.date || '—'}</td>
+                    </tr>`;
+            }).join('');
+
+            const capNote = blockedEvents.length > maxShow
+                ? `<p class="sub" style="margin-top:.4rem;font-style:italic">Showing ${maxShow} of ${blockedEvents.length} blocked events.</p>`
+                : '';
+
+            return `
+                <div class="sec">Curation Audit Trail</div>
+                <p class="sub">${desc}</p>
+                <div class="card">
+                    <div class="ch">
+                        <span class="ct">Blocked Events</span>
+                        <span class="cs">${n(blockedEvents.length)} blocked of ${n(c.total)} total</span>
+                    </div>
+                    <table class="dt">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Package</th>
+                                <th>Version</th>
+                                <th>Type</th>
+                                <th>Repo</th>
+                                <th>Policy</th>
+                                <th>Requested By</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                    ${capNote}
+                </div>
+                <div class="ui-link">
+                    Full audit trail: <a href="${m.url}/ui/curation/audit">${m.host}/ui/curation/audit</a>
+                </div>`;
+        }
+
+        /* ═══ RENDER ALL SECTIONS ═══ */
+
+        buildSidebar();
+
+        document.getElementById('content').innerHTML = [
+            buildHeader(),
+            buildExecutiveSummary(),
+            buildKPIs(),
+            buildScoringGuide(),
+            buildCuration(),
+            buildViolations(),
+            buildLicense(),
+            buildOperational(),
+            buildBenefit(),
+            buildGovernance(),
+            buildComparison(),
+            buildThreatVelocity(),
+            buildRecommendations(),
+            buildAuditTrail(),
+            `<div class="footer">JFrog CISO Report — ${DATA.meta.server_id} — Generated by Jfrog Dashboard Skills</div>`
+        ].join('');
+    </script>
+</body>
+
+</html>

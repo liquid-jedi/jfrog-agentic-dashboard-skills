@@ -1,0 +1,24 @@
+{
+  "server_id": "LiquidJedi",
+  "server_slug": "liquidjedi",
+  "report_type": "weekly",
+  "report_date": "2026-05-20",
+  "local_root": "/Users/avinashg/ciso-reports",
+  "output_path": "/Users/avinashg/ciso-reports/liquidjedi/weekly/2026-05-20/report.html",
+  "save_data_json": true,
+  "token_usage": {
+    "total_tokens": null,
+    "source": "unavailable",
+    "status": "unavailable"
+  },
+  "curation_diagnostics": {
+    "status": "captured",
+    "http_status": 200,
+    "mode": "weekly",
+    "pages_fetched": 7,
+    "rows_fetched": 163,
+    "total_count_reported": 163,
+    "date_from": "2026-05-13T10:37:31Z",
+    "date_to": "2026-05-20T10:37:31Z"
+  }
+}
