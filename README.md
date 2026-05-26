@@ -94,6 +94,32 @@ bash "$REPO_ROOT/scripts/agentic-dashboard-prechecks.sh"
 Generate a weekly CISO report
 ```
 
+### Hands-free runs (run, grab coffee, come back)
+
+If your agent keeps asking for confirmation on every tool call, start it in an auto-approval mode first, then paste your report prompt.
+
+Claude Code:
+
+```bash
+claude --permission-mode dontAsk
+```
+
+Codex CLI:
+
+```bash
+codex -a never
+```
+
+Gemini CLI:
+
+```bash
+gemini --approval-mode yolo
+```
+
+Other agent runtimes (Cursor/Cline/Windsurf/Amp): use each tool's workspace approval setting and switch from manual confirmations to auto-approve for non-destructive runs.
+
+Safety note: these modes reduce or skip confirmations. Use only in trusted repositories/workspaces.
+
 **7. Review shipped example reports** — open any HTML file under `samples/` in a browser to see the output format before connecting to a live JFrog Platform instance.
 
 Examples in this repo:
