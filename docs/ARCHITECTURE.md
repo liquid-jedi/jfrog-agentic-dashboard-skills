@@ -139,5 +139,5 @@ Any agent that supports the Skills framework can run these skills (Claude Code, 
 ## Related docs
 
 - [Beta schema migration](BETA-SCHEMA.md)
-- [Running reports](RUNNING.md)
+- [Installation](INSTALL.md)
 - [CISO user manual](ciso-user-manual.md)

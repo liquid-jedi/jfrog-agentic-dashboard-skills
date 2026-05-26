@@ -74,10 +74,12 @@ npx skills add "$REPO_ROOT" -g --skill jfrog-ciso-report
 **4. Verify the install:**
 
 ```bash
-npx skills list
+npx skills list -g
 ```
 
 Expected result: the global skills list includes both `jfrog` and `jfrog-ciso-report`.
+
+**Current shipped versions:** `jfrog-ciso-report` `2.1.0`, `jfrog-dashboard-blueprint` `2.1.0`.
 
 **5. Run the readiness check** (recommended for local-clone installs):
 
@@ -111,8 +113,7 @@ Full install options, GitHub installs, and verification → **[docs/INSTALL.md](
 
 | Doc | Contents |
 |-----|----------|
-| [**Installation**](docs/INSTALL.md) | Prerequisites, `npx skills add`, prechecks, platform notes |
-| [**Running reports**](docs/RUNNING.md) | Prompts, defaults, local artifacts, Artifactory |
+| [**Installation**](docs/INSTALL.md) | Install, verify, update, prechecks, and first report run |
 | [**Architecture**](docs/ARCHITECTURE.md) | Data flow, execution contract, file map, new personas |
 | [**CISO user manual**](docs/ciso-user-manual.md) | Permissions, agents, interpretation, tuning |
 | [**Beta schema**](docs/BETA-SCHEMA.md) | Schema 2.0-beta migration for custom producers |

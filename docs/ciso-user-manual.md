@@ -8,8 +8,7 @@ and interpreting the CISO dashboard skill.
 | Document | Focus |
 |----------|--------|
 | [README](../README.md) | Project overview, quick start, documentation index |
-| [INSTALL.md](INSTALL.md) | Prerequisites, skill install, prechecks |
-| [RUNNING.md](RUNNING.md) | Prompts, defaults, local and Artifactory artifacts |
+| [INSTALL.md](INSTALL.md) | Prerequisites, install, verify, update, prechecks, first run |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Data flow, execution contract, persona scaffolding |
 | [BETA-SCHEMA.md](BETA-SCHEMA.md) | Schema 2.0-beta for custom JSON producers |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common issues |

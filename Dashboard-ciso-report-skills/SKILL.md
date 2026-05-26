@@ -10,6 +10,7 @@ description: >-
 metadata:
   role: workflow
   author: Avinash Giri
+  version: 2.1.0
 ---
 
 # JFrog CISO Report Generator
@@ -41,8 +42,9 @@ Before collecting data:
   not name one, you MUST stop and ask the user to choose. Do NOT use the
   JFrog CLI default server. Do NOT guess.
 - Resolve local output root. You MUST always surface the final resolved
-  local path before data collection starts. If no path was provided, say
-  you are defaulting to `$PWD` and show the exact resolved path.
+  local path before data collection starts. If no path was provided and
+  `CISO_LOCAL_ROOT` is not set, ask once for a stable local root, create it,
+  and persist it before data collection starts.
 - Resolve storage. If no storage preference is given, default to local-only.
   Do NOT ask about storage unless the user explicitly said "save to Artifactory".
 

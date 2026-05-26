@@ -22,15 +22,20 @@ brew install jfrog-cli
 # Linux
 curl -fL https://install-cli.jfrog.io | sh
 
-# Configure a server
-jf config add solenglatest --url=https://solenglatest.jfrog.io --interactive
+# Configure a server interactively with your own JFrog Platform URL
+jf config add --interactive
 ```
+
+### Current skill versions in this repository
+
+- `jfrog-ciso-report` — `2.1.0`
+- `jfrog-dashboard-blueprint` — `2.1.0`
 
 ### Install the base `jfrog` skill
 
 ```bash
 npx skills add jfrog -g -y
-npx skills list   # must include "jfrog"
+npx skills list -g   # must include "jfrog"
 ```
 
 ---
@@ -70,7 +75,49 @@ npx skills add "$REPO_ROOT" -g --skill jfrog-dashboard-blueprint
 
 ## Verify installation
 
-Your agent should list `jfrog-ciso-report` among available skills.
+Check the globally installed skills directly:
+
+```bash
+npx skills list -g
+```
+
+Expected result: the global skills list includes `jfrog` and `jfrog-ciso-report`.
+
+If you also installed the scaffolder, the list should include `jfrog-dashboard-blueprint`.
+
+## Update installed skills
+
+There is no separate update command documented in this repo today. To refresh an installed skill, rerun the same `npx skills add ... -g --skill ...` command you used for install, then verify again with `npx skills list -g`.
+
+Update from GitHub:
+
+```bash
+npx skills add git@github.com:liquid-jedi/jfrog-agentic-dashboard-skills.git -g --skill jfrog-ciso-report
+```
+
+Update from a local clone:
+
+```bash
+REPO_ROOT="$(pwd)"
+npx skills add "$REPO_ROOT" -g --skill jfrog-ciso-report
+```
+
+## First report run
+
+Ask your agent with a direct prompt such as:
+
+```text
+Generate a weekly CISO report.
+Generate a monthly CISO report. Local only.
+Generate a weekly CISO report for <your-server-id>. Save to Artifactory.
+```
+
+Runtime defaults:
+
+- Server: single configured server is used automatically; multiple servers require a user choice.
+- Local output root: prompt path, then `CISO_LOCAL_ROOT`, then a one-time bootstrap prompt for a stable local root.
+- Storage: local-only unless you explicitly ask for Artifactory.
+- Same-day reruns: written under `rerun-HHMMSS/` and never overwrite an earlier run.
 
 **Claude Code example:**
 
@@ -128,6 +175,5 @@ Cleanup is agent-driven (part of the skill workflow), not an external script. Tr
 
 ## Next steps
 
-- [Running reports](RUNNING.md) — prompts, defaults, and artifact layout
 - [CISO user manual](ciso-user-manual.md) — permissions, agents, and interpretation
 - [Troubleshooting](TROUBLESHOOTING.md) — common fixes

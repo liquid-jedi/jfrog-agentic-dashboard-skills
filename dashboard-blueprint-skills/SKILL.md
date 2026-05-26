@@ -11,6 +11,7 @@ description: >-
 metadata:
   role: workflow
   author: Avinash Giri
+  version: 2.1.0
 ---
 
 # JFrog Dashboard Blueprint Generator
