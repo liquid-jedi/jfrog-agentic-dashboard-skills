@@ -50,16 +50,43 @@ Single HTML file — open in a browser, email to stakeholders, or archive in Art
 
 **1. Prerequisites** — JFrog Platform with Xray, `jf` CLI, `jq`, `python3`, and the base [`jfrog`](https://github.com/jfrog/jfrog-skills) skill.
 
-**2. Install** (from the repository root):
+**2. Install the base skill:**
+
+```bash
+npx skills add jfrog -g -y
+```
+
+**3. Install `jfrog-ciso-report`**
+
+From GitHub:
+
+```bash
+npx skills add git@github.com:liquid-jedi/jfrog-agentic-dashboard-skills.git -g --skill jfrog-ciso-report
+```
+
+From a local clone (for development):
 
 ```bash
 REPO_ROOT="$(pwd)"
-npx skills add jfrog -g -y
 npx skills add "$REPO_ROOT" -g --skill jfrog-ciso-report
+```
+
+**4. Verify the install:**
+
+```bash
+npx skills list
+```
+
+Expected result: the global skills list includes both `jfrog` and `jfrog-ciso-report`.
+
+**5. Run the readiness check** (recommended for local-clone installs):
+
+```bash
+REPO_ROOT="$(pwd)"
 bash "$REPO_ROOT/scripts/agentic-dashboard-prechecks.sh"
 ```
 
-**3. Run** — ask your agent:
+**6. Run** — ask your agent:
 
 ```
 Generate a weekly CISO report
