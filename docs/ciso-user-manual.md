@@ -5,8 +5,17 @@ and interpreting the CISO dashboard skill.
 
 ## Document Scope
 
-- README: project overview, repository layout, quick-start installation, and adoption guidance.
-- User manual: operating model, supported environments, supported agents, output handling, skill-builder flow, and report interpretation.
+| Document | Focus |
+|----------|--------|
+| [README](../README.md) | Project overview, quick start, documentation index |
+| [INSTALL.md](INSTALL.md) | Prerequisites, skill install, prechecks |
+| [RUNNING.md](RUNNING.md) | Prompts, defaults, local and Artifactory artifacts |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Data flow, execution contract, persona scaffolding |
+| [BETA-SCHEMA.md](BETA-SCHEMA.md) | Schema 2.0-beta for custom JSON producers |
+| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common issues |
+| **This manual** | Permissions, supported agents, interpretation, tuning |
+
+For installation steps, start with [INSTALL.md](INSTALL.md) rather than duplicating commands here.
 
 ## Audience
 
@@ -20,30 +29,16 @@ The current CISO dashboard is the first production example in a broader
 dashboard blueprint pattern, so this manual focuses on operating the skill
 as-is while keeping the extension path visible for future personas.
 
-## Recommended Installation Method
+## Installation
 
-Recommended installation method: development mode from the repository source.
+See **[INSTALL.md](INSTALL.md)** for prerequisites, `npx skills add` commands (GitHub and local clone), prechecks, and verification.
+
+Quick reference — local development install:
 
 ```bash
-npx skills add /absolute/path/to/dashboard-report-skills -g -y
+REPO_ROOT="$(pwd)"
+npx skills add "$REPO_ROOT" -g --skill jfrog-ciso-report
 ```
-
-Why this is the standard working mode:
-
-- Changes in the repository are picked up immediately.
-- There is a single source of truth during development.
-- It avoids stale copied skill folders diverging from Git.
-
-If you need a frozen handoff package later, create that as a separate release step. Do not use copied installs as the default authoring workflow.
-
-## Prerequisites
-
-- JFrog CLI configured with at least one server.
-- JFrog Xray enabled.
-- Optional: JFrog Curation enabled.
-- Tools on PATH: `jf`, `jq`, `python3`.
-- Base skill installed: `jfrog`.
-- Persona skill installed: `jfrog-ciso-report`.
 
 ## Required Permissions
 
@@ -59,23 +54,7 @@ No admin permission is required for a standard local report run.
 
 ## JFrog Platform Skills Dependency
 
-The CISO skill depends on the JFrog Platform Skills base skill (`jfrog`).
-
-- Upstream repository: https://github.com/jfrog/jfrog-skills
-
-Install the base skill:
-
-```bash
-npx skills add jfrog -g -y
-```
-
-Verify installation:
-
-```bash
-npx skills list
-```
-
-Confirm `jfrog` appears in the list before running CISO report generation.
+The CISO skill depends on the base `jfrog` skill ([jfrog-skills](https://github.com/jfrog/jfrog-skills)). Install and verify steps are in [INSTALL.md](INSTALL.md).
 
 ## Supported Agents
 
@@ -94,26 +73,27 @@ Core runtime dependencies are the same across agents:
 
 - Data collection: `jf rt curl`, `jf xr curl`
 - Parsing and shaping: `jq`, `python3`
-- Rendering: `dashboard-report-skills/references/dashboard.html`
+- Rendering: `Dashboard-ciso-report-skills/references/dashboard.html`
 
 ## Runtime Readiness Gate
 
 Use the runtime checker before report generation, regardless of where the user runs commands from:
 
 ```bash
-bash /absolute/path/to/jfrog-ciso-dashboard/scripts/agentic-dashboard-prechecks.sh
+REPO_ROOT="/path/to/your/jfrog-ciso-dashboard-clone"
+bash "$REPO_ROOT/scripts/agentic-dashboard-prechecks.sh"
 ```
 
 Optional guided auto-fix (installs missing skills only when requested):
 
 ```bash
-bash /absolute/path/to/jfrog-ciso-dashboard/scripts/agentic-dashboard-prechecks.sh --fix
+bash "$REPO_ROOT/scripts/agentic-dashboard-prechecks.sh" --fix
 ```
 
 Non-interactive auto-fix for scripted onboarding:
 
 ```bash
-bash /absolute/path/to/jfrog-ciso-dashboard/scripts/agentic-dashboard-prechecks.sh --fix --yes
+bash "$REPO_ROOT/scripts/agentic-dashboard-prechecks.sh" --fix --yes
 ```
 
 This is the source-of-truth readiness gate for customer environments. It validates:
@@ -277,7 +257,7 @@ Before collection begins, the skill should surface a short execution summary con
 
 ## Recommended Environment Setup
 
-For reliable trend analysis across runs, set a stable local root that persists across all terminals and IDE sessions. The preferred behavior is that the first run asks once for this path, creates it, and persists it as `CISO_LOCAL_ROOT`. If you are configuring it manually, add it to **both** shell profile files so it is sourced by login shells (new terminal windows, SSH) and interactive shells (integrated terminals inside IDEs):
+For reliable trend analysis across runs, set a stable local root that persists across all terminals and IDE sessions. The runtime can bootstrap this on the first run, but setting it explicitly keeps behavior deterministic across terminals and CI. Add it to **both** shell profile files so it is sourced by login shells (new terminal windows, SSH) and interactive shells (integrated terminals inside IDEs):
 
 ```bash
 echo 'export CISO_LOCAL_ROOT=~/ciso-reports' >> ~/.zprofile
@@ -306,7 +286,7 @@ Server name is optional.
 
 - `Generate a weekly CISO report.`
 - `Generate a monthly CISO report. Local only.`
-- `Generate a weekly CISO report for <server-ID>. Save to Artifactory.`
+- `Generate a weekly CISO report for solenglatest. Save to Artifactory.`
 - `Generate a weekly CISO report. Local only. Save local artifacts under /Users/me/security-reports.`
 - `Generate a monthly CISO report for May 2026.`
 - `Generate a CISO report for 2026-05-01 to 2026-05-20.`
@@ -373,7 +353,8 @@ This project includes a separate builder skill for creating new persona packs:
 Recommended installation:
 
 ```bash
-npx skills add /absolute/path/to/dashboard-blueprint-skills -g -y
+REPO_ROOT="$(pwd)"
+npx skills add "$REPO_ROOT" -g --skill jfrog-dashboard-blueprint
 ```
 
 Typical builder prompt:
@@ -400,17 +381,17 @@ There are three important control points in the project.
 
 ### 1. Workflow contract
 
-- File: `dashboard-report-skills/SKILL.md`
+- File: `Dashboard-ciso-report-skills/SKILL.md`
 - Owns: execution order, mandatory checkpoints, validation rules, output handling
 
 ### 2. Data producer logic
 
-- File: `dashboard-report-skills/references/report-data-collection.md`
+- File: `Dashboard-ciso-report-skills/references/report-data-collection.md`
 - Owns: API mapping, field derivation, formulas, classification logic, recommendation scoring
 
 ### 3. Renderer logic
 
-- File: `dashboard-report-skills/references/dashboard.html`
+- File: `Dashboard-ciso-report-skills/references/dashboard.html`
 - Owns: section layout, visual presentation, interpretation callouts, sorting, and rendering behavior
 
 Runtime payloads are generated artifacts, not source-of-truth code:
