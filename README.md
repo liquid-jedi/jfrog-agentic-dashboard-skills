@@ -94,6 +94,14 @@ bash "$REPO_ROOT/scripts/agentic-dashboard-prechecks.sh"
 Generate a weekly CISO report
 ```
 
+**7. Review shipped example reports** — open any HTML file under `samples/` in a browser to see the output format before connecting to a live JFrog Platform instance.
+
+Examples in this repo:
+
+- `samples/ciso-report-2026-04-26.html`
+- `samples/ciso-report-liquidjedi-2026-05-mtd.html`
+- `samples/ciso-report-solenglatest-april-2026-monthly.html`
+
 Full install options, GitHub installs, and verification → **[docs/INSTALL.md](docs/INSTALL.md)**
 
 ---
@@ -130,6 +138,14 @@ docs/                                       # Operator guides
 samples/                                    # Example HTML reports
 scripts/agentic-dashboard-prechecks.sh      # Install / runtime checker
 ```
+
+## Example reports
+
+The `samples/` folder contains static HTML reports generated from real report payloads and kept as reference output.
+
+- Use them to review layout, tone, and section ordering without installing or configuring anything.
+- Open them directly in a browser; they are self-contained HTML files.
+- Treat them as examples of report shape and presentation, not as current live platform state.
 
 ---
 
