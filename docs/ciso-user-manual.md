@@ -402,7 +402,7 @@ Runtime payloads are generated artifacts, not source-of-truth code:
 
 - `/tmp/ciso-data.json`
 - local run `data.json`
-- checked-in HTML samples under `samples/`
+- checked-in HTML examples under `Example Reports/`
 
 ## Recommendation Contract
 

@@ -166,12 +166,10 @@ Hands-free example prompt (server + local-only storage resolved up front):
 Generate a weekly CISO report for server <server-id>. Local only. Save local artifacts under /path/to/ciso-reports.
 ```
 
-**8. Review shipped example reports** — open any HTML file under `samples/` or `Example Reports/` in a browser to see the output format before connecting to a live JFrog Platform instance.
+**8. Review shipped example reports** — open any HTML file under `Example Reports/` in a browser to see the output format before connecting to a live JFrog Platform instance.
 
 Examples in this repo:
 
-- `samples/ciso-report-2026-04-26.html`
-- `samples/` (additional sample outputs)
 - `Example Reports/ciso-reports/weekly/report-1.html`
 - `Example Reports/ciso-reports/Monthly/report-1.html`
 
@@ -185,12 +183,6 @@ Examples in this repo:
 | [**CISO user manual**](docs/ciso-user-manual.md) | Permissions, runtime behavior, interpretation, tuning |
 | [**Troubleshooting**](docs/TROUBLESHOOTING.md) | Common issues and compatibility |
 
-Maintainer references:
-
-- [Architecture](docs/ARCHITECTURE.md)
-- [APM packaging](docs/APM_PACKAGING.md)
-- [Beta schema](docs/BETA-SCHEMA.md)
-
 ---
 
 ## Repository layout
@@ -199,7 +191,6 @@ Maintainer references:
 Dashboard-ciso-report-skills/               # CISO skill + renderer
 Dashboard-blueprint-skills/                 # Persona scaffolder
 docs/                                       # Operator guides
-samples/                                    # Example HTML reports
 Example Reports/                            # Example generated run outputs
 packages/apm/                               # Microsoft APM package wrappers
 scripts/agentic-dashboard-prechecks.sh      # Install / runtime checker
@@ -207,7 +198,7 @@ scripts/agentic-dashboard-prechecks.sh      # Install / runtime checker
 
 ## Example reports
 
-The `samples/` and `Example Reports/` folders contain static HTML reports generated from real report payloads and kept as reference output.
+The `Example Reports/` folder contains static HTML reports generated from real report payloads and kept as reference output.
 
 - Use them to review layout, tone, and section ordering without installing or configuring anything.
 - Open them directly in a browser; they are self-contained HTML files.

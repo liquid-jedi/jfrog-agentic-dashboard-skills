@@ -222,8 +222,6 @@ Runtime defaults:
 
 If you want to see the output format before running the skill against your own instance, open one of the shipped sample reports from the repository:
 
-- `samples/ciso-report-2026-04-26.html`
-- `samples/` (additional sample outputs)
 - `Example Reports/ciso-reports/weekly/report-1.html`
 - `Example Reports/ciso-reports/Monthly/report-1.html`
 
