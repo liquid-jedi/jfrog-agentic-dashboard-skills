@@ -4,6 +4,10 @@
 *.log
 __pycache__/
 *.pyc
+apm_modules/
+*.tar.gz
+.claude-plugin/
+build/
 
 # Internal sample reports
 /samples/

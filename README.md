@@ -163,6 +163,7 @@ Full install options, GitHub installs, and verification → **[docs/INSTALL.md](
 | [**Installation**](docs/INSTALL.md) | Install, verify, update, prechecks, and first report run |
 | [**Architecture**](docs/ARCHITECTURE.md) | Data flow, execution contract, file map, new personas |
 | [**CISO user manual**](docs/ciso-user-manual.md) | Permissions, agents, interpretation, tuning |
+| [**APM packaging**](docs/APM_PACKAGING.md) | Package and test the two skills as Microsoft APM packages |
 | [**Beta schema**](docs/BETA-SCHEMA.md) | Schema 2.0-beta migration for custom producers |
 | [**Troubleshooting**](docs/TROUBLESHOOTING.md) | Common issues and compatibility |
 
@@ -176,6 +177,7 @@ Dashboard-blueprint-skills/                 # Persona scaffolder
 docs/                                       # Operator guides
 samples/                                    # Example HTML reports
 Example Reports/                            # Example generated run outputs
+packages/apm/                               # Microsoft APM package wrappers
 scripts/agentic-dashboard-prechecks.sh      # Install / runtime checker
 ```
 
