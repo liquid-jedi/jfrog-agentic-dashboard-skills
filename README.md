@@ -64,7 +64,22 @@ npx skills add jfrog -g -y
 
 **4. Install `jfrog-ciso-report`**
 
-From GitHub:
+This repository supports two install modes:
+
+- **APM install**: project-local and reproducible. Run Claude/Codex/Cursor from the APM project folder.
+- **Generic Skills install**: global user install. Use this when you want the skill available from any terminal folder or UI session.
+
+Option 1 — APM:
+
+```bash
+curl -sSL https://aka.ms/apm-unix | sh
+mkdir -p ~/ciso-reporting
+cd ~/ciso-reporting
+apm init -y --target claude,codex,cursor
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#main
+```
+
+Option 2 — generic Skills install:
 
 ```bash
 npx skills add git@github.com:liquid-jedi/jfrog-agentic-dashboard-skills.git -g --skill jfrog-ciso-report
@@ -79,11 +94,20 @@ npx skills add "$REPO_ROOT" -g --skill jfrog-ciso-report
 
 **5. Verify the install:**
 
+APM project-local install:
+
+```bash
+cd ~/ciso-reporting
+find .agents/skills .claude/skills -maxdepth 3 -type f | sort
+```
+
+Generic global Skills install:
+
 ```bash
 npx skills list -g
 ```
 
-Expected result: the global skills list includes both `jfrog` and `jfrog-ciso-report`.
+Expected result: the deployed or global skills include both `jfrog` and `jfrog-ciso-report`.
 
 **Current shipped versions:** `jfrog-ciso-report` `2.2.0`, `jfrog-dashboard-blueprint` `2.1.1`.
 **Previous release versions:** `jfrog-ciso-report` `2.1.1`, `jfrog-dashboard-blueprint` `2.1.0`.
@@ -138,8 +162,8 @@ Examples in this repo:
 
 - `samples/ciso-report-2026-04-26.html`
 - `samples/` (additional sample outputs)
-- `Example Reports/ciso-reports/liquidjedi/weekly/2026-05-20/report.html`
-- `Example Reports/ciso-reports/liquidjedi/weekly/2026-05-26/report.html`
+- `Example Reports/ciso-reports/weekly/report-1.html`
+- `Example Reports/ciso-reports/Monthly/report-1.html`
 
 Full install options, GitHub installs, and verification → **[docs/INSTALL.md](docs/INSTALL.md)**
 
@@ -163,6 +187,7 @@ Full install options, GitHub installs, and verification → **[docs/INSTALL.md](
 | [**Installation**](docs/INSTALL.md) | Install, verify, update, prechecks, and first report run |
 | [**Architecture**](docs/ARCHITECTURE.md) | Data flow, execution contract, file map, new personas |
 | [**CISO user manual**](docs/ciso-user-manual.md) | Permissions, agents, interpretation, tuning |
+| [**APM packaging**](docs/APM_PACKAGING.md) | Package and test the two skills as Microsoft APM packages |
 | [**Beta schema**](docs/BETA-SCHEMA.md) | Schema 2.0-beta migration for custom producers |
 | [**Troubleshooting**](docs/TROUBLESHOOTING.md) | Common issues and compatibility |
 
@@ -176,6 +201,7 @@ Dashboard-blueprint-skills/                 # Persona scaffolder
 docs/                                       # Operator guides
 samples/                                    # Example HTML reports
 Example Reports/                            # Example generated run outputs
+packages/apm/                               # Microsoft APM package wrappers
 scripts/agentic-dashboard-prechecks.sh      # Install / runtime checker
 ```
 

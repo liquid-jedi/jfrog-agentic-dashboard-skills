@@ -1,0 +1,19 @@
+name: jfrog-dashboard-blueprint
+version: 2.1.1
+description: Scaffold persona-specific JFrog dashboard and report skills from a guided interview.
+author: Avinash Giri
+license: Apache-2.0
+homepage: https://github.com/liquid-jedi/jfrog-agentic-dashboard-skills
+repository: https://github.com/liquid-jedi/jfrog-agentic-dashboard-skills
+keywords:
+  - jfrog
+  - dashboard
+  - blueprint
+  - skill
+  - scaffolding
+type: skill
+includes: auto
+targets:
+  - claude
+  - cursor
+  - codex

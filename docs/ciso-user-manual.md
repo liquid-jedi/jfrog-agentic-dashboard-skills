@@ -30,7 +30,13 @@ as-is while keeping the extension path visible for future personas.
 
 ## Installation
 
-See **[INSTALL.md](INSTALL.md)** for prerequisites, `npx skills add` commands (GitHub and local clone), prechecks, and verification.
+See **[INSTALL.md](INSTALL.md)** for prerequisites, APM install, generic Skills install, prechecks, and verification.
+
+Quick reference — APM install:
+
+```bash
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#main
+```
 
 Quick reference — local development install:
 
@@ -352,8 +358,7 @@ This project includes a separate builder skill for creating new persona packs:
 Recommended installation:
 
 ```bash
-REPO_ROOT="$(pwd)"
-npx skills add "$REPO_ROOT" -g --skill jfrog-dashboard-blueprint
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#main
 ```
 
 Typical builder prompt:

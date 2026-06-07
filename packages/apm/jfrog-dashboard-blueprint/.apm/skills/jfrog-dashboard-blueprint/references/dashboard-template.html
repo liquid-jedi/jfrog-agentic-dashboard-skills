@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>{{PERSONA_NAME}} Dashboard</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --panel: #121831;
+    --text: #e6e9f5;
+    --muted: #9aa3c7;
+    --accent: #41cd7d;
+    --warn: #f4b740;
+    --bad: #ef5350;
+    --border: #1f2647;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--text); padding: 24px;
+  }
+  h1 { margin: 0 0 4px 0; font-size: 24px; }
+  .sub { color: var(--muted); margin-bottom: 24px; }
+  .grid { display: grid; gap: 16px; }
+  .kpis { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+  .panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px;
+  }
+  .kpi .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+  .kpi .value { font-size: 28px; font-weight: 600; margin-top: 4px; }
+  .kpi .delta { font-size: 12px; margin-top: 4px; }
+  .delta.good { color: var(--accent); }
+  .delta.bad  { color: var(--bad); }
+  .delta.neutral { color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  th { color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; font-size: 11px; }
+  .section { margin-top: 24px; }
+  .section h2 { font-size: 16px; margin: 0 0 12px 0; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; }
+  .pill.P1 { background: rgba(239,83,80,.15); color: var(--bad); }
+  .pill.P2 { background: rgba(244,183,64,.15); color: var(--warn); }
+  .pill.P3 { background: rgba(154,163,199,.15); color: var(--muted); }
+  .warn-banner {
+    background: rgba(244,183,64,.1); border: 1px solid var(--warn);
+    color: var(--warn); padding: 8px 12px; border-radius: 8px; margin-bottom: 16px;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">{{PERSONA_NAME}} Dashboard</h1>
+  <div class="sub" id="subtitle">—</div>
+</header>
+
+<div id="warnings"></div>
+
+<div class="grid kpis" id="kpis"></div>
+
+<div id="sections"></div>
+
+<div class="section">
+  <h2>Recommendations</h2>
+  <div class="panel"><table>
+    <thead><tr><th>Priority</th><th>Score</th><th>Title</th><th>Owner</th><th>Due</th></tr></thead>
+    <tbody id="recs"></tbody>
+  </table></div>
+</div>
+
+<script>
+/* ═══ START DATA ═══ */
+const DATA = __DATA__;
+/* ═══ END DATA ═══ */
+
+function el(tag, cls, html) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html !== undefined) e.innerHTML = html;
+  return e;
+}
+
+function renderHeader() {
+  const meta = DATA.meta || {};
+  document.getElementById('title').textContent =
+    `${meta.persona || '{{PERSONA_NAME}}'} Dashboard`;
+  document.getElementById('subtitle').textContent =
+    `${meta.report_type || ''} · ${meta.period_start || ''} → ${meta.period_end || ''} · server: ${meta.server_id || 'n/a'}`;
+}
+
+function renderWarnings() {
+  const w = (DATA.meta && DATA.meta.warnings) || [];
+  if (!w.length) return;
+  const c = document.getElementById('warnings');
+  w.forEach(msg => c.appendChild(el('div', 'warn-banner', msg)));
+}
+
+function renderKpis() {
+  const root = document.getElementById('kpis');
+  (DATA.kpis || []).forEach(k => {
+    const panel = el('div', 'panel kpi');
+    panel.appendChild(el('div', 'label', k.label || k.id));
+    panel.appendChild(el('div', 'value', String(k.value ?? '—')));
+    if (k.delta !== undefined && k.delta !== null) {
+      const dir = k.direction || 'neutral';
+      const goodWhenUp = dir === 'up_is_good';
+      const goodWhenDown = dir === 'down_is_good';
+      const sign = k.delta > 0 ? '+' : '';
+      let cls = 'neutral';
+      if (goodWhenUp) cls = k.delta >= 0 ? 'good' : 'bad';
+      if (goodWhenDown) cls = k.delta <= 0 ? 'good' : 'bad';
+      panel.appendChild(el('div', `delta ${cls}`, `${sign}${k.delta} vs previous`));
+    }
+    root.appendChild(panel);
+  });
+}
+
+function renderSections() {
+  const root = document.getElementById('sections');
+  (DATA.sections || []).forEach(s => {
+    const wrap = el('div', 'section');
+    wrap.appendChild(el('h2', null, s.title || s.id));
+    const panel = el('div', 'panel');
+    if (s.kind === 'table' && s.data && Array.isArray(s.data.rows)) {
+      const cols = s.data.columns || Object.keys(s.data.rows[0] || {});
+      const tbl = el('table');
+      const thead = el('thead');
+      const trh = el('tr');
+      cols.forEach(c => trh.appendChild(el('th', null, c)));
+      thead.appendChild(trh); tbl.appendChild(thead);
+      const tbody = el('tbody');
+      s.data.rows.forEach(r => {
+        const tr = el('tr');
+        cols.forEach(c => tr.appendChild(el('td', null, String(r[c] ?? ''))));
+        tbody.appendChild(tr);
+      });
+      tbl.appendChild(tbody);
+      panel.appendChild(tbl);
+    } else if (s.kind === 'list' && s.data && Array.isArray(s.data.items)) {
+      const ul = el('ul');
+      s.data.items.forEach(i => ul.appendChild(el('li', null, String(i))));
+      panel.appendChild(ul);
+    } else if (s.kind === 'callout' && s.data) {
+      panel.appendChild(el('div', null, s.data.text || ''));
+    } else {
+      panel.appendChild(el('div', 'sub', 'TODO: implement renderer for section kind "' + (s.kind || 'unknown') + '"'));
+    }
+    wrap.appendChild(panel);
+    root.appendChild(wrap);
+  });
+}
+
+function renderRecs() {
+  const tbody = document.getElementById('recs');
+  const recs = (DATA.recommendations || []).slice().sort((a, b) => {
+    if ((b.score ?? 0) !== (a.score ?? 0)) return (b.score ?? 0) - (a.score ?? 0);
+    const order = { P1: 0, P2: 1, P3: 2 };
+    const pa = order[a.priority] ?? 9, pb = order[b.priority] ?? 9;
+    if (pa !== pb) return pa - pb;
+    return (a.title || '').localeCompare(b.title || '');
+  });
+  recs.forEach(r => {
+    const missing = !r.priority || r.score === undefined || r.score === null;
+    const tr = el('tr');
+    tr.appendChild(el('td', null, r.priority ? `<span class="pill ${r.priority}">${r.priority}</span>` : '<span class="pill P3">?</span>'));
+    tr.appendChild(el('td', null, String(r.score ?? '—')));
+    tr.appendChild(el('td', null, `<strong>${r.title || '—'}</strong><br/><span class="sub">${r.detail || ''}</span>`));
+    tr.appendChild(el('td', null, r.owner || '—'));
+    tr.appendChild(el('td', null, r.due_date || '—'));
+    if (missing) tr.style.outline = '1px solid var(--warn)';
+    tbody.appendChild(tr);
+  });
+}
+
+renderHeader();
+renderWarnings();
+renderKpis();
+renderSections();
+renderRecs();
+</script>
+</body>
+</html>
