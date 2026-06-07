@@ -8,6 +8,14 @@
 
 Every organization needs different reports. CISOs, engineering leads, and compliance officers all want a different slice of the same platform. This repository delivers **Skills** that agents use to collect live data, build structured JSON, and render **branded, self-contained HTML** dashboards on demand.
 
+## Why Agentic Reporting
+
+- **Live data** — reports reflect current platform state, not static exports.
+- **Consistent UX** — the same template renders every run for comparable executive output.
+- **Auditable flow** — agents collect JSON first, then a fixed renderer builds the dashboard.
+- **Portable install** — use APM for project-local reproducibility or global Skills install for run-from-anywhere workflows.
+- **Extensible personas** — new dashboards start from the blueprint skill, not a copy-paste rewrite.
+
 ```mermaid
 flowchart TB
   subgraph agent [AI Agent + Skill]
@@ -66,8 +74,8 @@ npx skills add jfrog -g -y
 
 This repository supports two install modes:
 
-- **APM install**: project-local and reproducible. Run Claude/Codex/Cursor from the APM project folder.
-- **Generic Skills install**: global user install. Use this when you want the skill available from any terminal folder or UI session.
+- **APM install**: project-local and reproducible. Best for teams that want an `apm.yml` and lockfile checked into a reporting workspace.
+- **Generic Skills install**: global user install. Best for users who want to open Claude/Codex/Cursor from any folder and run the skill.
 
 Option 1 — APM:
 
@@ -76,7 +84,7 @@ curl -sSL https://aka.ms/apm-unix | sh
 mkdir -p ~/ciso-reporting
 cd ~/ciso-reporting
 apm init -y --target claude,codex,cursor
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#main
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v2.3.0
 ```
 
 Option 2 — generic Skills install:
@@ -91,6 +99,8 @@ From a local clone (for development):
 REPO_ROOT="$(pwd)"
 npx skills add "$REPO_ROOT" -g --skill jfrog-ciso-report
 ```
+
+Full install guidance, including APM pros/cons → **[docs/INSTALL.md](docs/INSTALL.md)**.
 
 **5. Verify the install:**
 
@@ -109,8 +119,8 @@ npx skills list -g
 
 Expected result: the deployed or global skills include both `jfrog` and `jfrog-ciso-report`.
 
-**Current shipped versions:** `jfrog-ciso-report` `2.2.0`, `jfrog-dashboard-blueprint` `2.1.1`.
-**Previous release versions:** `jfrog-ciso-report` `2.1.1`, `jfrog-dashboard-blueprint` `2.1.0`.
+**Current shipped versions:** `jfrog-ciso-report` `2.3.0`, `jfrog-dashboard-blueprint` `2.1.1`.
+**Previous release versions:** `jfrog-ciso-report` `2.2.0`, `jfrog-dashboard-blueprint` `2.1.0`.
 
 **6. Run the readiness check** (recommended for local-clone installs):
 
@@ -165,31 +175,21 @@ Examples in this repo:
 - `Example Reports/ciso-reports/weekly/report-1.html`
 - `Example Reports/ciso-reports/Monthly/report-1.html`
 
-Full install options, GitHub installs, and verification → **[docs/INSTALL.md](docs/INSTALL.md)**
-
----
-
-## Why agentic reporting?
-
-- **Live data** — reports reflect current platform state, not static exports  
-- **Customer-defined priorities** — tune scoring and thresholds in the JSON contract  
-- **Consistent UX** — same template every run for comparable executive output  
-- **Portable** — works across Claude Code, Cursor, Cline, Windsurf, Amp, and other Skills-capable agents  
-- **Inspectable** — JSON-first pipeline is testable and auditable  
-- **Extensible** — new personas = new skill + mapping, not a new product  
-
 ---
 
 ## Documentation
 
 | Doc | Contents |
 |-----|----------|
-| [**Installation**](docs/INSTALL.md) | Install, verify, update, prechecks, and first report run |
-| [**Architecture**](docs/ARCHITECTURE.md) | Data flow, execution contract, file map, new personas |
-| [**CISO user manual**](docs/ciso-user-manual.md) | Permissions, agents, interpretation, tuning |
-| [**APM packaging**](docs/APM_PACKAGING.md) | Package and test the two skills as Microsoft APM packages |
-| [**Beta schema**](docs/BETA-SCHEMA.md) | Schema 2.0-beta migration for custom producers |
+| [**Installation**](docs/INSTALL.md) | Start here: APM vs global install, verification, first run |
+| [**CISO user manual**](docs/ciso-user-manual.md) | Permissions, runtime behavior, interpretation, tuning |
 | [**Troubleshooting**](docs/TROUBLESHOOTING.md) | Common issues and compatibility |
+
+Maintainer references:
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [APM packaging](docs/APM_PACKAGING.md)
+- [Beta schema](docs/BETA-SCHEMA.md)
 
 ---
 

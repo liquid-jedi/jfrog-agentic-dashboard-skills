@@ -73,18 +73,18 @@ packages, local path install plus `apm pack --dry-run` are the primary checks.
 
 ## Install From GitHub
 
-After these package folders are merged to `main`, consumers can install from the monorepo subdirectories:
-
-```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#main
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#main
-```
-
-Use a version tag only after the tag contains the `packages/apm/` folders, for example a future release:
+After release, consumers can install from the monorepo subdirectories with a version tag:
 
 ```bash
 apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v2.3.0
 apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v2.3.0
+```
+
+For development against the latest branch, use `#main`:
+
+```bash
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#main
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#main
 ```
 
 Do not use `#v2.2.0` for APM installs because that tag was created before APM package folders were added.

@@ -28,12 +28,12 @@ jf config add --interactive
 
 ### Current skill versions in this repository
 
-- `jfrog-ciso-report` — `2.2.0`
+- `jfrog-ciso-report` — `2.3.0`
 - `jfrog-dashboard-blueprint` — `2.1.1`
 
 Previous release:
 
-- `jfrog-ciso-report` — `2.1.1`
+- `jfrog-ciso-report` — `2.2.0`
 - `jfrog-dashboard-blueprint` — `2.1.0`
 
 ### Install the base `jfrog` skill
@@ -47,6 +47,22 @@ npx skills list -g   # must include "jfrog"
 
 ## Install dashboard skills
 
+### What is APM?
+
+[Microsoft APM](https://microsoft.github.io/apm/) is an Agent Package Manager: a package manager for agent context. It lets a project declare skills, prompts, instructions, plugins, and MCP servers in `apm.yml`, then reproduce the same agent setup with `apm install`.
+
+For these JFrog dashboard skills, APM installs the skill into the current project, for example:
+
+```text
+~/ciso-reporting/
+├── apm.yml
+├── apm.lock.yaml
+├── .agents/skills/jfrog-ciso-report/
+└── .claude/skills/jfrog-ciso-report/
+```
+
+That project-local model is different from a global Skills install.
+
 ### Which install should you choose?
 
 | Install path | Best for | Runtime behavior |
@@ -57,6 +73,16 @@ npx skills list -g   # must include "jfrog"
 APM is intentionally project-based, similar to how `npm install` works for application dependencies. If you install the skill into `~/ciso-reporting`, start Claude/Codex/Cursor from `~/ciso-reporting` so the runtime can see that project's `.agents/skills/` and `.claude/skills/` folders.
 
 If your operators expect to open Claude/Codex from any folder and simply ask for a CISO report, use the generic global Skills install instead.
+
+APM tradeoffs:
+
+- **Pros:** reproducible installs, lockfile, project-local isolation, easier team onboarding, safer than relying on each user's global state.
+- **Cons:** users must run the agent from the APM project folder, or open that folder as the active workspace in UI-based agents.
+
+Generic Skills tradeoffs:
+
+- **Pros:** available globally from any terminal folder or UI session after one install.
+- **Cons:** less reproducible across users and machines; updates depend on each user's global skill state.
 
 ### Option 1: APM install
 
@@ -75,13 +101,13 @@ Install the CISO report package from the published repository:
 mkdir -p ~/ciso-reporting
 cd ~/ciso-reporting
 apm init -y --target claude,codex,cursor
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#main
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v2.3.0
 ```
 
 Optional: install the persona scaffolder package:
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#main
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v2.3.0
 ```
 
 Run project-local APM skills from the same folder:
@@ -93,7 +119,7 @@ claude
 
 For Codex or Cursor, open/use the `~/ciso-reporting` folder as the active project/workspace.
 
-Use a version tag only after that tag includes the `packages/apm/` folders. Do not use `#v2.2.0` for APM installs because that release predates APM packaging.
+Do not use `#v2.2.0` for APM installs because that release predates APM packaging.
 
 ### Option 2: Generic Skills install
 

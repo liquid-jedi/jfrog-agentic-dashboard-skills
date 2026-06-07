@@ -1,5 +1,5 @@
 name: jfrog-ciso-report
-version: 2.2.0
+version: 2.3.0
 description: Generate a branded CISO Security and Curation HTML dashboard from a JFrog Platform instance.
 author: Avinash Giri
 license: Apache-2.0

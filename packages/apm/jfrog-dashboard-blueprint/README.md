@@ -7,7 +7,7 @@ The skill scaffolds new persona-specific JFrog dashboard/report skills from a gu
 ## Install
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#main
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v2.3.0
 ```
 
 For local testing from this repository:

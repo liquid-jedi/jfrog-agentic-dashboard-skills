@@ -7,7 +7,7 @@ The skill generates a branded CISO Security and Curation HTML dashboard from a J
 ## Install
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#main
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v2.3.0
 ```
 
 For local testing from this repository:
