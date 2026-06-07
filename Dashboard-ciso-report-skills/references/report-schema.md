@@ -21,6 +21,8 @@ field. Neither changes the other's job.
     "url": "string — full platform URL with https",
     "host": "string — hostname only (e.g., <server-id>.jfrog.io)",
     "generated": "string — YYYY-MM-DD",
+    "curation_uninspected_label": "string — default: Passed without inspection",
+    "curation_audit_ui_path": "string — optional UI path, default /ui/package-curation/audit",
     "date_from": "string — display format (e.g., Apr 1, 2026)",
     "date_to": "string — display format",
     "report_type": "string — Weekly | Monthly | Custom",
@@ -85,7 +87,45 @@ field. Neither changes the other's job.
     "total": "number — total audit events",
     "blocked": "number",
     "approved": "number — explicitly approved/override outcomes",
-    "passed": "number — evaluated with no blocking policy match",
+    "passed": "number — legacy; prefer request_results.without_inspection",
+    "request_results": {
+      "blocked": "number",
+      "approved": "number",
+      "dry_run": "number — alert-only evaluations (dry_run=true stream)",
+      "without_inspection": "number — downloads not policy-inspected (Curation UI Passed)"
+    },
+    "without_inspection": "number — alias of request_results.without_inspection",
+    "policy_inventory": {
+      "block_active": "number",
+      "dry_run_active": "number",
+      "total_registered": "number",
+      "by_risk_type": [{ "type": "string", "count": "number" }],
+      "block_by_risk_type": [{ "type": "string", "count": "number" }],
+      "block_policies": [{ "name": "string", "risk_type": "string", "scope": "string", "condition": "string" }]
+    },
+    "curation_state": {
+      "remote_total": "number",
+      "connected": "number",
+      "not_connected": "number",
+      "connected_pct": "number",
+      "supported_remote_total": "number — remotes in supported ecosystems",
+      "supported_connected": "number",
+      "supported_not_connected": "number",
+      "supported_connected_pct": "number",
+      "package_types_total": "number",
+      "by_package_type": [
+        {
+          "package_type": "string",
+          "remote_total": "number",
+          "connected": "number",
+          "blocked_period": "number"
+        }
+      ],
+      "note": "string"
+    },
+    "top_policies": [
+      { "name": "string", "audit_hits": "number", "blocked_hits": "number", "scope_label": "string", "action": "string" }
+    ],
     "block_rate": "number — percentage",
     "by_reason": {
       "malicious": "number",
@@ -93,30 +133,100 @@ field. Neither changes the other's job.
       "license": "number",
       "operational": "number"
     },
+    "policy_violations_by_type": {
+      "malicious": "number",
+      "security": "number",
+      "license": "number",
+      "operational": "number",
+      "total_blocked": "number"
+    },
+    "blocking_events_per_policy": [
+      {
+        "name": "string",
+        "scope_label": "string",
+        "blocked_events": "number",
+        "audit_events": "number",
+        "action": "string"
+      }
+    ],
+    "package_types": {
+      "total": "number — package types in supported ecosystems (UI parity)",
+      "top_by_blocked": [
+        {
+          "package_type": "string",
+          "blocked": "number",
+          "connected_repos": "number",
+          "remote_total": "number"
+        }
+      ]
+    },
     "top_blocked": [
       {
         "package": "string",
         "ecosystem": "string — npm, PyPI, Maven, etc.",
         "count": "number",
-        "policies": "string — comma-separated policy names",
         "malicious": "boolean — true if flagged as malicious"
       }
     ],
+    "policies_enforced": {
+      "available": "boolean",
+      "total_registered": "number — all curation policies returned by API",
+      "enabled": "number",
+      "enforcing": "number — enabled policies where policy_action is not dry_run",
+      "dry_run_excluded": "number",
+      "by_scope": [
+        {
+          "scope": "string — all_repos | specific_repos | user | …",
+          "label": "string — display label",
+          "registered": "number",
+          "enforcing": "number — non-dry-run in this scope"
+        }
+      ],
+      "by_policy": [
+        {
+          "name": "string",
+          "scope": "string",
+          "scope_label": "string",
+          "action": "string — block | dry_run | …",
+          "enabled": "boolean",
+          "audit_hits": "number — non-dry-run policy evaluations in period",
+          "blocked_hits": "number — blocked outcomes tied to policy"
+        }
+      ]
+    },
     "by_type": [
       { "type": "string — npm, PyPI, etc.", "total": "number", "blocked": "number" }
     ],
+    "unique_users": "number — distinct username or user_mail across all audit events in period",
+    "top_users": [
+      {
+        "user": "string — username or user_mail",
+        "events": "number — total audit events for this user",
+        "blocked": "number",
+        "approved": "number",
+        "passed": "number"
+      }
+    ],
     "audit_events": [
       {
-        "status": "string — blocked | approved",
+        "status": "string — blocked only (all blocked events in period)",
         "package": "string",
         "version": "string",
         "type": "string — package type",
         "repo": "string",
         "policy": "string",
         "requested_by": "string — user/email",
-        "date": "string — display format"
+        "date": "string — display format",
+        "timestamp": "string — ISO created_at (optional)",
+        "malicious": "boolean — optional, used for display sort"
       }
     ],
+    "audit_events_display": "array — same shape as audit_events, max 50, sort C+D for HTML table",
+    "audit_events_display_meta": {
+      "cap": "number — default 50",
+      "sort": "string — malicious_then_package_count_then_newest",
+      "total_blocked": "number"
+    },
     "observation": "string — agent-generated insight about curation data"
   },
 
@@ -155,6 +265,18 @@ field. Neither changes the other's job.
     ],
     "top_repos": [
       { "repo": "string", "count": "number" }
+    ],
+    "top_cves": [
+      {
+        "id": "string — CVE-YYYY-NNNN or XRAY id",
+        "cvss": "number|string|null",
+        "severity": "string",
+        "packages": "number — unique affected components",
+        "hits": "number — violation rows"
+      }
+    ],
+    "top_watch_policies": [
+      { "policy": "string", "type": "string", "hits": "number" }
     ],
     "observation": "string — agent-generated key finding"
   },

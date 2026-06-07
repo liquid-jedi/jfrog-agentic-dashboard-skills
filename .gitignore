@@ -2,6 +2,8 @@
 .claude/
 .remember/
 *.log
+__pycache__/
+*.pyc
 
 # Internal sample reports
 /samples/
@@ -24,8 +26,6 @@
 /ciso-report-*.html
 
 # Root-level one-off scripts (not part of the project)
-/ciso-build-data.py
-/ciso-collect-may2026.sh
 
 # Internal working docs
 /docs/ciso-skill-changelog.md

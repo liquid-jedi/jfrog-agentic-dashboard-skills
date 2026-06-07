@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CISO Security Report</title>
     <link
-        href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,600;9..40,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <style>
         /*
@@ -62,13 +62,14 @@
         }
 
         body {
-            font-family: 'Open Sans', sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
             background: var(--bg);
             color: var(--tx);
             line-height: 1.55;
             display: flex;
             min-height: 100vh;
-            -webkit-font-smoothing: antialiased
+            -webkit-font-smoothing: antialiased;
+            font-variant-numeric: tabular-nums
         }
 
         .side {
@@ -82,10 +83,37 @@
             overflow-y: auto
         }
 
-        .side svg {
-            width: 40px;
-            height: 40px;
-            margin-bottom: .8rem
+        .side-brand {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            font-size: var(--fs-m);
+            font-weight: 700;
+            color: var(--bartx);
+            letter-spacing: .02em;
+            margin-bottom: .9rem;
+            padding-bottom: .65rem;
+            border-bottom: 1px solid rgba(255, 255, 255, .1)
+        }
+
+        .side-brand svg {
+            width: 34px;
+            height: auto;
+            flex-shrink: 0
+        }
+
+        .side-brand-text {
+            min-width: 0
+        }
+
+        .side-brand span {
+            display: block;
+            font-size: var(--fs-xxs);
+            font-weight: 600;
+            color: var(--barmuted);
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            margin-top: .2rem
         }
 
         .ss {
@@ -160,28 +188,46 @@
             max-width: 1080px
         }
 
-        .sec {
-            font-size: var(--fs-m);
+        .sec-head {
+            display: flex;
+            align-items: flex-start;
+            gap: .75rem;
+            margin: 2rem 0 .55rem;
+            padding-top: .25rem
+        }
+
+        .sec-head:first-child {
+            margin-top: .5rem
+        }
+
+        .sec-title {
+            font-family: 'DM Sans', 'Plus Jakarta Sans', sans-serif;
+            font-size: 1.05rem;
             font-weight: 700;
-            margin: 1.6rem 0 .5rem;
-            border-left: 3px solid var(--frog);
-            padding-left: .55rem
+            color: var(--tx);
+            margin: 0;
+            line-height: 1.25
         }
 
-        .sec.red {
-            border-color: var(--crit)
+        .sec-sub {
+            margin: .2rem 0 0 !important
         }
 
-        .sec.orange {
-            border-color: var(--high)
+        .band {
+            background: var(--alt);
+            border: 1px solid var(--blt);
+            border-radius: var(--r);
+            padding: .9rem 1rem 1rem;
+            margin-bottom: 1.25rem
         }
 
-        .sec.blue {
-            border-color: var(--blue)
+        .band .card {
+            box-shadow: none;
+            margin-top: .45rem
         }
 
-        .sec.amber {
-            border-color: var(--amber)
+        .band .card:first-child {
+            margin-top: 0
         }
 
         p.sub {
@@ -194,6 +240,483 @@
             display: grid;
             grid-template-columns: repeat(6, 1fr);
             gap: .6rem
+        }
+
+        .kpis-hero {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: .85rem;
+            margin: .65rem 0 .5rem
+        }
+
+        .kpi-hero {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 1rem 1.05rem;
+            box-shadow: var(--sh)
+        }
+
+        .kpi-hero .kpi-n {
+            font-size: 2rem;
+            line-height: 1.05
+        }
+
+        .kpi-hero .kpi-l {
+            font-size: var(--fs-xs);
+            margin-top: .25rem
+        }
+
+        .kpis-secondary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .4rem;
+            margin-bottom: 1.1rem
+        }
+
+        .kpi-chip {
+            display: inline-flex;
+            align-items: baseline;
+            gap: .35rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: .32rem .65rem;
+            font-size: var(--fs-xs);
+            color: var(--tx2)
+        }
+
+        .kpi-chip strong {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: var(--fs-s);
+            color: var(--tx);
+            font-weight: 700
+        }
+
+        .severity-hero {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 1rem 1.05rem;
+            margin-bottom: .5rem
+        }
+
+        .severity-hero .dist {
+            height: 18px;
+            margin: .5rem 0 .65rem
+        }
+
+        .velocity-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: .75rem;
+            margin-bottom: .75rem
+        }
+
+        .velocity-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: .55rem .6rem .45rem
+        }
+
+        .velocity-panel .vp-label {
+            font-size: var(--fs-xxs);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--muted);
+            margin-bottom: .35rem
+        }
+
+        .velocity-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: .35rem;
+            height: 72px
+        }
+
+        .velocity-bar-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end
+        }
+
+        .velocity-bar {
+            width: 100%;
+            max-width: 36px;
+            border-radius: 4px 4px 2px 2px;
+            min-height: 4px
+        }
+
+        .velocity-bar-wrap.is-last .velocity-bar {
+            opacity: 1
+        }
+
+        .velocity-bar-wrap:not(.is-last) .velocity-bar {
+            opacity: .55
+        }
+
+        .velocity-bar-label {
+            font-size: var(--fs-xs);
+            font-weight: 600;
+            color: var(--tx2);
+            margin-top: .35rem;
+            text-align: center;
+            line-height: 1.2;
+            max-width: 72px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .velocity-table .mono {
+            font-size: var(--fs-s);
+            font-weight: 600
+        }
+
+        .outcome-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: .55rem;
+            margin: .5rem 0 .75rem
+        }
+
+        .outcome-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: .65rem .75rem;
+            text-align: center
+        }
+
+        .outcome-card strong {
+            display: block;
+            font-size: 1.35rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: .2rem
+        }
+
+        .outcome-card span {
+            font-size: var(--fs-xs);
+            font-weight: 600;
+            color: var(--tx2)
+        }
+
+        .outcome-card small {
+            display: block;
+            font-size: var(--fs-xxs);
+            color: var(--muted);
+            margin-top: .2rem;
+            line-height: 1.3
+        }
+
+        .stat-grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: .5rem;
+            margin: .45rem 0
+        }
+
+        .stat-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: .55rem .65rem;
+            text-align: center
+        }
+
+        .stat-box strong {
+            font-size: 1.15rem;
+            display: block
+        }
+
+        .stat-box span {
+            font-size: var(--fs-xxs);
+            color: var(--muted);
+            font-weight: 600
+        }
+
+        .conn-bar {
+            height: 10px;
+            background: var(--blt);
+            border-radius: 5px;
+            overflow: hidden;
+            margin: .4rem 0
+        }
+
+        .conn-bar span {
+            display: block;
+            height: 100%;
+            background: var(--frog)
+        }
+
+        .donut-wrap {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+            margin: .5rem 0
+        }
+
+        .donut {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-shrink: 0
+        }
+
+        .donut-inner {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: var(--surface);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            line-height: 1.1;
+            z-index: 1
+        }
+
+        .donut-inner small {
+            font-size: var(--fs-xxs);
+            font-weight: 600;
+            color: var(--muted)
+        }
+
+        .donut-legend {
+            display: flex;
+            flex-direction: column;
+            gap: .45rem;
+            min-width: 200px
+        }
+
+        .donut-legend-item {
+            display: flex;
+            align-items: center;
+            gap: .45rem;
+            font-size: var(--fs-s);
+            font-weight: 600
+        }
+
+        .donut-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0
+        }
+
+        .policy-protect {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            padding: .85rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            background: linear-gradient(90deg, rgba(64, 190, 70, .06), transparent 55%)
+        }
+
+        .policy-protect h4 {
+            margin: 0;
+            color: var(--frog);
+            font-size: var(--fs-m);
+            font-weight: 700
+        }
+
+        .policy-protect p {
+            margin: .2rem 0 0;
+            font-size: var(--fs-xs);
+            color: var(--muted);
+            max-width: 420px
+        }
+
+        .policy-protect-metrics {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem
+        }
+
+        .policy-metric {
+            display: flex;
+            align-items: baseline;
+            gap: .35rem
+        }
+
+        .policy-metric strong {
+            font-size: 1.5rem;
+            font-weight: 800;
+            line-height: 1
+        }
+
+        .policy-metric.block strong {
+            color: var(--frog)
+        }
+
+        .policy-metric.dry strong {
+            color: var(--amber)
+        }
+
+        .policy-metric span {
+            font-size: var(--fs-s);
+            color: var(--tx2);
+            font-weight: 600
+        }
+
+        .severity-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: .5rem;
+            margin: .5rem 0 .65rem
+        }
+
+        .severity-stat {
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: .55rem .65rem;
+            background: var(--surface)
+        }
+
+        .severity-stat strong {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: 800
+        }
+
+        .severity-stat span {
+            font-size: var(--fs-xs);
+            font-weight: 600;
+            color: var(--tx2)
+        }
+
+        .severity-stat em {
+            display: block;
+            font-style: normal;
+            font-size: var(--fs-xxs);
+            color: var(--muted);
+            margin-top: .15rem
+        }
+
+        .pkg-type-pill {
+            display: inline-block;
+            padding: .12rem .45rem;
+            border-radius: 999px;
+            font-size: var(--fs-xxs);
+            font-weight: 700
+        }
+
+        .pkg-type-pill.ok {
+            background: #e8f5e9;
+            color: #2e7d32
+        }
+
+        .pkg-type-pill.partial {
+            background: #fff8e1;
+            color: #f57f17
+        }
+
+        .violation-type-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: .55rem;
+            margin: .55rem 0 .75rem
+        }
+
+        .violation-type-card {
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: .65rem .75rem;
+            background: var(--surface);
+            text-align: center
+        }
+
+        .violation-type-card strong {
+            display: block;
+            font-size: 1.35rem;
+            font-weight: 800;
+            line-height: 1.1
+        }
+
+        .violation-type-card span {
+            font-size: var(--fs-xs);
+            font-weight: 700;
+            color: var(--tx2)
+        }
+
+        .repo-enabled-banner {
+            display: flex;
+            align-items: baseline;
+            gap: .5rem;
+            flex-wrap: wrap;
+            padding: .7rem .85rem;
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            background: var(--surface);
+            margin: .5rem 0
+        }
+
+        .repo-enabled-banner strong {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--frog)
+        }
+
+        .rec-cards {
+            display: flex;
+            flex-direction: column;
+            gap: .45rem
+        }
+
+        .rec-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--muted);
+            border-radius: var(--r);
+            padding: .65rem .85rem
+        }
+
+        .rec-card.p1 {
+            border-left-color: var(--crit)
+        }
+
+        .rec-card.p2 {
+            border-left-color: var(--high)
+        }
+
+        .rec-card.p3 {
+            border-left-color: var(--low)
+        }
+
+        .rec-card-title {
+            font-family: 'DM Sans', 'Plus Jakarta Sans', sans-serif;
+            font-size: var(--fs-m);
+            font-weight: 700;
+            margin-bottom: .25rem;
+            line-height: 1.35
+        }
+
+        .rec-card-body {
+            font-size: var(--fs-s);
+            color: var(--tx2);
+            line-height: 1.5
+        }
+
+        .rec-card-meta {
+            font-size: var(--fs-xxs);
+            color: var(--muted);
+            margin-top: .3rem
         }
 
         .kpi {
@@ -223,7 +746,7 @@
         }
 
         .kpi-n {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: var(--fs-xl);
             font-weight: 700;
             line-height: 1.1
@@ -239,7 +762,7 @@
         }
 
         .kpi-d {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: var(--fs-xxs);
             font-weight: 600;
             margin-top: .1rem;
@@ -275,7 +798,7 @@
         }
 
         .nb strong {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: var(--fs-m);
             margin-right: .2rem
         }
@@ -341,12 +864,12 @@
 
         .dt .num {
             text-align: right;
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: 600
         }
 
         .mono {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: var(--fs-xs)
         }
 
@@ -422,7 +945,7 @@
 
         .sevr .cnt {
             font-weight: 600;
-            font-family: 'IBM Plex Mono', monospace
+            font-family: 'Plus Jakarta Sans', sans-serif
         }
 
         .callout {
@@ -464,7 +987,7 @@
         }
 
         .ben.bl {
-            border-left: 4px solid var(--blue)
+            border-left: 4px solid var(--border)
         }
 
         .ben-t {
@@ -497,7 +1020,7 @@
         }
 
         .bs-v {
-            font-family: 'IBM Plex Mono', monospace;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: var(--fs-m);
             font-weight: 700
         }
@@ -579,15 +1102,96 @@
         }
 
         .exec-summary .es-title {
-            font-size: var(--fs-m);
+            font-family: 'DM Sans', 'Plus Jakarta Sans', sans-serif;
+            font-size: 1.05rem;
             font-weight: 700;
             margin-bottom: .35rem
         }
 
-        .exec-summary .es-text {
+        .exec-summary .es-lead {
             font-size: var(--fs-s);
-            line-height: 1.6;
+            line-height: 1.65;
+            color: var(--tx);
+            margin-bottom: .55rem
+        }
+
+        .exec-summary .es-list {
+            margin: 0 0 .65rem 1.1rem;
+            padding: 0;
+            font-size: var(--fs-s);
             color: var(--tx2)
+        }
+
+        .exec-summary .es-list li {
+            margin-bottom: .35rem;
+            line-height: 1.55
+        }
+
+        .exec-summary .es-list strong,
+        .exec-summary .es-highlight {
+            color: var(--tx);
+            font-weight: 700
+        }
+
+        .exec-summary .es-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            margin-top: .25rem
+        }
+
+        .exec-summary .es-stat {
+            background: var(--alt);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: .35rem .55rem;
+            font-size: var(--fs-xs)
+        }
+
+        .exec-summary .es-stat strong {
+            display: block;
+            font-size: var(--fs-m);
+            color: var(--tx);
+            line-height: 1.2
+        }
+
+        .method-note {
+            font-size: var(--fs-xs);
+            color: var(--muted);
+            margin: -.15rem 0 .65rem;
+            line-height: 1.45
+        }
+
+        .method-note strong {
+            color: var(--tx2)
+        }
+
+        .col-hint {
+            font-weight: 400;
+            color: var(--muted);
+            font-size: var(--fs-xxs);
+            display: block;
+            margin-top: .1rem
+        }
+
+        .audit-link-card {
+            background: var(--flt);
+            border: 1px solid rgba(64, 190, 70, .35);
+            border-radius: var(--r);
+            padding: .85rem 1rem;
+            margin: .6rem 0
+        }
+
+        .audit-link-card a.btn-audit {
+            display: inline-block;
+            margin-top: .45rem;
+            padding: .4rem .75rem;
+            background: var(--frog);
+            color: #fff;
+            font-weight: 700;
+            font-size: var(--fs-xs);
+            border-radius: 5px;
+            text-decoration: none
         }
 
         .pri {
@@ -647,8 +1251,15 @@
         }
 
         .report-header-text .report-period {
-            font-size: var(--fs-s);
+            font-size: var(--fs-m);
+            font-weight: 600;
             color: var(--tx2);
+            margin-top: .35rem
+        }
+
+        .report-header-text .report-window {
+            font-size: var(--fs-s);
+            color: var(--muted);
             margin-top: .15rem
         }
 
@@ -657,8 +1268,22 @@
                 grid-template-columns: repeat(3, 1fr)
             }
 
+            .kpis-hero {
+                grid-template-columns: 1fr
+            }
+
+            .velocity-grid {
+                grid-template-columns: 1fr
+            }
+
             .g2 {
                 grid-template-columns: 1fr
+            }
+
+            .outcome-grid,
+            .violation-type-grid,
+            .stat-grid-4 {
+                grid-template-columns: repeat(2, 1fr)
             }
 
             .side {
@@ -693,6 +1318,336 @@
 
         const n = v => typeof v === 'number' ? v.toLocaleString() : (v || '0');
         const pct = (a, b) => b > 0 ? Math.round(a / b * 100) : 0;
+
+        const AUDIT_DISPLAY_CAP = 50;
+        const CURATION_AUDIT_UI_PATH = '/ui/package-curation/audit';
+
+        function curationAuditUiUrl(meta) {
+            const m = meta || {};
+            const path = m.curation_audit_ui_path || CURATION_AUDIT_UI_PATH;
+            if (/^https?:\/\//i.test(path)) return path;
+            const base = String(m.url || '').replace(/\/$/, '');
+            return base ? base + (path.startsWith('/') ? path : '/' + path) : path;
+        }
+
+        function normalizeAuditStatus(e) {
+            return String(e.status || e.action || '').toLowerCase();
+        }
+
+        function eventIsMalicious(e) {
+            if (e.malicious === true) return true;
+            const hay = [e.policy, e.policies, e.condition_name, e.condition_category]
+                .filter(Boolean).join(' ').toLowerCase();
+            return /malicious/.test(hay);
+        }
+
+        function eventTimestamp(e) {
+            return e.timestamp || e.date || '';
+        }
+
+        function packageKey(e) {
+            return `${e.package || ''}\u0000${e.type || ''}`;
+        }
+
+        function sortAuditEventsCD(blockedEvents) {
+            const counts = {};
+            blockedEvents.forEach((e) => {
+                const k = packageKey(e);
+                counts[k] = (counts[k] || 0) + 1;
+            });
+            return blockedEvents.slice().sort((a, b) => {
+                const am = eventIsMalicious(a) ? 1 : 0;
+                const bm = eventIsMalicious(b) ? 1 : 0;
+                if (bm !== am) return bm - am;
+                const ac = counts[packageKey(a)] || 0;
+                const bc = counts[packageKey(b)] || 0;
+                if (bc !== ac) return bc - ac;
+                return String(eventTimestamp(b)).localeCompare(String(eventTimestamp(a)));
+            });
+        }
+
+        function buildAuditEventsDisplayFromBlocked(blockedEvents) {
+            return sortAuditEventsCD(blockedEvents).slice(0, AUDIT_DISPLAY_CAP);
+        }
+
+        function parseReportDate(value) {
+            if (!value) return null;
+            const s = String(value).trim();
+            if (!s) return null;
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s + 'T23:59:59Z');
+            const d = new Date(s.includes('T') ? s : s.replace(' ', 'T'));
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+
+        function reportPeriodEnd() {
+            const m = DATA.meta || {};
+            return parseReportDate(m.generated) || parseReportDate(m.date_to) || new Date();
+        }
+
+        function computeDaysOpen(firstSeen, endDate) {
+            const start = parseReportDate(firstSeen);
+            const end = endDate || reportPeriodEnd();
+            if (!start || !end) return null;
+            return Math.max(0, Math.floor((end.getTime() - start.getTime()) / 86400000));
+        }
+
+        function formatTriggeringPolicies(item) {
+            const raw = String(item.policies || item.policy || '').trim();
+            if (raw && !/^unknown$/i.test(raw)) return raw;
+            if (item.reason) return String(item.reason);
+            return 'Not returned by audit API (see JFrog UI)';
+        }
+
+        function isSummaryGovernanceRow(row) {
+            if (!row || typeof row !== 'object') return false;
+            const repo = String(row.repo || '').toLowerCase();
+            return repo.includes('repos in scope') || repo.includes('overall');
+        }
+
+        function comparisonMetricFromPair(label, previous, current, goodWhenDown = true) {
+            const prev = Number(previous) || 0;
+            const cur = Number(current) || 0;
+            const delta = cur - prev;
+            const changePct = prev !== 0 ? Math.round((delta / prev) * 100) : (delta === 0 ? 0 : 100);
+            return {
+                label,
+                previous: prev,
+                current: cur,
+                change_pct: changePct,
+                direction: delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat',
+                good: goodWhenDown ? delta <= 0 : delta >= 0
+            };
+        }
+
+        function syncComparisonFromThreatVelocity() {
+            const t = DATA.threat_velocity || {};
+            const periods = Array.isArray(t.periods) ? t.periods : [];
+            if (!t.available || periods.length < 2) return false;
+            const prev = periods[periods.length - 2];
+            const curr = periods[periods.length - 1];
+            const cmp = DATA.comparison = DATA.comparison || {};
+            cmp.available = true;
+            cmp.previous_date = prev.label || cmp.previous_date || 'Previous period';
+            cmp.source = 'threat_velocity';
+            cmp.metrics = [
+                comparisonMetricFromPair('Packages Blocked', prev.blocked, curr.blocked, true),
+                comparisonMetricFromPair('Violations', prev.violations, curr.violations, true),
+                comparisonMetricFromPair('Critical', prev.critical, curr.critical, true)
+            ];
+            const c = DATA.curation || {};
+            const v = DATA.violations || {};
+            if (v.risk_score !== undefined && v.risk_score_previous !== undefined) {
+                cmp.metrics.push(comparisonMetricFromPair(
+                    'Risk Score',
+                    v.risk_score_previous,
+                    v.risk_score,
+                    true
+                ));
+            }
+            return true;
+        }
+
+        function labelWithoutInspection() {
+            const m = DATA.meta || {};
+            return m.curation_uninspected_label || 'Passed without inspection';
+        }
+
+        function getRemoteConnectionStats(state) {
+            const st = state || {};
+            if (Number(st.supported_remote_total) > 0) {
+                return {
+                    total: Number(st.supported_remote_total),
+                    connected: Number(st.supported_connected),
+                    not_connected: Number(st.supported_not_connected),
+                    pct: Number(st.supported_connected_pct) || 0,
+                    scope: 'Supported-ecosystem remotes',
+                    footnote: 'Includes all remote repositories that belong to a supported package ecosystem (per Curation policy coverage).'
+                };
+            }
+            return {
+                total: Number(st.remote_total) || 0,
+                connected: Number(st.connected) || 0,
+                not_connected: Number(st.not_connected) || 0,
+                pct: Number(st.connected_pct) || 0,
+                scope: 'All remote repositories',
+                footnote: st.note || ''
+            };
+        }
+
+        function policyViolationsByType(c) {
+            const pv = c.policy_violations_by_type || {};
+            const br = c.by_reason || {};
+            return {
+                malicious: Number(pv.malicious ?? br.malicious) || 0,
+                security: Number(pv.security ?? br.security) || 0,
+                license: Number(pv.license ?? br.license) || 0,
+                operational: Number(pv.operational ?? br.operational) || 0,
+                total: Number(pv.total_blocked) || (
+                    (Number(pv.malicious ?? br.malicious) || 0) +
+                    (Number(pv.security ?? br.security) || 0) +
+                    (Number(pv.license ?? br.license) || 0) +
+                    (Number(pv.operational ?? br.operational) || 0)
+                )
+            };
+        }
+
+        function buildDonutChart(total, connected, notConnected, pct) {
+            const p = Math.min(100, Math.max(0, Number(pct) || 0));
+            const bg = `conic-gradient(var(--frog) 0 ${p}%, #d8dee9 ${p}% 100%)`;
+            const notPct = total > 0 ? Math.round((notConnected / total) * 1000) / 10 : 0;
+            return `
+                <div class="donut-wrap">
+                    <div class="donut" style="background:${bg}">
+                        <div class="donut-inner">${n(total)}<small>remote</small></div>
+                    </div>
+                    <div class="donut-legend">
+                        <div class="donut-legend-item"><span class="donut-dot" style="background:var(--frog)"></span>Connected (${p}%) <strong>${n(connected)}</strong></div>
+                        <div class="donut-legend-item"><span class="donut-dot" style="background:#d8dee9"></span>Not connected (${notPct}%) <strong>${n(notConnected)}</strong></div>
+                    </div>
+                </div>`;
+        }
+
+        function getCurationRequestResults(c) {
+            const rr = c.request_results || {};
+            return {
+                blocked: Number(rr.blocked ?? c.blocked) || 0,
+                approved: Number(rr.approved ?? c.approved) || 0,
+                dry_run: Number(rr.dry_run) || 0,
+                without_inspection: Number(rr.without_inspection ?? c.without_inspection) || 0
+            };
+        }
+
+        function buildTrendSummaryFallback() {
+            const t = DATA.threat_velocity || {};
+            const periods = Array.isArray(t.periods) ? t.periods : [];
+            if (periods.length < 2) return '';
+            const prev = periods[periods.length - 2];
+            const curr = periods[periods.length - 1];
+            const fmtDelta = (label, a, b, goodWhenDown) => {
+                const p = Number(a) || 0;
+                const c = Number(b) || 0;
+                const d = c - p;
+                const pct = p !== 0 ? Math.round((d / p) * 100) : (d === 0 ? 0 : 100);
+                const dir = d > 0 ? 'rose' : d < 0 ? 'fell' : 'held steady at';
+                const tone = d === 0 ? 'neutral' : (goodWhenDown ? (d < 0 ? 'positive' : 'concerning') : (d > 0 ? 'positive' : 'concerning'));
+                return { label, from: p, to: c, dir, pct, tone };
+            };
+            const blocked = fmtDelta('Curation blocks', prev.blocked, curr.blocked, false);
+            const violations = fmtDelta('Violations', prev.violations, curr.violations, true);
+            const critical = fmtDelta('Critical findings', prev.critical, curr.critical, true);
+            const advice = critical.to < critical.from && blocked.to >= blocked.from
+                ? 'Gate activity is up while in-repo critical volume is easing — keep enforcement on high-risk remotes and focus remediation on remaining critical XRAY IDs.'
+                : critical.to > critical.from
+                    ? 'Critical backlog is growing — pair stronger curation block policies with watch-backed scanning on unindexed remotes.'
+                    : 'Trends are flat — validate dry-run policies for promotion to block mode where npm/docker volume is highest.';
+            return `Blocked downloads ${blocked.dir} ${blocked.from} → ${blocked.to} (${blocked.pct >= 0 ? '+' : ''}${blocked.pct}%). `
+                + `Violations ${violations.dir} ${violations.from} → ${violations.to} (${violations.pct >= 0 ? '+' : ''}${violations.pct}%). `
+                + `Critical ${critical.dir} ${critical.from} → ${critical.to} (${critical.pct >= 0 ? '+' : ''}${critical.pct}%). `
+                + advice;
+        }
+
+        function computeRepoWatchSummary(rows) {
+            const list = (rows || []).filter((r) => r && !isSummaryGovernanceRow(r));
+            if (!list.length) return null;
+            let indexed = 0;
+            let unindexed = 0;
+            let withWatch = 0;
+            let withoutWatch = 0;
+            list.forEach((r) => {
+                if (r.indexed) indexed += 1;
+                else unindexed += 1;
+                const wc = Number(r.watch_count);
+                if (Number.isFinite(wc) && wc > 0) withWatch += 1;
+                else withoutWatch += 1;
+            });
+            return { total: list.length, indexed, unindexed, withWatch, withoutWatch };
+        }
+
+        function augmentRecommendations() {
+            const recs = Array.isArray(DATA.recommendations) ? [...DATA.recommendations] : [];
+            const c = DATA.curation || {};
+            const p = DATA.platform || {};
+            const st = c.curation_state || p.curation_state || {};
+            const extras = [];
+
+            const normalizeRec = (item, idx) => {
+                const text = String(item.text || item.detail || item.description || '').trim();
+                const title = item.title || (text ? text.split(/[.;]/)[0].slice(0, 72) : `Recommendation ${idx + 1}`);
+                return { ...item, title, detail: item.detail || text, source: item.source || 'xray' };
+            };
+
+            if (c.available && Number(c.blocked) > 0) {
+                const top = (c.top_blocked || [])[0];
+                extras.push({
+                    priority: 'P2',
+                    score: 72,
+                    source: 'curation',
+                    title: 'Harden gate policies on high-volume ecosystems',
+                    detail: `Impact: ${n(c.blocked)} packages blocked at the gate this period. Next step: review ${top ? top.ecosystem + ' / ' + top.package : 'top blocked packages'} and promote dry-run curation policies to block where appropriate.`
+                });
+            }
+            if (Number(st.not_connected) > 0) {
+                extras.push({
+                    priority: 'P2',
+                    score: 65,
+                    source: 'curation',
+                    title: 'Connect remaining remote repositories to Curation',
+                    detail: `Impact: ${n(st.not_connected)} of ${n(st.remote_total)} remote repos are not connected (curated=false). Next step: enable curation on high-traffic npm/docker remotes first.`
+                });
+            }
+            if (Number(c.unique_users) > 0 && Number(c.blocked) > 0) {
+                extras.push({
+                    priority: 'P3',
+                    score: 48,
+                    source: 'curation',
+                    title: 'Review top curation users driving blocks',
+                    detail: `Impact: ${n(c.unique_users)} users triggered ${n(c.total)} evaluations. Next step: validate override/approval patterns for repeat blockers in the audit UI.`
+                });
+            }
+
+            const merged = [...extras, ...recs.map(normalizeRec)];
+            const seen = new Set();
+            DATA.recommendations = merged.filter((r) => {
+                const key = (r.title || '') + '|' + (r.source || '');
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            }).slice(0, 12);
+        }
+
+        function secHead(num, title, subtitle) {
+            return `
+                <div class="sec-head">
+                    <div>
+                        <h2 class="sec-title">${title}</h2>
+                        ${subtitle ? `<p class="sub sec-sub">${subtitle}</p>` : ''}
+                    </div>
+                </div>`;
+        }
+
+        function miniVelocityChart(periods, key, color) {
+            const list = periods || [];
+            if (!list.length) return '';
+            const vals = list.map((p) => Number(p[key]) || 0);
+            const max = Math.max(...vals, 1);
+            const bars = list.map((p, i) => {
+                const v = vals[i];
+                const pctH = Math.max(6, Math.round((v / max) * 100));
+                const last = i === list.length - 1;
+                return `
+                    <div class="velocity-bar-wrap${last ? ' is-last' : ''}">
+                        <div class="velocity-bar" style="height:${pctH}%;background:${color}" title="${n(v)}"></div>
+                        <div class="velocity-bar-label">${p.label || ''}</div>
+                    </div>`;
+            }).join('');
+            const labels = { blocked: 'Blocked', violations: 'Violations', critical: 'Critical' };
+            return `
+                <div class="velocity-panel">
+                    <div class="vp-label">${labels[key] || key}</div>
+                    <div class="velocity-bars">${bars}</div>
+                </div>`;
+        }
+
 
         const sevColor = s => ({
             Critical: 'var(--crit)',
@@ -768,31 +1723,173 @@
                     package: item.package || item.name ? `${item.package || item.name}${item.version ? `:${item.version}` : ''}` : 'unknown',
                     ecosystem: item.ecosystem || item.type || 'unknown',
                     count: Number(item.count) || 0,
-                    policies: item.policies || item.reason || '—',
                     malicious: Boolean(item.malicious)
                 }));
             }
+            if (!c.policies_enforced || typeof c.policies_enforced !== 'object') {
+                c.policies_enforced = { available: false, by_scope: [], by_policy: [] };
+            }
+            if ((Number(c.unique_users) || 0) === 0 && Array.isArray(c.top_users) && c.top_users.length > 0) {
+                c.unique_users = c.top_users.length;
+            }
+            if (!Array.isArray(c.top_users)) c.top_users = [];
+            if (c.unique_users === undefined || c.unique_users === null) {
+                c.unique_users = c.top_users.length > 0
+                    ? new Set(c.top_users.map((u) => u.user).filter(Boolean)).size
+                    : 0;
+            } else {
+                c.unique_users = Number(c.unique_users) || 0;
+            }
+            c.top_users = c.top_users.map((item) => ({
+                user: item.user || item.username || item.email || '—',
+                events: Number(item.events ?? item.count ?? item.total) || 0,
+                blocked: Number(item.blocked) || 0,
+                approved: Number(item.approved) || 0,
+                passed: Number(item.passed) || 0
+            }));
             if (!Array.isArray(p.curated_types) && c.by_package_type && typeof c.by_package_type === 'object') {
                 p.curated_types = Object.keys(c.by_package_type);
             }
             if (!Array.isArray(p.uncurated_types)) p.uncurated_types = [];
+            const rr = getCurationRequestResults(c);
+            if (c.request_results) {
+                c.blocked = rr.blocked;
+                c.approved = rr.approved;
+                c.without_inspection = rr.without_inspection;
+                c.passed = rr.without_inspection;
+            } else {
+                const actionSum = (Number(c.blocked) || 0) + (Number(c.approved) || 0) + (Number(c.passed) || 0);
+                c.total = Math.max(Number(c.total) || 0, actionSum);
+                if ((Number(c.passed) || 0) === 0 && (Number(c.total) || 0) > (Number(c.blocked) || 0)) {
+                    c.passed = Math.max(0, (Number(c.total) || 0) - (Number(c.blocked) || 0));
+                }
+            }
+            if (!Array.isArray(c.top_policies) && c.policies_enforced && Array.isArray(c.policies_enforced.by_policy)) {
+                c.top_policies = c.policies_enforced.by_policy.slice(0, 5);
+            }
+            const platState = (p.curation_state || {});
+            if ((!c.curation_state || !(c.curation_state.remote_total)) && platState.remote_total) {
+                c.curation_state = platState;
+            }
+            const curState = c.curation_state || p.curation_state || {};
+            const curationSignals = [
+                c.available,
+                Number(c.total) > 0,
+                Number(c.blocked) > 0,
+                Number(c.unique_users) > 0,
+                Number(curState.remote_total) > 0,
+                Number(curState.supported_remote_total) > 0,
+                Number(curState.connected) > 0,
+                Number(curState.supported_connected) > 0,
+                Number((c.policy_inventory || {}).total_registered) > 0,
+                Number((c.policies_enforced || {}).total_registered) > 0,
+                Number(p.curation_policies_total) > 0,
+                Number(p.curation_policies_block) > 0,
+                Number(p.curation_policies_global) > 0,
+                Number(p.curation_policies_repo) > 0,
+                Number(p.curation_repos_count) > 0
+            ];
+            p.curation_enabled = curationSignals.some(Boolean);
+            if (!p.curation_repos_count && Number(curState.remote_total) > 0) {
+                p.curation_repos_count = Number(curState.remote_total);
+            }
+            if (!c.policy_violations_by_type && c.by_reason) {
+                c.policy_violations_by_type = {
+                    ...c.by_reason,
+                    total_blocked: (Number(c.by_reason.malicious) || 0) + (Number(c.by_reason.security) || 0)
+                        + (Number(c.by_reason.license) || 0) + (Number(c.by_reason.operational) || 0)
+                };
+            }
+            if (!c.blocking_events_per_policy && c.top_policies && c.top_policies.length) {
+                c.blocking_events_per_policy = c.top_policies.map((p) => ({
+                    name: p.name,
+                    scope_label: p.scope_label,
+                    blocked_events: Number(p.blocked_hits ?? p.blocked_events) || 0,
+                    audit_events: Number(p.audit_hits ?? p.audit_events) || 0,
+                    action: p.action
+                }));
+            }
+            if (!c.package_types && (c.by_type || []).length) {
+                c.package_types = {
+                    total: (p.curation_state || {}).package_types_total || c.by_type.length,
+                    top_by_blocked: [...c.by_type].sort((a, b) => (b.blocked || 0) - (a.blocked || 0)).slice(0, 5)
+                        .map((t) => ({ package_type: t.type, blocked: t.blocked, connected_repos: 0, remote_total: t.total }))
+                };
+            }
+            const platByPkg = (c.curation_state || p.curation_state || {}).by_package_type || [];
+            if (platByPkg.length) {
+                const platMap = new Map(platByPkg.map((row) => [row.package_type, row]));
+                const pkgInsight = c.package_types || { total: platByPkg.length, top_by_blocked: [] };
+                const topRows = (pkgInsight.top_by_blocked || []).length
+                    ? pkgInsight.top_by_blocked
+                    : platByPkg.map((row) => ({
+                        package_type: row.package_type,
+                        blocked: Number(row.blocked_period) || 0,
+                        connected_repos: Number(row.connected_repos ?? row.connected) || 0,
+                        remote_total: Number(row.remote_total ?? row.total) || 0
+                    }));
+                pkgInsight.top_by_blocked = topRows.map((row) => {
+                    const plat = platMap.get(row.package_type);
+                    if (!plat) return row;
+                    const conn = Number(row.connected_repos) || Number(plat.connected_repos ?? plat.connected) || 0;
+                    const remote = Number(row.remote_total) || Number(plat.remote_total ?? plat.total) || 0;
+                    return { ...row, connected_repos: conn, remote_total: remote };
+                });
+                if (!pkgInsight.total) {
+                    pkgInsight.total = (c.curation_state || p.curation_state || {}).package_types_total || platByPkg.length;
+                }
+                c.package_types = pkgInsight;
+            }
+
+            if (!meta.curation_audit_ui_path) meta.curation_audit_ui_path = CURATION_AUDIT_UI_PATH;
+            if (!meta.curation_uninspected_label) meta.curation_uninspected_label = 'Passed without inspection';
+
+            const blockedOnly = (c.audit_events || [])
+                .map((e) => ({ ...e, normalized_status: normalizeAuditStatus(e) }))
+                .filter((e) => e.normalized_status === 'blocked');
+            if (blockedOnly.length > 0 || Number(c.blocked || 0) > 0) {
+                if (!Array.isArray(c.audit_events_display) || c.audit_events_display.length === 0) {
+                    c.audit_events_display = buildAuditEventsDisplayFromBlocked(blockedOnly);
+                }
+                const totalBlocked = Number(c.blocked) > 0 ? Number(c.blocked) : blockedOnly.length;
+                c.audit_events_display_meta = {
+                    cap: AUDIT_DISPLAY_CAP,
+                    sort: 'malicious_then_package_count_then_newest',
+                    total_blocked: totalBlocked,
+                    ...(c.audit_events_display_meta || {})
+                };
+            }
+
 
             const v = DATA.violations;
             v.by_severity = v.by_severity || { critical: 0, high: 0, medium: 0, low: 0 };
             if (!v.by_type || typeof v.by_type !== 'object') v.by_type = {};
+            // Keep total aligned with available breakdowns.
+            const sevSum = (Number(v.by_severity.critical) || 0) + (Number(v.by_severity.high) || 0) + (Number(v.by_severity.medium) || 0) + (Number(v.by_severity.low) || 0);
             if (v.by_type.security === undefined) v.by_type.security = Number(v.total) || 0;
             if (v.by_type.operational === undefined) v.by_type.operational = 0;
             if (v.by_type.license === undefined) v.by_type.license = 0;
             if (v.by_type.operational === undefined && v.by_type.operational_risk !== undefined) {
                 v.by_type.operational = v.by_type.operational_risk;
             }
+            const typeSum = (Number(v.by_type.security) || 0) + (Number(v.by_type.operational) || 0) + (Number(v.by_type.license) || 0);
+            v.total = Math.max(Number(v.total) || 0, sevSum, typeSum);
             if (Array.isArray(v.critical_issues)) {
-                v.critical_issues = v.critical_issues.map((issue) => ({
-                    ...issue,
-                    id: issue.id || issue.issue_id || 'unknown',
-                    description: issue.description || issue.title || 'No description provided',
-                    hits: issue.hits !== undefined ? issue.hits : (issue.count !== undefined ? issue.count : ((issue.affected_artifacts || []).length || (issue.components || []).length || 1))
-                }));
+                const periodEnd = reportPeriodEnd();
+                v.critical_issues = v.critical_issues.map((issue) => {
+                    let daysOpen = Number(issue.days_open);
+                    if (!Number.isFinite(daysOpen) || daysOpen <= 0) {
+                        const computed = computeDaysOpen(issue.first_seen, periodEnd);
+                        if (computed !== null) daysOpen = computed;
+                    }
+                    return {
+                        ...issue,
+                        id: issue.id || issue.issue_id || 'unknown',
+                        description: issue.description || issue.title || 'No description provided',
+                        hits: issue.hits !== undefined ? issue.hits : (issue.count !== undefined ? issue.count : ((issue.affected_artifacts || []).length || (issue.components || []).length || 1)),
+                        days_open: Number.isFinite(daysOpen) ? daysOpen : 0
+                    };
+                });
             }
 
             const l = DATA.license;
@@ -823,7 +1920,8 @@
             if (!b.curation_headline) b.curation_headline = `Stopped ${n(c.blocked || 0)} packages before entering any repository`;
             if (!b.xray_headline) b.xray_headline = `Surfaced ${n(v.total || 0)} violations across indexed repositories`;
             if (b.cves_prevented === undefined) b.cves_prevented = b.estimated_vulnerabilities_prevented !== undefined ? b.estimated_vulnerabilities_prevented : (c.blocked || 0);
-            if (b.upgrade_rate === undefined) b.upgrade_rate = 0;
+            if (b.upgrade_rate === undefined) b.upgrade_rate = null;
+            b.upgrade_rate_computed = b.upgrade_rate_computed === true;
             if (b.xray_coverage === undefined) {
                 b.xray_coverage = Array.isArray(DATA.governance.repo_watch_coverage)
                     ? 0
@@ -832,6 +1930,7 @@
             if (!b.compare_line) b.compare_line = b.observation || '';
 
             const g = DATA.governance;
+            g._summary_only = false;
             if (!Array.isArray(g.policy_effectiveness)) {
                 const effectivenessPct = Number(g.policy_effectiveness);
                 g.policy_effectiveness = Number.isFinite(effectivenessPct) && effectivenessPct > 0
@@ -843,17 +1942,23 @@
                         delta_pct: 0
                     }]
                     : [];
+                if (g.policy_effectiveness.length === 1) g._policy_summary_only = true;
             }
             if (!Array.isArray(g.repo_watch_coverage)) {
                 const coveragePct = Number(g.repo_watch_coverage);
                 g.repo_watch_coverage = Number.isFinite(coveragePct) && coveragePct > 0
                     ? [{
-                        repo: `${n(p.curation_repos_count || p.repos_indexed || 0)} repos in scope`,
+                        repo: `${n(p.curation_repos_count || p.repos_indexed || 0)} repos in scope (summary)`,
                         indexed: true,
-                        watch_count: Number(g.watches_active) || 0,
-                        risk_level: `${coveragePct}% covered`
+                        watch_count: null,
+                        risk_level: `${coveragePct}% indexed`
                     }]
                     : [];
+                if (g.repo_watch_coverage.length === 1 && isSummaryGovernanceRow(g.repo_watch_coverage[0])) {
+                    g._repo_summary_only = true;
+                }
+            } else if (g.repo_watch_coverage.every(isSummaryGovernanceRow)) {
+                g._repo_summary_only = true;
             }
 
             const cmp = DATA.comparison;
@@ -903,11 +2008,70 @@
                 ];
             }
             if (!t.trend_summary && t.observation) t.trend_summary = t.observation;
+            const stubTrend = /moved from \d+ to \d+;\s*curation blocks moved to \d+\.?$/i.test(String(t.trend_summary || ''))
+                || (String(t.trend_summary || '').includes('moved to') && !String(t.trend_summary || '').includes('→'));
+            if (!t.trend_summary || stubTrend) {
+                const built = buildTrendSummaryFallback();
+                if (built) t.trend_summary = built;
+            }
+
+            if (Array.isArray(v.top_watch_policies) && v.top_watch_policies.length > 0) {
+                const totalHits = v.top_watch_policies.reduce((s, p) => s + (Number(p.hits) || 0), 0) || Math.max(1, Number(v.total) || 1);
+                const watchRows = v.top_watch_policies.map((p) => ({
+                    policy: p.policy,
+                    type: p.type || 'security',
+                    hits: Number(p.hits) || 0,
+                    pct_of_events: Math.round(((Number(p.hits) || 0) / totalHits) * 100),
+                    delta_pct: Number(p.delta_pct) || 0
+                }));
+                if (!Array.isArray(g.xray_policy_effectiveness) || !g.xray_policy_effectiveness.length) {
+                    g.xray_policy_effectiveness = watchRows;
+                }
+                const pe = g.policy_effectiveness || [];
+                const peAllZero = pe.length === 0 || pe.every((x) => (Number(x.hits) || 0) === 0);
+                const peAllCuration = pe.length > 0 && pe.every((x) => String(x.type || '').toLowerCase() === 'curation');
+                if (peAllZero || peAllCuration) {
+                    g.policy_effectiveness = g.xray_policy_effectiveness || watchRows;
+                    g._policy_summary_only = false;
+                }
+            }
+            if ((!Array.isArray(g.curation_policy_effectiveness) || !g.curation_policy_effectiveness.length)
+                && Array.isArray(c.blocking_events_per_policy) && c.blocking_events_per_policy.length) {
+                const blockedTotal = Math.max(Number(c.blocked) || 0, 1);
+                g.curation_policy_effectiveness = c.blocking_events_per_policy
+                    .filter((row) => (Number(row.blocked_events) || 0) > 0)
+                    .map((row) => ({
+                        policy: row.name || '—',
+                        type: 'curation',
+                        hits: Number(row.blocked_events) || 0,
+                        pct_of_events: Math.round(((Number(row.blocked_events) || 0) / blockedTotal) * 100),
+                        delta_pct: 0,
+                        scope_label: row.scope_label
+                    }));
+            }
+            if (Array.isArray(g.repo_watch_coverage) && g.repo_watch_coverage.length > 0) {
+                g.repo_watch_summary = computeRepoWatchSummary(g.repo_watch_coverage);
+            }
+            if (!g.repo_watch_summary && (Number(p.repos_total) || 0) > 0) {
+                g.repo_watch_summary = {
+                    total: Number(p.repos_total) || 0,
+                    indexed: Number(p.repos_indexed) || 0,
+                    unindexed: Number(p.repos_unindexed) || 0,
+                    withWatch: null,
+                    withoutWatch: null,
+                    _platform_fallback: true
+                };
+            }
+
+            augmentRecommendations();
+
+            // Prefer threat_velocity.periods for period comparison when present (avoids stale snapshot deltas).
+            syncComparisonFromThreatVelocity();
 
             if (Array.isArray(DATA.recommendations)) {
                 DATA.recommendations = DATA.recommendations.map((item) => ({
                     ...item,
-                    detail: item.detail || item.description || ''
+                    detail: item.detail || item.description || item.text || ''
                 }));
             }
         }
@@ -963,7 +2127,8 @@
             const curationActions = m.curation_actions || {
                 blocked: 'Denied by policy.',
                 approved: 'Explicit override approval.',
-                passed: 'Evaluated and allowed because no blocking rule matched.'
+                dry_run: 'Alert-only evaluation (dry run).',
+                without_inspection: 'Passed through without policy inspection — may be vulnerable or malicious.'
             };
             return { weights, bands, severity, repoRiskLevels, curationActions };
         }
@@ -979,30 +2144,40 @@
         }
 
         function buildSidebar() {
-            const m = DATA.meta, p = DATA.platform;
-            let s = FROG_SVG;
+            const m = DATA.meta, p = DATA.platform, c = DATA.curation || {};
+            let s = `<div class="side-brand">${FROG_SVG}<div class="side-brand-text">${m.report_type || 'Weekly'} Report<span>${m.server_id || 'Platform'}</span></div></div>`;
 
             s += sideItem('Platform URL',
                 `<a href="${m.url}">${m.host}</a>`);
 
+            const platWarn = (Number(p.watches_total) || 0) === 0 && (Number(p.policies_total) || 0) === 0;
             s += sideItem('Watches',
-                `${n(p.watches_total)} total · ${n(p.watches_active)} active`);
+                `${n(p.watches_total)} total · ${n(p.watches_active)} active`,
+                platWarn ? 'Run platform merge (/api/v2/watches)' : null,
+                platWarn);
 
             s += sideItem('Policies',
                 `${n(p.policies_total)} total`,
-                `${n(p.policies_security)} security · ${n(p.policies_operational)} operational · ${n(p.policies_license)} license`);
+                `${n(p.policies_security)} security · ${n(p.policies_operational)} operational · ${n(p.policies_license)} license`,
+                platWarn);
 
+            const curState = c.curation_state || p.curation_state || {};
+            const curConn = getRemoteConnectionStats(curState);
+            const curStatusDetail = curConn.total > 0
+                ? `${n(curConn.connected)} / ${n(curConn.total)} ${curConn.scope.toLowerCase()} connected`
+                : (Number(p.curation_repos_count) > 0 ? `${n(p.curation_repos_count)} remote repos in scope` : null);
             s += sideItem('Curation Status',
                 p.curation_enabled ? 'Enabled' : 'Not configured',
-                p.curation_enabled ? `${n(p.curation_repos_count)} remote repos curated` : null,
+                p.curation_enabled ? curStatusDetail : 'No curation audit, policy, or repository signal found',
                 !p.curation_enabled);
 
-            s += sideItem('Curation Policies',
-                p.curation_enabled
-                    ? `Global: ${n(p.curation_policies_global)} · Repo: ${n(p.curation_policies_repo)} · User: ${n(p.curation_policies_user)}`
-                    : 'Not configured',
-                null,
-                !p.curation_enabled);
+            const pe = c.policies_enforced || {};
+            const curPolLine = pe.available || Number(pe.enforcing) > 0
+                ? `${n(pe.enforcing)} block · ${n(pe.dry_run_excluded)} dry-run`
+                : (p.curation_enabled
+                    ? `All remote: ${n(p.curation_policies_global)} · Selected: ${n(p.curation_policies_repo)}`
+                    : 'Not configured');
+            s += sideItem('Curation Policies', curPolLine, null, !p.curation_enabled);
 
             let pills = '';
             (p.curated_types || []).forEach(t => pills += `<span class="sp on">${t}</span>`);
@@ -1011,10 +2186,6 @@
             s += sideItem('Xray Indexed',
                 `${n(p.repos_indexed)} of ${n(p.repos_total)} repos`,
                 pills);
-
-            s += sideItem('Report Period',
-                `${m.date_from} – ${m.date_to}`,
-                `${m.report_type} (${m.window_days} days)`);
 
             s += sideItem('Generated', m.generated);
 
@@ -1039,10 +2210,10 @@
             const m = DATA.meta;
             return `
                 <div class="report-header">
-                    ${FROG_SVG}
                     <div class="report-header-text">
                         <h1><span>${m.report_type}</span> Report for <span>${m.server_id}</span></h1>
                         <div class="report-period">${m.date_from} – ${m.date_to}</div>
+                        <div class="report-window">${m.report_type || 'Weekly'} (${m.window_days || 7} days)</div>
                     </div>
                 </div>`;
         }
@@ -1050,30 +2221,37 @@
         /* ═══ EXECUTIVE SUMMARY ═══ */
 
         function buildExecutiveSummary() {
-            const c = DATA.curation, v = DATA.violations, m = DATA.meta, b = DATA.benefit;
-            let lines = [];
+            const c = DATA.curation, v = DATA.violations, m = DATA.meta;
+            const bullets = [];
+            const stats = [];
 
-            if (c.available && c.blocked > 0) {
-                lines.push(`Curation blocked ${n(c.blocked)} packages at the gate before they could enter your repositories.`);
+            if (c.available && Number(c.blocked) > 0) {
+                bullets.push(`<strong>Gate defense:</strong> Curation blocked <strong>${n(c.blocked)}</strong> package downloads before they could enter your repositories (${n(c.unique_users || 0)} users active).`);
+                stats.push(`<div class="es-stat"><strong>${n(c.blocked)}</strong> blocked at gate</div>`);
+            } else if (c.available) {
+                bullets.push('<strong>Gate defense:</strong> Curation evaluated packages in this period; no blocks were recorded.');
             }
 
-            if (v.total > 0) {
-                lines.push(`Xray surfaced ${n(v.total)} violations across indexed repositories, including ${n(v.by_severity.critical)} critical findings.`);
+            if (Number(v.total) > 0) {
+                bullets.push(`<strong>Inside repositories:</strong> Xray reported <strong>${n(v.total)}</strong> violations, including <strong>${n(v.by_severity.critical)}</strong> critical findings.`);
+                stats.push(`<div class="es-stat"><strong>${n(v.by_severity.critical)}</strong> critical inside</div>`);
             }
 
             if (v.critical_issues && v.critical_issues.length > 0) {
                 const top = v.critical_issues[0];
-                lines.push(`The most recurring critical issue is ${top.id} affecting ${n(top.hits)} artifacts.`);
+                const days = top.days_open > 0 ? ` · open ~${n(top.days_open)} days` : '';
+                bullets.push(`<strong>Top critical exposure:</strong> <span class="mono">${top.id}</span> — ${n(top.hits)} artifact hits${days}.`);
             }
 
-            if (c.available && c.blocked === 0 && v.total === 0) {
-                lines.push('No threats were blocked or detected during this reporting period.');
+            if (c.available && Number(c.blocked) === 0 && Number(v.total) === 0) {
+                bullets.push('No material blocked downloads or violations were detected in this reporting window.');
             }
 
             return `
                 <div class="exec-summary">
                     <div class="es-title">Executive Summary</div>
-                    <div class="es-text">${lines.join(' ')}</div>
+                    ${bullets.length ? `<ul class="es-list">${bullets.map((b) => `<li>${b}</li>`).join('')}</ul>` : ''}
+                    ${stats.length ? `<div class="es-stats">${stats.join('')}</div>` : ''}
                 </div>`;
         }
 
@@ -1081,42 +2259,36 @@
 
         function buildKPIs() {
             const c = DATA.curation, v = DATA.violations;
+            const rr = getCurationRequestResults(c);
             return `
-                <p class="sub">At-a-glance numbers showing how many packages were evaluated by Curation and what Xray found inside your repositories this period.</p>
-                <div class="kpis">
-                    <div class="kpi gray">
-                        <div class="kpi-n">${n(c.total)}</div>
-                        <div class="kpi-l">Packages Evaluated</div>
-                    </div>
-                    <div class="kpi red">
+                <div class="kpis-hero">
+                    <div class="kpi-hero">
                         <div class="kpi-n" style="color:var(--crit)">${n(c.blocked)}</div>
                         <div class="kpi-l">Blocked at the Gate</div>
                         ${delta(null, 'Packages Blocked')}
                     </div>
-                    <div class="kpi green">
-                        <div class="kpi-n" style="color:var(--fdk)">${n(c.approved)}</div>
-                        <div class="kpi-l">Approved Overrides</div>
-                    </div>
-                    <div class="kpi gray">
-                        <div class="kpi-n">${n(c.passed)}</div>
-                        <div class="kpi-l">Passed by Policy</div>
-                    </div>
-                    <div class="kpi orange">
-                        <div class="kpi-n" style="color:var(--high)">${n(v.total)}</div>
-                        <div class="kpi-l">Threats Found Inside</div>
-                        ${delta(null, 'Violations')}
-                    </div>
-                    <div class="kpi red">
+                    <div class="kpi-hero">
                         <div class="kpi-n" style="color:var(--crit)">${n(v.by_severity.critical)}</div>
-                        <div class="kpi-l">Critical Findings</div>
+                        <div class="kpi-l">Critical Inside</div>
                         ${delta(null, 'Critical')}
                     </div>
-                    <div class="kpi orange">
-                        <div class="kpi-n" style="color:var(--high)">${n(v.risk_score)}</div>
-                        <div class="kpi-l">Risk Score</div>
+                    <div class="kpi-hero">
+                        <div class="kpi-n">${n(v.risk_score)}</div>
+                        <div class="kpi-l">Risk Score (0–100)</div>
                         ${delta(null, 'Risk Score')}
                     </div>
-                </div>`;
+                </div>
+                <div class="kpis-secondary">
+                    <span class="kpi-chip"><strong>${n(c.total)}</strong> evaluated</span>
+                    <span class="kpi-chip"><strong>${n(rr.without_inspection)}</strong> ${labelWithoutInspection().toLowerCase()}</span>
+                    <span class="kpi-chip"><strong>${n(rr.dry_run)}</strong> dry run</span>
+                    <span class="kpi-chip"><strong>${n(c.approved)}</strong> approved</span>
+                    <span class="kpi-chip"><strong>${n(v.total)}</strong> violations</span>
+                    <span class="kpi-chip"><strong>${n(c.unique_users || 0)}</strong> curation users</span>
+                </div>
+                <p class="method-note">
+                    <strong>Sources:</strong> Curation totals from audit API event counts; Xray from violations API in this date window.
+                </p>`;
         }
 
         function buildScoringGuide() {
@@ -1127,9 +2299,8 @@
             }).join('');
 
             return `
-                <div class="sec blue">Severity and Risk Method</div>
-                <p class="sub">How to read Critical/High/Medium/Low, risk score, and what counts as good or bad.</p>
-                <div class="g2">
+                ${secHead('12', 'Severity & risk method', 'Reference — how to read severity levels, risk score, and curation actions.')}
+                <div class="band g2">
                     <div class="card">
                         <div class="ch"><span class="ct">Violation Severity (Xray)</span></div>
                         <table class="dt">
@@ -1153,37 +2324,236 @@
                         </table>
                     </div>
                 </div>
-                <div class="callout warn"><strong>Curation interpretation</strong><span class="mono">Blocked</span> = ${m.curationActions.blocked} <span class="mono">Approved</span> = ${m.curationActions.approved} <span class="mono">Passed</span> = ${m.curationActions.passed} Higher blocked can mean stronger prevention or higher attack pressure; interpret with block rate and top blocked packages.</div>`;
+                </div>
+                <div class="callout warn"><strong>Curation interpretation</strong><span class="mono">Blocked</span> = ${m.curationActions.blocked} <span class="mono">Approved</span> = ${m.curationActions.approved} <span class="mono">Dry run</span> = ${m.curationActions.dry_run} <span class="mono">${labelWithoutInspection()}</span> = ${m.curationActions.without_inspection}</div>`;
         }
 
         /* ═══ SECTION 2: CURATION — SUPPLY CHAIN DEFENSE ═══ */
 
-        function buildCuration() {
+        function buildCurationAuditLinkCard() {
             const c = DATA.curation, m = DATA.meta;
+            const auditUrl = curationAuditUiUrl(m);
+            const auditPathLabel = m.curation_audit_ui_path || CURATION_AUDIT_UI_PATH;
+            return `
+                <div class="audit-link-card">
+                    <strong>View full audit trail in JFrog Platform</strong>
+                    <p class="method-note" style="margin:.35rem 0 0">This report summarizes ${n(c.total)} evaluations, ${n(c.blocked)} blocked, and ${n(c.unique_users || 0)} users. Use the UI for search, export, and per-event policy detail.</p>
+                    <a class="btn-audit" href="${auditUrl}" target="_blank" rel="noopener">${m.host}${auditPathLabel}</a>
+                </div>`;
+        }
+
+        function buildCuration() {
+            const c = DATA.curation, m = DATA.meta, p = DATA.platform || {};
+            const rr = getCurationRequestResults(c);
+            const inv = c.policy_inventory || {};
+            const state = c.curation_state || {};
 
             if (!c.available) {
                 return `
-                    <div class="sec">Curation — Supply Chain Defense</div>
-                    <p class="sub">Curation screens every package download before it enters your repositories, blocking known threats at the gate.</p>
+                    ${secHead('06', 'Gate defense', 'Curation screens every package download before it enters your repositories.')}
                     <div class="callout warn">
                         <strong>Unavailable</strong>
                         Curation audit data was unavailable on this instance. Curation may not be configured or the token lacks the required permission. Contact your JFrog administrator.
                     </div>`;
             }
 
+            const pv = policyViolationsByType(c);
+            const conn = getRemoteConnectionStats(state);
+            const pkgInsight = c.package_types || {};
+            const pkgTotal = Number(pkgInsight.total ?? state.package_types_total) || 0;
+            const topPkgBlocked = pkgInsight.top_by_blocked || [];
+            const blockPolicies = c.blocking_events_per_policy || c.top_policies || [];
+            const blockActive = inv.block_active ?? p.curation_policies_block;
+            const dryActive = inv.dry_run_active ?? p.curation_policies_dry_run;
+            const policiesRegistered = inv.total_registered ?? p.curation_policies_total ?? 0;
+            const topUser = c.top_users && c.top_users.length ? c.top_users[0] : null;
+            const computedBlockRate = Number(c.total) > 0 ? ((Number(rr.blocked) || 0) / Number(c.total)) * 100 : 0;
+            const blockRate = Number(c.block_rate) > 0 ? Number(c.block_rate) : computedBlockRate;
+            const blockRateLabel = blockRate > 0 && blockRate < 0.1 ? '<0.1%' : `${n(blockRate)}%`;
+            const userInsight = topUser
+                ? `Top user: ${topUser.user} (${n(topUser.events)} events, ${n(topUser.blocked)} blocked).`
+                : 'Top user data was not available in this run.';
+
             let html = `
-                <div class="sec">Curation — Supply Chain Defense</div>
-                <p class="sub">Curation screens every package download before it enters your repositories, blocking known threats at the gate. Period: ${m.date_from} – ${m.date_to}.</p>
-                <div class="nums">
-                    <div class="nb"><strong style="color:var(--crit)">${n(c.blocked)}</strong> Blocked</div>
-                    <div class="nb"><strong style="color:var(--fdk)">${n(c.approved)}</strong> Approved</div>
-                    <div class="nb"><strong>${n(c.passed)}</strong> Passed</div>
-                    <div class="nb"><strong style="color:#b71c1c">${n(c.by_reason.malicious)}</strong> Malicious</div>
-                    <div class="nb"><strong style="color:var(--high)">${n(c.by_reason.security)}</strong> Security (CVE)</div>
-                    <div class="nb"><strong style="color:var(--amber)">${n(c.by_reason.license)}</strong> License</div>
-                    <div class="nb"><strong>${n(c.by_reason.operational)}</strong> Operational</div>
-                    <div class="nb"><strong>${c.block_rate}%</strong> Block Rate</div>
+                ${secHead('06', 'Gate defense', 'Curation screens every package download before it enters your repositories.')}
+                <div class="band">
+                <div class="ch"><span class="ct">Request overall results</span><span class="cs">${n(c.total)} evaluations in period</span></div>
+                <div class="outcome-grid">
+                    <div class="outcome-card"><strong style="color:var(--crit)">${n(rr.blocked)}</strong><span>Blocked</span></div>
+                    <div class="outcome-card"><strong style="color:var(--frog)">${n(rr.approved)}</strong><span>Approved</span></div>
+                    <div class="outcome-card"><strong style="color:var(--amber)">${n(rr.dry_run)}</strong><span>Dry run</span><small>Passed with alert</small></div>
+                    <div class="outcome-card"><strong>${n(rr.without_inspection)}</strong><span>${labelWithoutInspection()}</span><small>Not evaluated by a curation policy</small></div>
+                </div>
+
+                <div class="card">
+                    <div class="ch"><span class="ct">Curation activity insight</span><span class="cs">Human demand + enforcement rate</span></div>
+                    <div class="stat-grid-4">
+                        <div class="stat-box"><strong>${n(c.unique_users)}</strong><span>Unique requesters</span></div>
+                        <div class="stat-box"><strong style="color:var(--crit)">${blockRateLabel}</strong><span>Blocked request rate</span></div>
+                        <div class="stat-box"><strong>${n(c.total)}</strong><span>Total evaluations</span></div>
+                        <div class="stat-box"><strong>${n(rr.blocked)}</strong><span>Prevented downloads</span></div>
+                    </div>
+                    <p class="method-note" style="margin:.4rem 0 0">${userInsight} A low block rate with high evaluation volume usually means Curation is filtering a broad stream of package requests while escalating only policy-relevant risk.</p>
+                </div>
+
+                <div class="card">
+                    <div class="ch"><span class="ct">Policy violations</span><span class="cs">Blocked by type · ${n(pv.total)} events</span></div>
+                    <div class="violation-type-grid">
+                        <div class="violation-type-card"><strong style="color:#b71c1c">${n(pv.malicious)}</strong><span>Malicious</span></div>
+                        <div class="violation-type-card"><strong style="color:var(--high)">${n(pv.security)}</strong><span>Security</span></div>
+                        <div class="violation-type-card"><strong style="color:var(--amber)">${n(pv.license)}</strong><span>License</span></div>
+                        <div class="violation-type-card"><strong>${n(pv.operational)}</strong><span>Operational</span></div>
+                    </div>
+                </div>
+
+                <div class="policy-protect">
+                    <div>
+                        <h4>Protect with policies</h4>
+                        <p>Create policies to block risky OSS on selected packages or set up alerts for your team.</p>
+                        <p class="sub" style="margin:.35rem 0 0"><strong>${n(policiesRegistered)}</strong> policies registered on platform</p>
+                    </div>
+                    <div class="policy-protect-metrics">
+                        <div class="policy-metric block"><strong>${n(blockActive)}</strong><span>Block policies</span></div>
+                        <div class="policy-metric dry"><strong>${n(dryActive)}</strong><span>Dry run policies</span></div>
+                    </div>
                 </div>`;
+
+            if (conn.total > 0) {
+                html += `
+                    <div class="repo-enabled-banner">
+                        <strong>${n(conn.connected)} / ${n(conn.total)}</strong>
+                        <span>remote repositories enabled for Curation</span>
+                    </div>
+                    <p class="sub" style="margin:-.25rem 0 .65rem">${conn.footnote}</p>
+                    <div class="card">
+                        <div class="ch"><span class="ct">Connected remote repositories state</span><span class="cs">${conn.scope}</span></div>
+                        ${buildDonutChart(conn.total, conn.connected, conn.not_connected, conn.pct)}
+                    </div>`;
+            }
+
+            if (pkgTotal > 0 || topPkgBlocked.length > 0) {
+                const pkgRows = topPkgBlocked.map((row) =>
+                    `<tr>
+                        <td>${row.package_type || '—'}</td>
+                        <td class="num">${n(row.blocked)}</td>
+                        <td class="num">${n(row.connected_repos)} / ${n(row.remote_total)}</td>
+                    </tr>`
+                ).join('');
+                html += `
+                    <div class="card">
+                        <div class="ch"><span class="ct">Package types protected by Curation</span><span class="cs">${n(pkgTotal)} types on platform</span></div>
+                        <p class="sub" style="margin-top:0">Top <strong>5</strong> package types by <strong>blocked</strong> downloads in this period.</p>
+                        ${pkgRows ? `
+                        <table class="dt">
+                            <thead><tr><th>Package type</th><th>Blocked (period)</th><th>Connected repos</th></tr></thead>
+                            <tbody>${pkgRows}</tbody>
+                        </table>` : '<p class="sub">No blocked events by package type in this period.</p>'}
+                    </div>`;
+            }
+
+            const byPkg = state.by_package_type || [];
+            if (byPkg.length > 0) {
+                const pkgConnRows = [...byPkg].sort((a, b) => (b.connected || 0) - (a.connected || 0)).slice(0, 16).map((row) => {
+                    const tot = Number(row.remote_total) || 0;
+                    const connN = Number(row.connected) || 0;
+                    const pill = tot > 0 && connN === tot ? 'ok' : (connN > 0 ? 'partial' : '');
+                    const label = tot > 0 && connN === tot ? 'Connected' : (connN > 0 ? 'Partially connected' : 'Not connected');
+                    return `<tr>
+                        <td>${row.package_type || '—'}</td>
+                        <td><span class="pkg-type-pill ${pill}">${label}</span></td>
+                        <td class="num">${n(connN)} / ${n(tot)}</td>
+                        <td class="num">${n(row.blocked_period || 0)}</td>
+                    </tr>`;
+                }).join('');
+                html += `
+                    <div class="card">
+                        <div class="ch"><span class="ct">Package types · repository coverage</span></div>
+                        <table class="dt">
+                            <thead><tr><th>Package type</th><th>Status</th><th>Connected repos</th><th>Blocked (period)</th></tr></thead>
+                            <tbody>${pkgConnRows}</tbody>
+                        </table>
+                    </div>`;
+            }
+
+            if (blockPolicies.length > 0) {
+                const polRows = blockPolicies.slice(0, 5).map((pol) =>
+                    `<tr>
+                        <td>${pol.name || '—'}</td>
+                        <td>${pol.scope_label || '—'}</td>
+                        <td class="num">${n(pol.blocked_events ?? pol.blocked_hits)}</td>
+                        <td class="num">${n(pol.audit_events ?? pol.audit_hits)}</td>
+                    </tr>`
+                ).join('');
+                html += `
+                    <div class="card">
+                        <div class="ch"><span class="ct">Blocking events per policy</span><span class="cs">Top 5 by blocked events</span></div>
+                        <table class="dt">
+                            <thead><tr><th>Policy</th><th>Scope</th><th>Blocked events</th><th>Audit events</th></tr></thead>
+                            <tbody>${polRows}</tbody>
+                        </table>
+                    </div>`;
+            }
+
+            const pe = c.policies_enforced || {};
+            if (pe.available || Number(pe.enforcing) > 0 || Number(pe.total_registered) > 0) {
+                const scopeRows = (pe.by_scope || []).map((s) =>
+                    `<tr>
+                        <td>${s.label || s.scope}</td>
+                        <td class="num">${n(s.registered)}</td>
+                        <td class="num">${n(s.enforcing)}</td>
+                    </tr>`
+                ).join('');
+                html += `
+                    <div class="card">
+                        <div class="ch"><span class="ct">Policy scope</span><span class="cs">${n(pe.enforcing)} enforcing · ${n(pe.dry_run_excluded)} dry-run excluded · ${n(pe.total_registered)} registered</span></div>
+                        <p class="sub" style="margin-top:0">Curation package-download policies (separate from Xray watch policies: <strong>${n(p.policies_total)}</strong> on platform).</p>
+                        ${scopeRows ? `
+                        <table class="dt">
+                            <thead><tr><th>Scope</th><th>Registered</th><th>Enforcing (block)</th></tr></thead>
+                            <tbody>${scopeRows}</tbody>
+                        </table>` : ''}
+                    </div>`;
+            }
+
+            const blockList = inv.block_policies || [];
+            if (blockList.length > 0) {
+                const rows = blockList.slice(0, 20).map((pol) =>
+                    `<tr>
+                        <td>${pol.name}</td>
+                        <td>${pol.condition || '—'}</td>
+                        <td>${pol.risk_type || '—'}</td>
+                        <td>${pol.scope || '—'}</td>
+                    </tr>`
+                ).join('');
+                html += `
+                    <div class="card">
+                        <div class="ch"><span class="ct">Active block policies (by condition)</span></div>
+                        <table class="dt">
+                            <thead><tr><th>Policy</th><th>Condition</th><th>Risk type</th><th>Scope</th></tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>`;
+            }
+
+            if (c.top_users && c.top_users.length > 0) {
+                const userRows = c.top_users.slice(0, 10).map((u) =>
+                    `<tr>
+                        <td class="mono">${u.user}</td>
+                        <td class="num">${n(u.events)}</td>
+                        <td class="num">${n(u.blocked)}</td>
+                        <td class="num">${n(u.approved)}</td>
+                        <td class="num">${n(u.passed)}</td>
+                    </tr>`
+                ).join('');
+                html += `
+                    <div class="card">
+                        <div class="ch"><span class="ct">Top Curation Users (by activity)</span></div>
+                        <table class="dt">
+                            <thead><tr><th>User</th><th>Events</th><th>Blocked</th><th>Approved</th><th>Other</th></tr></thead>
+                            <tbody>${userRows}</tbody>
+                        </table>
+                    </div>`;
+            }
 
             if (c.top_blocked && c.top_blocked.length > 0) {
                 /* Blocked by ecosystem */
@@ -1212,7 +2582,6 @@
                         <td class="mono">${p.package}${p.malicious ? ' <span class="badge" style="background:#fce4ec;color:#b71c1c">Malicious</span>' : ''}</td>
                         <td>${p.ecosystem}</td>
                         <td class="num">${n(p.count)}</td>
-                        <td>${p.policies}</td>
                     </tr>`
                 ).join('');
 
@@ -1220,7 +2589,7 @@
                     <div class="card">
                         <div class="ch"><span class="ct">Top Blocked Packages</span></div>
                         <table class="dt">
-                            <thead><tr><th>Package</th><th>Ecosystem</th><th>Block Count</th><th>Triggering Policies</th></tr></thead>
+                            <thead><tr><th>Package</th><th>Ecosystem</th><th>Block Count</th></tr></thead>
                             <tbody>${rows}</tbody>
                         </table>
                     </div>`;
@@ -1234,11 +2603,8 @@
                     </div>`;
             }
 
-            html += `
-                <div class="ui-link">
-                    Full curation audit trail: <a href="${m.url}/ui/curation/audit">${m.host}/ui/curation/audit</a>
-                </div>`;
-
+            html += buildCurationAuditLinkCard();
+            html += '</div>';
             return html;
         }
 
@@ -1256,33 +2622,10 @@
             };
 
             let html = `
-                <div class="sec red">Xray — Security Posture</div>
-                <p class="sub">Xray continuously scans your indexed repositories and build artifacts for known vulnerabilities, license violations, and operational risks. Period: ${m.date_from} – ${m.date_to}.</p>`;
+                ${secHead('07', 'Inside the perimeter', `Xray findings in indexed repos · ${m.date_from} – ${m.date_to}`)}
+                <div class="band">`;
 
-            /* Violations by Type */
-            const types = [
-                ['Security', byType.security],
-                ['Operational Risk', byType.operational],
-                ['License', byType.license]
-            ];
-            let typeRows = types.map(([t, c]) =>
-                `<tr><td>${t}</td><td class="num">${n(c)}</td><td class="num">${pct(c, v.total)}%</td></tr>`
-            ).join('');
-            typeRows += `<tr style="font-weight:700"><td>Total</td><td class="num">${n(v.total)}</td><td class="num">100%</td></tr>`;
-
-            html += `
-                <div class="card">
-                    <div class="ch">
-                        <span class="ct">Violations Breakdown — By Type</span>
-                        <span class="cs">How violations are distributed across security, operational risk, and license categories</span>
-                    </div>
-                    <table class="dt">
-                        <thead><tr><th>Type</th><th>Count</th><th>% of Total</th></tr></thead>
-                        <tbody>${typeRows}</tbody>
-                    </table>
-                </div>`;
-
-            /* Severity bar + table */
+            /* Severity hero first */
             const sevs = [
                 ['Critical', bySev.critical, sp.critical, '--crit'],
                 ['High', bySev.high, sp.high, '--high'],
@@ -1310,17 +2653,45 @@
             ).join('');
 
             html += `
-                <div class="card">
-                    <div class="ch"><span class="ct">Security Violations by Severity</span></div>
-                    <div class="callout risk" style="margin-top:0">
-                        <strong>Severity concentration</strong>
-                        Critical + High account for ${critHighPct}% (${n(critHigh)} of ${n(sevTotal)}) of all security-severity findings. Dominant severity is ${dominant[0]} (${dominantPct}%).
+                <div class="severity-hero">
+                    <div class="ch"><span class="ct">Severity mix</span><span class="cs">${n(sevTotal)} findings in period</span></div>
+                    <div class="severity-stats">
+                        ${sevs.map(([lbl, cnt, p, c]) =>
+                            `<div class="severity-stat">
+                                <strong style="color:var(${c})">${n(cnt)}</strong>
+                                <span>${lbl}</span>
+                                <em>${p}% of total</em>
+                            </div>`
+                        ).join('')}
                     </div>
+                    <p class="sub" style="margin:0 0 .5rem">
+                        <strong>${critHighPct}%</strong> of findings (${n(critHigh)}) are Critical or High — prioritize these first.
+                        Largest bucket: <strong>${dominant[0]}</strong> (${dominantPct}%).
+                    </p>
                     <div class="dist">${bar}</div>
                     <div class="sevr" style="margin-bottom:.25rem;gap:.8rem;flex-wrap:wrap">
                         ${sevs.map(([lbl, , p, c]) => `<span><span class="dot" style="background:var(${c})"></span> ${lbl}: <span class="cnt">${p}%</span></span>`).join('')}
                     </div>
                     <table class="dt"><tbody>${sevRows}</tbody></table>
+                </div>`;
+
+            const types = [
+                ['Security', byType.security],
+                ['Operational Risk', byType.operational],
+                ['License', byType.license]
+            ];
+            let typeRows = types.map(([t, c]) =>
+                `<tr><td>${t}</td><td class="num">${n(c)}</td><td class="num">${pct(c, v.total)}%</td></tr>`
+            ).join('');
+            typeRows += `<tr style="font-weight:700"><td>Total</td><td class="num">${n(v.total)}</td><td class="num">100%</td></tr>`;
+
+            html += `
+                <div class="card">
+                    <div class="ch"><span class="ct">By violation type</span></div>
+                    <table class="dt">
+                        <thead><tr><th>Type</th><th>Count</th><th>% of Total</th></tr></thead>
+                        <tbody>${typeRows}</tbody>
+                    </table>
                 </div>`;
 
             /* Critical issues — capped at 20 */
@@ -1348,29 +2719,40 @@
                 html += `
                     <div class="card">
                         <div class="ch">
-                            <span class="ct">All Critical Issues</span>
+                            <span class="ct">Critical issues</span>
                             <span class="cs">${totalUnique} unique</span>
                         </div>
-                        <p class="sub" style="margin-top:0">Every unique critical severity vulnerability found in your repositories, grouped by Xray ID. "Hits" shows how many artifacts are affected by each issue.</p>
+                        <p class="sub" style="margin-top:0">Every unique critical severity vulnerability found in your repositories, grouped by Xray ID. <strong>Hits</strong> = affected artifacts. <strong>Days Open</strong> = calendar days from first seen to report end (${DATA.meta.generated || DATA.meta.date_to || 'report date'}).</p>
                         <table class="dt">
-                            <thead><tr><th>Xray ID</th><th>Description</th><th>Hits</th><th>First Seen</th><th>Days Open</th><th>Exploit</th><th>Env</th><th>Runbook</th></tr></thead>
+                            <thead><tr><th>Xray ID</th><th>Description</th><th>Hits</th><th>First Seen</th><th>Days Open<span class="col-hint">since first seen</span></th><th>Exploit</th><th>Env</th><th>Runbook</th></tr></thead>
                             <tbody>${ciRows}</tbody>
                         </table>
                         ${capNote}
                     </div>`;
             }
 
-            if (v.observation) {
+            const topCritical = (v.critical_issues || [])[0];
+            const topRepo = (v.top_repos || [])[0];
+            const generatedKeyFinding = `Outstanding violations total ${n(v.total)}: `
+                + `${n(v.by_type.security || 0)} security, ${n(v.by_type.operational || 0)} operational risk, `
+                + `${n(v.by_type.license || 0)} license. `
+                + `${n(v.by_severity.critical || 0)} critical and ${n(v.by_severity.high || 0)} high findings. `
+                + `${topCritical ? `Top critical issue ${topCritical.id} has ${n(topCritical.hits)} hit(s). ` : ''}`
+                + `${topRepo ? `Most impacted path is ${topRepo.repo} (${n(topRepo.count)} hits).` : ''}`;
+            const keyFinding = (v.observation && String(v.observation).trim().length > 80) ? v.observation : generatedKeyFinding;
+
+            if (keyFinding) {
                 html += `
                     <div class="callout risk">
                         <strong>Key finding</strong>
-                        ${v.observation}
+                        ${keyFinding}
                     </div>`;
             }
 
             html += `
                 <div class="ui-link">
                     Full violation details: <a href="${m.url}/ui/watchesNew/violations">${m.host}/ui/watchesNew/violations</a>
+                </div>
                 </div>`;
 
             return html;
@@ -1385,16 +2767,14 @@
                 const hasPolicy = p && p.policies_license > 0;
                 if (hasPolicy) {
                     return `
-                        <div class="sec amber">License Compliance</div>
-                        <p class="sub">Open source licenses that conflict with your organization's policies.</p>
+                        ${secHead('08', 'License compliance', 'Open-source license policy conflicts.')}
                         <div class="callout">
                             <strong>No violations detected</strong>
                             ${n(p.policies_license)} license compliance ${p.policies_license === 1 ? 'policy is' : 'policies are'} active and monitoring. No license violations were found in this reporting period.
                         </div>`;
                 }
                 return `
-                    <div class="sec amber">License Compliance</div>
-                    <p class="sub">Open source licenses that conflict with your organization's policies.</p>
+                    ${secHead('08', 'License compliance', 'Open-source license policy conflicts.')}
                     <div class="callout warn">
                         <strong>No license policies configured</strong>
                         There are no license compliance policies set up on this platform. Without license policies, Xray will not flag components with restricted or copyleft licenses. Consider creating a license policy to monitor your exposure.
@@ -1410,14 +2790,45 @@
             ).join('');
 
             let html = `
-                <div class="sec amber">License Compliance</div>
-                <p class="sub">Open-source licenses that conflict with your organization's policies. These may require legal review before the affected components can be used in production.</p>
+                ${secHead('08', 'License compliance', 'Licenses that may require legal review before production use.')}
+                <div class="band">
                 <div class="card">
                     <table class="dt">
                         <thead><tr><th>License (SPDX)</th><th>Violations</th><th>Severity</th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                 </div>`;
+
+            if ((l.top_components || []).length > 0 || (l.top_locations || []).length > 0) {
+                html += `<div class="g2">`;
+                if ((l.top_components || []).length > 0) {
+                    const rows = l.top_components.map(x =>
+                        `<tr><td class="mono">${x.component || 'unknown'}</td><td class="num">${n(x.hits || x.count || 0)}</td></tr>`
+                    ).join('');
+                    html += `
+                        <div class="card">
+                            <div class="ch"><span class="ct">Top Affected Components</span></div>
+                            <table class="dt">
+                                <thead><tr><th>Component</th><th>Hits</th></tr></thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+                        </div>`;
+                }
+                if ((l.top_locations || []).length > 0) {
+                    const rows = l.top_locations.map(x =>
+                        `<tr><td class="mono">${x.location || x.repo || 'unknown'}</td><td class="num">${n(x.hits || x.count || 0)}</td></tr>`
+                    ).join('');
+                    html += `
+                        <div class="card">
+                            <div class="ch"><span class="ct">Top Impacted Artifact Locations</span></div>
+                            <table class="dt">
+                                <thead><tr><th>Repository / Path</th><th>Violation Hits</th></tr></thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+                        </div>`;
+                }
+                html += `</div>`;
+            }
 
             if (l.observation) {
                 html += `
@@ -1427,6 +2838,7 @@
                     </div>`;
             }
 
+            html += '</div>';
             return html;
         }
 
@@ -1437,9 +2849,8 @@
             if (!o || o.total === 0) return '';
 
             let html = `
-                <div class="sec orange">Operational Risk</div>
-                <p class="sub">Components flagged for end-of-life status, outdated dependencies, or missing maintenance — issues that increase exposure over time even without a specific CVE. ${n(o.total)} operational risk violations${o.severity ? ` — ${o.severity}` : ''}.</p>
-                <div class="g2">`;
+                ${secHead('09', 'Operational risk', `EOL, outdated, or unmaintained components · ${n(o.total)} violations${o.severity ? ` (${o.severity})` : ''}.`)}
+                <div class="band g2">`;
 
             if (o.top_components && o.top_components.length > 0) {
                 let rows = o.top_components.map(c =>
@@ -1481,13 +2892,23 @@
         /* ═══ SECTION 6: COMBINED SECURITY VALUE ═══ */
 
         function buildBenefit() {
-            const b = DATA.benefit, c = DATA.curation, v = DATA.violations;
+            const b = DATA.benefit, c = DATA.curation, v = DATA.violations, p = DATA.platform || {};
+            const fallbackCoverage = (Number(p.repos_total) || 0) > 0
+                ? Math.round(((Number(p.repos_indexed) || 0) / Math.max(1, Number(p.repos_total))) * 1000) / 10
+                : 0;
+            const coverage = Number(b.xray_coverage || 0) > 0 ? Number(b.xray_coverage) : fallbackCoverage;
+            const upgradeRate = Number(b.upgrade_rate);
+            const upgradeLabel = b.upgrade_rate_computed && Number.isFinite(upgradeRate)
+                ? `${upgradeRate}%`
+                : '—';
+            const upgradeNote = b.upgrade_rate_computed
+                ? 'Share of unique blocked packages later approved at a higher version in the same period.'
+                : 'Not computed this run (needs block-then-upgrade detection in audit data).';
 
             return `
-                <div class="sec">Combined Security Value</div>
-                <p class="sub">The combined impact of Curation (preventing threats from entering) and Xray (detecting threats already inside). Together they form a complete supply chain security posture.</p>
-                <div class="g2">
-                    <div class="ben gl">
+                ${secHead('10', 'Combined value', 'How gate prevention and in-repo detection work together.')}
+                <div class="band">
+                    <div class="ben gl" style="max-width:100%">
                         <div class="ben-t">Curation — Gate Prevention</div>
                         <div class="ben-h">${b.curation_headline}</div>
                         <div class="ben-s">
@@ -1497,91 +2918,98 @@
                             </div>
                             <div class="bs">
                                 <div class="bs-v">${n(b.cves_prevented)}</div>
-                                <div class="bs-l">CVEs Prevented</div>
+                                <div class="bs-l">CVEs Prevented (est.)</div>
                             </div>
                             <div class="bs">
-                                <div class="bs-v" style="color:var(--fdk)">${b.upgrade_rate}%</div>
-                                <div class="bs-l">Upgrade Rate</div>
+                                <div class="bs-v" style="color:var(--fdk)">${upgradeLabel}</div>
+                                <div class="bs-l">Upgrade Rate<span class="col-hint">${upgradeNote}</span></div>
+                            </div>
+                            <div class="bs">
+                                <div class="bs-v">${coverage}%</div>
+                                <div class="bs-l">Repo index coverage</div>
                             </div>
                         </div>
                     </div>
-                    <div class="ben bl">
-                        <div class="ben-t">Xray — Detection and Visibility</div>
-                        <div class="ben-h">${b.xray_headline}</div>
-                        <div class="ben-s">
-                            <div class="bs">
-                                <div class="bs-v" style="color:var(--crit)">${n(v.by_severity.critical)}</div>
-                                <div class="bs-l">Critical</div>
-                            </div>
-                            <div class="bs">
-                                <div class="bs-v" style="color:var(--high)">${n(v.by_severity.high)}</div>
-                                <div class="bs-l">High</div>
-                            </div>
-                            <div class="bs">
-                                <div class="bs-v">${n(DATA.license.total)}</div>
-                                <div class="bs-l">License</div>
-                            </div>
-                            <div class="bs">
-                                <div class="bs-v">${b.xray_coverage}%</div>
-                                <div class="bs-l">Coverage</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="cmp">${b.compare_line}</div>`;
+                    <div class="cmp" style="margin-top:.75rem">${b.compare_line || `Curation stopped ${n(c.blocked)} at the gate. Xray found ${n(v.total)} inside (${n(v.by_severity.critical)} critical).`}</div>
+                    <p class="method-note">Xray severity breakdown and CVE tables are in <strong>Inside the perimeter</strong> — not duplicated here.</p>
+                </div>`;
         }
 
         /* ═══ SECTION 7: GOVERNANCE EFFECTIVENESS ═══ */
 
         function buildGovernance() {
             const g = DATA.governance || {};
-            const pe = g.policy_effectiveness || [];
+            const p = DATA.platform || {};
+            const xrayPe = (g.xray_policy_effectiveness || g.policy_effectiveness || [])
+                .filter((row) => (Number(row.hits) || 0) > 0 && String(row.type || '').toLowerCase() !== 'curation');
+            const curPe = (g.curation_policy_effectiveness || [])
+                .filter((row) => (Number(row.hits) || 0) > 0);
             const rc = g.repo_watch_coverage || [];
+            const rw = g.repo_watch_summary || computeRepoWatchSummary(rc);
+            const showXrayTable = xrayPe.length > 0 && !g._policy_summary_only;
+            const showCurationTable = curPe.length > 0;
 
-            if (pe.length === 0 && rc.length === 0) return '';
+            if (!showXrayTable && !showCurationTable && !rw && rc.length === 0) return '';
+
+            const policyTable = (title, note, rows) => {
+                const body = rows.slice(0, 10).map((pol) => `
+                    <tr>
+                        <td>${pol.policy}${pol.scope_label ? ` <span class="sub">(${pol.scope_label})</span>` : ''}</td>
+                        <td>${pol.type}</td>
+                        <td class="num">${n(pol.hits)}</td>
+                        <td class="num">${n(pol.pct_of_events)}%</td>
+                        <td class="num">${n(pol.delta_pct)}%</td>
+                    </tr>`).join('');
+                return `
+                    <div class="card">
+                        <div class="ch"><span class="ct">${title}</span></div>
+                        <p class="method-note" style="margin:.35rem 0 0">${note}</p>
+                        <table class="dt">
+                            <thead><tr><th>Policy</th><th>Type</th><th>Hits</th><th>% of events</th><th>Delta</th></tr></thead>
+                            <tbody>${body}</tbody>
+                        </table>
+                    </div>`;
+            };
 
             let html = `
-                <div class="sec blue">Governance Effectiveness</div>
-                <p class="sub">Policy signal quality and repository watch coverage to identify blind spots and dead rules.</p>
-                <div class="g2">`;
+                ${secHead('11', 'Governance', 'Xray watch policies, curation gate policies, and repository indexing coverage.')}
+                <div class="band g2">`;
 
-            if (pe.length > 0) {
-                const rows = pe.map(p => `
-                    <tr>
-                        <td>${p.policy}</td>
-                        <td>${p.type}</td>
-                        <td class="num">${n(p.hits)}</td>
-                        <td class="num">${n(p.pct_of_events)}%</td>
-                        <td class="num">${n(p.delta_pct)}%</td>
-                    </tr>`).join('');
-
+            if (rw) {
+                const watchLine = rw.withWatch !== null && rw.withWatch !== undefined
+                    ? `<div class="stat-box"><strong style="color:var(--frog)">${n(rw.withWatch)}</strong><span>Repos with watch</span></div>
+                       <div class="stat-box"><strong style="color:var(--amber)">${n(rw.withoutWatch)}</strong><span>Repos without watch</span></div>`
+                    : `<div class="stat-box" style="grid-column:span 2"><strong>${n(p.watches_total)}</strong><span>Platform watches (${n(p.watches_active)} active)</span></div>`;
                 html += `
                     <div class="card">
-                        <div class="ch"><span class="ct">Policy Effectiveness</span></div>
-                        <table class="dt">
-                            <thead><tr><th>Policy</th><th>Type</th><th>Hits</th><th>% of Events</th><th>Delta</th></tr></thead>
-                            <tbody>${rows}</tbody>
-                        </table>
+                        <div class="ch"><span class="ct">Artifactory &amp; watch coverage</span><span class="cs">${rw._platform_fallback ? 'Platform totals' : n(rw.total) + ' repos in scope'}</span></div>
+                        <div class="stat-grid-4">
+                            <div class="stat-box"><strong style="color:var(--frog)">${n(rw.indexed)}</strong><span>Xray indexed</span></div>
+                            <div class="stat-box"><strong>${n(rw.unindexed)}</strong><span>Not indexed</span></div>
+                            ${watchLine}
+                        </div>
+                        <p class="sub" style="margin:.35rem 0 0">${n(p.repos_indexed)} of ${n(p.repos_total)} Artifactory repos indexed · ${n(p.watches_total)} watches (${n(p.watches_active)} active).</p>
                     </div>`;
+            } else if (g._repo_summary_only) {
+                html += `<div class="callout"><strong>Repository watch coverage (summary)</strong>Platform has <strong>${n(p.watches_total)}</strong> watches (<strong>${n(p.watches_active)}</strong> active) across <strong>${n(p.repos_indexed)}</strong> indexed repos.</div>`;
             }
 
-            if (rc.length > 0) {
-                const rows = rc.map(r => `
-                    <tr>
-                        <td class="mono">${r.repo}</td>
-                        <td>${r.indexed ? 'Yes' : 'No'}</td>
-                        <td class="num">${n(r.watch_count)}</td>
-                        <td>${r.risk_level || '—'}</td>
-                    </tr>`).join('');
+            if (showXrayTable) {
+                html += policyTable(
+                    'Policy effectiveness (Xray watches)',
+                    '<strong>Hits</strong> = violations attributed to this watch in the period. <strong>Delta</strong> = % change vs prior snapshot (0 when no prior per-policy data).',
+                    xrayPe
+                );
+            } else if ((g.policy_effectiveness || []).length > 0 && !showCurationTable) {
+                html += `<div class="callout warn"><strong>No watch policy hits in period</strong>Populate <span class="mono">violations.top_watch_policies</span> from the violations API.</div>`;
+            }
 
-                html += `
-                    <div class="card">
-                        <div class="ch"><span class="ct">Repository Watch Coverage</span></div>
-                        <table class="dt">
-                            <thead><tr><th>Repo</th><th>Indexed</th><th>Watch Count</th><th>Risk</th></tr></thead>
-                            <tbody>${rows}</tbody>
-                        </table>
-                    </div>`;
+            if (showCurationTable) {
+                html += policyTable(
+                    'Policy effectiveness (Curation gate)',
+                    '<strong>Hits</strong> = blocked audit events attributed to this curation policy. Shown separately from Xray watch policies.',
+                    curPe
+                );
             }
 
             html += '</div>';
@@ -1595,8 +3023,7 @@
 
             if (!c || !c.available) {
                 return `
-                    <div class="sec blue">Period Comparison</div>
-                    <p class="sub">Tracks whether your security posture is improving or degrading compared to the previous reporting period.</p>
+                    ${secHead('03', 'Period comparison', 'Week-over-week change in core security metrics.')}
                     <div class="callout">Comparison will be available after the next report run.</div>`;
             }
 
@@ -1612,10 +3039,13 @@
                     </tr>`;
             }).join('');
 
+            const sourceNote = c.source === 'threat_velocity'
+                ? 'Aligned with Threat Velocity periods (prior weekly snapshot).'
+                : 'Compared using the previous saved snapshot on disk.';
+
             return `
-                <div class="sec blue">Period Comparison</div>
-                <p class="sub">Tracks whether your security posture is improving or degrading. Compared with ${c.previous_date}.</p>
-                <div class="card">
+                ${secHead('03', 'Period comparison', `Compared with <strong>${c.previous_date}</strong>. ${sourceNote}`)}
+                <div class="band">
                     <table class="dt">
                         <thead><tr><th>Metric</th><th>Previous</th><th>Current</th><th>Change</th></tr></thead>
                         <tbody>${rows}</tbody>
@@ -1629,7 +3059,8 @@
             const t = DATA.threat_velocity;
             if (!t || !t.available) return '';
 
-            const rows = (t.periods || []).map(p => `
+            const periods = t.periods || [];
+            const rows = periods.map(p => `
                 <tr>
                     <td class="mono">${p.label}</td>
                     <td class="num">${n(p.blocked)}</td>
@@ -1637,11 +3068,19 @@
                     <td class="num">${n(p.critical)}</td>
                 </tr>`).join('');
 
+            const charts = periods.length >= 2
+                ? `<div class="velocity-grid">
+                    ${miniVelocityChart(periods, 'blocked', 'var(--frog)')}
+                    ${miniVelocityChart(periods, 'violations', 'var(--high)')}
+                    ${miniVelocityChart(periods, 'critical', 'var(--crit)')}
+                   </div>`
+                : '';
+
             return `
-                <div class="sec blue">Threat Velocity</div>
-                <p class="sub">Recent trend across blocked packages and violations to highlight acceleration or stabilization.</p>
-                <div class="card">
-                    <table class="dt">
+                ${secHead('04', 'Threat velocity', 'Trend across recent reporting periods — blocked downloads vs findings inside repos.')}
+                <div class="band">
+                    ${charts}
+                    <table class="dt velocity-table">
                         <thead><tr><th>Period</th><th>Blocked</th><th>Violations</th><th>Critical</th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
@@ -1675,24 +3114,30 @@
 
             let items = ordered.map((x, idx) => {
                 let badge = '';
-                const title = x.title || `Recommendation ${idx + 1}`;
+                const inferredTitle = String(x && (x.text || x.detail || x.description) || '').split(/[.;]/)[0].trim();
+                const title = x.title || inferredTitle || `Recommendation ${idx + 1}`;
                 const priority = (x.priority || '').toUpperCase();
                 if (priority === 'P1') badge = '<span class="pri p1">P1</span>';
                 else if (priority === 'P2') badge = '<span class="pri p2">P2</span>';
                 else if (priority === 'P3') badge = '<span class="pri p3">P3</span>';
 
                 const cleanTitle = title;
+                const src = (x.source || 'xray').toLowerCase();
+                const srcBadge = src === 'curation'
+                    ? '<span class="badge" style="background:#e8f5e9;color:#2e7d32;margin-right:.35rem">Curation</span>'
+                    : '<span class="badge" style="background:#e3f2fd;color:#1565c0;margin-right:.35rem">Xray</span>';
                 const scoreLabel = sc(x) >= 0 ? `Score: ${sc(x)}` : '';
                 const meta = [scoreLabel, x.effort ? `Effort: ${x.effort}` : '', x.owner ? `Owner: ${x.owner}` : '', x.due_date ? `Due: ${x.due_date}` : '']
                     .filter(Boolean)
                     .join(' · ');
                 const deps = x.dependencies && x.dependencies.length > 0 ? `Depends on: ${x.dependencies.join(', ')}` : '';
 
-                return `<div class="rec-i">
-                    <strong>${badge}${cleanTitle}</strong>
-                    ${x.detail}
-                    ${meta ? `<div class="sd">${meta}</div>` : ''}
-                    ${deps ? `<div class="sd">${deps}</div>` : ''}
+                const pClass = priority === 'P1' ? 'p1' : priority === 'P2' ? 'p2' : priority === 'P3' ? 'p3' : '';
+                return `<div class="rec-card ${pClass}">
+                    <div class="rec-card-title">${badge}${srcBadge}${cleanTitle}</div>
+                    <div class="rec-card-body">${x.detail || ''}</div>
+                    ${meta ? `<div class="rec-card-meta">${meta}</div>` : ''}
+                    ${deps ? `<div class="rec-card-meta">${deps}</div>` : ''}
                 </div>`;
             }).join('');
 
@@ -1701,122 +3146,9 @@
                 : '';
 
             return `
-                <div class="sec">Recommendations</div>
-                <p class="sub">Prioritized actions based on this report's findings. Each item references specific Xray IDs, package names, or policies to act on.</p>
+                ${secHead('05', 'Prioritized actions', 'What to do next — ordered by score and priority.')}
                 ${warning}
-                <div class="rec">${items}</div>`;
-        }
-
-        /* ═══ SECTION 11: CURATION AUDIT TRAIL ═══ */
-
-        function buildAuditTrail() {
-            const c = DATA.curation, m = DATA.meta;
-            const desc = 'Blocked package download requests intercepted by Curation policies. For the full audit trail including approved and passed events, navigate to the JFrog Platform.';
-            const zeroCallout = c.observation || 'No curation audit events were recorded in this reporting period.';
-
-            if (!c.available) {
-                return `
-                    <div class="sec">Curation Audit Trail</div>
-                    <p class="sub">${desc}</p>
-                    <div class="callout warn">
-                        <strong>Unavailable</strong>
-                        Curation audit data was unavailable on this instance. Curation may not be configured or the token lacks the required permission.
-                    </div>`;
-            }
-
-            const events = (c.audit_events || []).map(e => ({
-                ...e,
-                normalized_status: String(e.status || e.action || '').toLowerCase()
-            }));
-            const blockedEvents = events.filter(e => e.normalized_status === 'blocked');
-            if (blockedEvents.length === 0 && Number(c.blocked || 0) > 0) {
-                const reason = c.by_reason || {};
-                const typeRows = (c.by_type || []).filter(x => Number(x.blocked || 0) > 0).slice(0, 6).map(x =>
-                    `<tr><td>${x.type}</td><td class="num">${n(x.blocked)}</td><td class="num">${x.total > 0 ? Math.round((x.blocked / x.total) * 100) : 0}%</td></tr>`
-                ).join('');
-                const topRows = (c.top_blocked || []).slice(0, 10).map(x =>
-                    `<tr><td class="mono">${x.package}</td><td>${x.ecosystem}</td><td class="num">${n(x.count)}</td><td>${x.policies || '—'}</td></tr>`
-                ).join('');
-
-                return `
-                    <div class="sec">Curation Audit Trail</div>
-                    <p class="sub">${desc}</p>
-                    <div class="callout warn">
-                        <strong>Blocked count exists but row-level events are missing</strong>
-                        This report still shows aggregate blocked activity (${n(c.blocked)} blocked). Row-level event rows may be missing due to API window, pagination, or status-shape mismatch.
-                    </div>
-                    <div class="nums">
-                        <div class="nb"><strong style="color:var(--crit)">${n(c.blocked)}</strong> Blocked</div>
-                        <div class="nb"><strong>${n(reason.malicious || 0)}</strong> Malicious</div>
-                        <div class="nb"><strong>${n(reason.security || 0)}</strong> Security</div>
-                        <div class="nb"><strong>${n(reason.license || 0)}</strong> License</div>
-                        <div class="nb"><strong>${n(reason.operational || 0)}</strong> Operational</div>
-                    </div>
-                    ${typeRows ? `<div class="card"><div class="ch"><span class="ct">Blocked by Ecosystem</span></div><table class="dt"><thead><tr><th>Ecosystem</th><th>Blocked</th><th>Block Share</th></tr></thead><tbody>${typeRows}</tbody></table></div>` : ''}
-                    ${topRows ? `<div class="card"><div class="ch"><span class="ct">Top Blocked Packages (Summary)</span></div><table class="dt"><thead><tr><th>Package</th><th>Type</th><th>Count</th><th>Policies</th></tr></thead><tbody>${topRows}</tbody></table></div>` : ''}
-                    <div class="ui-link">
-                        Full audit trail: <a href="${m.url}/ui/curation/audit">${m.host}/ui/curation/audit</a>
-                    </div>`;
-            }
-
-            if (blockedEvents.length === 0) {
-                return `
-                    <div class="sec">Curation Audit Trail</div>
-                    <p class="sub">${desc}</p>
-                    <div class="callout">${zeroCallout}</div>
-                    <div class="ui-link">
-                        Full audit trail: <a href="${m.url}/ui/curation/audit">${m.host}/ui/curation/audit</a>
-                    </div>`;
-            }
-
-            const maxShow = 50;
-            const shown = blockedEvents.slice(0, maxShow);
-            let rows = shown.map(e => {
-                return `
-                    <tr>
-                        <td><span class="badge b-block">Blocked</span></td>
-                        <td class="mono">${e.package}</td>
-                        <td class="mono">${e.version}</td>
-                        <td>${e.type}</td>
-                        <td class="mono">${e.repo}</td>
-                        <td>${e.policy || '—'}</td>
-                        <td>${e.requested_by || '—'}</td>
-                        <td class="mono">${e.timestamp || e.date || '—'}</td>
-                    </tr>`;
-            }).join('');
-
-            const capNote = blockedEvents.length > maxShow
-                ? `<p class="sub" style="margin-top:.4rem;font-style:italic">Showing ${maxShow} of ${blockedEvents.length} blocked events.</p>`
-                : '';
-
-            return `
-                <div class="sec">Curation Audit Trail</div>
-                <p class="sub">${desc}</p>
-                <div class="card">
-                    <div class="ch">
-                        <span class="ct">Blocked Events</span>
-                        <span class="cs">${n(blockedEvents.length)} blocked of ${n(c.total)} total</span>
-                    </div>
-                    <table class="dt">
-                        <thead>
-                            <tr>
-                                <th>Status</th>
-                                <th>Package</th>
-                                <th>Version</th>
-                                <th>Type</th>
-                                <th>Repo</th>
-                                <th>Policy</th>
-                                <th>Requested By</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                    ${capNote}
-                </div>
-                <div class="ui-link">
-                    Full audit trail: <a href="${m.url}/ui/curation/audit">${m.host}/ui/curation/audit</a>
-                </div>`;
+                <div class="rec-cards">${items}</div>`;
         }
 
         /* ═══ RENDER ALL SECTIONS ═══ */
@@ -1829,17 +3161,16 @@
                 safeRender('Report Header', buildHeader),
                 safeRender('Executive Summary', buildExecutiveSummary),
                 safeRender('Executive KPIs', buildKPIs),
-                safeRender('Severity and Risk Method', buildScoringGuide),
+                safeRender('Period Comparison', buildComparison),
+                safeRender('Threat Velocity', buildThreatVelocity),
+                safeRender('Recommendations', buildRecommendations),
                 safeRender('Curation — Supply Chain Defense', buildCuration),
                 safeRender('Xray — Security Posture', buildViolations),
                 safeRender('License Compliance', buildLicense),
                 safeRender('Operational Risk', buildOperational),
                 safeRender('Combined Security Value', buildBenefit),
                 safeRender('Governance Effectiveness', buildGovernance),
-                safeRender('Period Comparison', buildComparison),
-                safeRender('Threat Velocity', buildThreatVelocity),
-                safeRender('Recommendations', buildRecommendations),
-                safeRender('Curation Audit Trail', buildAuditTrail),
+                safeRender('Severity and Risk Method', buildScoringGuide),
                 `<div class="footer">JFrog CISO Report — ${DATA.meta.server_id} — Generated by Jfrog Dashboard Skills</div>`
             ].join('');
         } catch (error) {
