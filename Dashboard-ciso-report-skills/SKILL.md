@@ -85,13 +85,25 @@ Every run must satisfy all contract points below:
   marker.
 4. Fail-fast on transport blocks: sandbox/network/DNS/TLS/connectivity errors
   must terminate the run.
-5. End-of-run cleanup: transient runtime payloads in `/tmp` must be removed
+5. Source immutability: normal dashboard generation must not edit this skill,
+  repository scripts, references, dashboard templates, or any source-controlled
+  file. Only report artifacts (`report.html`, `data.json`, `snapshot.json`,
+  `run-meta.json`) and transient `/tmp/ciso-*` files may be created or changed.
+  If a runner or validation bug appears, stop and report it; patch source only
+  when the user explicitly asks to improve or fix the skill implementation.
+6. End-of-run cleanup: transient runtime payloads in `/tmp` must be removed
   as the finalization step after success, and also before exiting on failure
   paths where temporary payloads were written.
 
 ## Prerequisites
 
 Read `../jfrog/SKILL.md` for CLI setup. Required on PATH: `jf`, `jq`, `python3`.
+Before running any step, execute from this repository root (`$SKILL_DIR`) rather
+than `$HOME` so helper discovery and file scans stay scoped to the project.
+
+```bash
+cd "$SKILL_DIR"
+```
 
 **For API paths:** Read `../jfrog/references/xray-entities.md` for the
 authoritative curation audit and violations API documentation. Do NOT
@@ -99,19 +111,32 @@ hardcode API paths from memory — the base skill has the correct, versioned
 paths. Our `report-data-collection.md` maps those API responses to our
 JSON schema.
 
-## Workflow
+## Phased workflow (0–4)
+
+Execute in order. **Profiles (CISO_REPORT_PROFILE) are parked** — use default layout only.
+
+| Phase | Name | What happens |
+|-------|------|----------------|
+| **0** | Preflight | Report type, dates, `SERVER_ID`, `LOCAL_ROOT`, storage, prior snapshot lookup |
+| **1** | Collect | Run `report-data-collection.md` modules directly (`phase1-collect`, `curation`, `violations`) with no required standalone scripts |
+| **2** | Transform | jq mapping + **mandatory** curation audit transform + merge into JSON |
+| **3** | Render & publish | Gates, injection, upload, `run-meta.json` |
+| **4** | Finalize | Cleanup `/tmp/ciso-*` transient files |
 
 ```
-1. Determine report type and date range
-2. Select server (MANDATORY if multiple)
-3. Check/create report storage repo (MANDATORY if first run)
-4. Download previous snapshot for comparison
-5. Collect data from JFrog APIs
-6. Build JSON matching schema → save to /tmp/ciso-data.json
-7. Run injection command → creates final HTML report
-8. Upload snapshot + report to Artifactory
-9. Finalize run: cleanup transient /tmp runtime payloads
+Phase 0 → Phase 1 (module tracks in parallel) → Phase 2 (transform) → Phase 3 (render) → Phase 4 (cleanup)
 ```
+
+Legacy step numbers below map to phases: Steps 1–4 → Phase 0; Step 5 → Phase 1; Step 6 → Phase 2; Steps 7–8 → Phase 3; Step 9 → Phase 4.
+
+## Determinism contract (mandatory)
+
+For all paginated collection modules:
+- Merge pages strictly by ascending `offset`.
+- Stop at the first partial page (`rows < limit`) and ignore higher offsets.
+- Keep stable sort keys for display transforms (`C+D` for curation audit display).
+- For monthly curation chunking: merge chunk results in chunk-order, not completion order.
+- Run `report-data-collection.md` → `Module: collection-determinism-guards` before render.
 
 ## Step 1: Report type and date range
 
@@ -186,6 +211,17 @@ On first run, bootstrap a stable local root instead of falling back to `$PWD`.
 | Prompt includes a local path (for example: "save under /Users/me/reports") | Use it as `LOCAL_ROOT`. |
 | `CISO_LOCAL_ROOT` env var is set | Use it as `LOCAL_ROOT`. |
 | No location provided and `CISO_LOCAL_ROOT` is not set | Ask the user once for a stable local root (recommend `~/ciso-reports`), create the directory, and persist it as `CISO_LOCAL_ROOT` for future runs before continuing. |
+| Resolved `LOCAL_ROOT` equals `$HOME` and user did not explicitly request home root | Ask for confirmation or use `~/ciso-reports` before proceeding. |
+
+Set these once during Phase 0 / Step 3 (before Step 4 snapshot lookup or any
+Python that references them). Step 7 render reuses the same values:
+
+```bash
+export REPORT_DATE="${REPORT_DATE:-$(date +%Y-%m-%d)}"
+export REPORT_TYPE_LOWER="$(echo "${REPORT_TYPE:-weekly}" | tr '[:upper:]' '[:lower:]')"
+export SERVER_SLUG="$(echo "$SERVER_ID" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g')"
+export REPORT_TYPE_SLUG="$REPORT_TYPE_LOWER"
+```
 
 Before Step 4 begins, print a short status line to the user. This is
 informational only — do not wait for acknowledgement, do not ask a
@@ -262,7 +298,7 @@ See `references/report-data-collection.md` → "comparison" section.
 ```bash
 # Find the most recent snapshot.json in LOCAL_ROOT under this server and report type,
 # excluding today's date folder.
-PREV_SNAPSHOT=$(find "${LOCAL_ROOT}/${SERVER_ID}/${REPORT_TYPE_LOWER}" \
+PREV_SNAPSHOT=$(find "${LOCAL_ROOT}/${SERVER_SLUG}/${REPORT_TYPE_SLUG}" \
   -mindepth 2 -maxdepth 2 \
   -name snapshot.json \
   -not -path "*/${REPORT_DATE}/*" \
@@ -283,60 +319,109 @@ If no previous data from either path: set `comparison.available: false`.
 
 > **Note:** local trend analysis requires a stable `LOCAL_ROOT` across runs. If `LOCAL_ROOT` defaults to `$PWD` and the agent is launched from different directories each time, prior snapshots will not be found and trend comparison will always be empty. Set `CISO_LOCAL_ROOT` to a fixed path (e.g. `~/ciso-reports`) for reliable trend data without Artifactory.
 
-## Step 5: Collect data
+## Step 5: Generate the dashboard data and artifacts
 
-Read `references/report-data-collection.md` for every API call and jq command.
+The skill stays agentic, but report execution uses a deterministic spine.
+The agent resolves the request (server, period, local root, storage choice, and
+executive context). The runner owns live collection, pagination, merge order,
+validation gates, and template injection.
 
-Live data integrity gate (MANDATORY): this report must be built from live API
-responses collected in the current run window. If the runtime reports network
-blocked/sandboxed execution, connection refused, DNS failures, TLS failures,
-or equivalent transport errors, stop immediately and ask the user to allow
-network egress for JFrog endpoints before retrying.
-
-**Collect in this exact order:**
-
-1. Platform metadata (repos, watches, policies)
-2. **Curation audit events — ALWAYS call this, do NOT skip it, do NOT
-   gate it on an entitlement check.** Call the API and check if data comes
-   back. If data: curation is enabled. If 404: set available to false.
-3. Xray violations (totals, severity, critical issues, repos)
-4. License violations
-5. Operational risk
-6. Compute benefit metrics and comparison deltas
-
-During curation collection, always persist diagnostics to
-`/tmp/ciso-curation-diagnostics.json` so payload quality can be validated
-before rendering. Include at least:
-
-- `http_status` (last curation API status)
-- `mode` (`weekly` or `monthly_chunked`)
-- `pages_fetched`
-- `rows_fetched`
-- `total_count_reported`
-- `date_from`, `date_to`
-
-## Step 6: Build JSON
-
-Read `references/report-schema.md` for the complete JSON structure.
-
-Build a single JSON object matching every field in the schema. Save it:
+**Mandatory fresh-run command:**
 
 ```bash
-cat > /tmp/ciso-data.json << 'ENDJSON'
-{
-  "meta": { ... },
-  "platform": { ... },
-  "curation": { ... },
-  "violations": { ... },
-  "license": { ... },
-  "operational": { ... },
-  "benefit": { ... },
-  "governance": { ... },
-  "threat_velocity": { ... },
-  "comparison": { ... },
-  "recommendations": [ ... ]
-}
-ENDJSON
+SKILL_DIR="$(find ~/.agents/skills -name 'jfrog-ciso-report' -type d 2>/dev/null | head -1)"
+[ -z "$SKILL_DIR" ] && SKILL_DIR="./Dashboard-ciso-report-skills"
+"$SKILL_DIR/bin/generate-ciso-report.sh" "$SERVER_ID" "$LOCAL_ROOT" "$REPORT_TYPE_LOWER"
+```
+
+Before running it, export any resolved period values:
+
+```bash
+export REPORT_DATE="$REPORT_DATE"
+export DATE_FROM="$DATE_FROM"
+export DATE_TO="$DATE_TO"
+export SAVE_DATA_JSON="$SAVE_DATA_JSON"
+```
+
+The runner must:
+
+- Clear stale `/tmp/ciso-*` runtime files before collection.
+- Collect live platform metadata, curation audit events, curation policies, and Xray violations.
+- Build `/tmp/ciso-data.json`, run platform merge, run `curation-audit-transform`, and populate governance.
+- Fail before render if platform, curation, violation, governance, or diagnostics fields are incoherent.
+- Render only by injecting JSON into `references/dashboard.html`.
+- Write `report.html`, `data.json`, `snapshot.json`, and `run-meta.json`.
+- Run the skill-private collection proof helper as a final live proof.
+
+Do **not** manually stitch `report-data-collection.md` snippets for normal report generation. That document is the API/schema mapping reference and debugging guide. Manual snippet execution is allowed only while developing the skill itself.
+
+The report is not valid unless the runner finishes successfully. If it exits
+non-zero, stop and report the failing gate; do not generate or hand-edit HTML.
+
+## Step 6: Agent-authored interpretation
+
+After the runner succeeds, inspect the saved `data.json`, `snapshot.json`, and
+`run-meta.json`. The agent should then provide the executive interpretation:
+
+- Highlight the most important security, curation, governance, and coverage signals.
+- Call out validation proof (for example indexed repos, watches, policies, curation rows, unique users, named policies).
+- If needed, improve observations/recommendations in a controlled follow-up pass, then re-run validation/render through the runner or repair helper.
+
+Use `references/report-schema.md` and `references/report-data-collection.md` when interpreting fields or debugging a failed runner gate.
+
+### Manual gates retained for debugging
+
+The checks below document what the runner enforces. They are not a substitute
+for `bin/generate-ciso-report.sh` in normal skill execution.
+
+**Platform backfill (self-heal missing watch/policy/indexed counts):**
+
+```bash
+python3 -c "
+import json, subprocess, sys
+
+server_id = sys.argv[1]
+p = '/tmp/ciso-data.json'
+d = json.load(open(p))
+plat = d.setdefault('platform', {})
+repos_total = int(plat.get('repos_total', 0) or 0)
+
+def jf_get(path):
+  proc = subprocess.run(
+    ['jf', 'xr', 'curl', '-s', '--server-id', server_id, '-XGET', path],
+    capture_output=True, text=True
+  )
+  if proc.returncode != 0:
+    return None
+  try:
+    return json.loads(proc.stdout or 'null')
+  except Exception:
+    return None
+
+if repos_total > 0:
+  if int(plat.get('repos_indexed', 0) or 0) == 0:
+    idx = jf_get('/api/v1/binMgr/default/repos') or {}
+    indexed = idx.get('indexed_repos') or []
+    plat['repos_indexed'] = len(indexed)
+    plat['repos_unindexed'] = max(0, repos_total - int(plat['repos_indexed']))
+
+  if int(plat.get('watches_total', 0) or 0) == 0:
+    w = jf_get('/api/v2/watches')
+    if isinstance(w, list):
+      plat['watches_total'] = len(w)
+      plat['watches_active'] = sum(1 for x in w if isinstance(x, dict) and ((x.get('general_data') or {}).get('active') is True))
+
+  if int(plat.get('policies_total', 0) or 0) == 0:
+    pol = jf_get('/api/v2/policies')
+    if isinstance(pol, list):
+      plat['policies_total'] = len(pol)
+      plat['policies_security'] = sum(1 for x in pol if isinstance(x, dict) and x.get('type') == 'security')
+      plat['policies_operational'] = sum(1 for x in pol if isinstance(x, dict) and x.get('type') == 'operational_risk')
+      plat['policies_license'] = sum(1 for x in pol if isinstance(x, dict) and x.get('type') == 'license')
+
+json.dump(d, open(p, 'w'), indent=2)
+print('Platform backfill complete')
+" "$SERVER_ID"
 ```
 
 **Gate 1 — JSON validity + risk score normalization (run together):**
@@ -402,6 +487,23 @@ if report_type == 'weekly' and not (6 <= window_days <= 8):
 if report_type == 'monthly' and window_days < 27:
   print(f'ERROR: monthly window_days={window_days}, expected full-month range'); sys.exit(1)
 
+# Weekly curation API windows must stay <= 168h.
+diag_path = '/tmp/ciso-curation-diagnostics.json'
+if report_type == 'weekly' and os.path.exists(diag_path):
+  from datetime import datetime
+  dg = json.load(open(diag_path))
+  ds = str(dg.get('date_from', ''))
+  de = str(dg.get('date_to', ''))
+  if ds and de:
+    ds = ds.replace('Z', '+00:00')
+    de = de.replace('Z', '+00:00')
+    try:
+      hours = (datetime.fromisoformat(de) - datetime.fromisoformat(ds)).total_seconds() / 3600.0
+      if hours > 168.0:
+        print(f'ERROR: weekly curation window is {hours:.1f}h (>168h). Clamp date range before collection.'); sys.exit(1)
+    except Exception:
+      pass
+
 # Curation consistency: available=false while platform shows curation configured.
 curation_available = bool(cur.get('available', False))
 policy_total = sum(int(plat.get(k, 0) or 0) for k in ('curation_policies_global','curation_policies_repo','curation_policies_user'))
@@ -410,7 +512,6 @@ if not curation_available and (plat.get('curation_enabled') or repo_count > 0 or
   print(f'ERROR: curation.available=false but platform shows curation configured (repos={repo_count}, policies={policy_total})'); sys.exit(1)
 
 # Curation zero-plausibility: cross-check diagnostics when present.
-diag_path = '/tmp/ciso-curation-diagnostics.json'
 if os.path.exists(diag_path):
   diag = json.load(open(diag_path))
   cur_total = int(cur.get('total', 0) or 0)
@@ -418,6 +519,8 @@ if os.path.exists(diag_path):
   reported = int(diag.get('total_count_reported', 0) or 0)
   if cur_total == 0 and (rows > 0 or reported > 0):
     print(f'ERROR: curation payload total=0 but diagnostics rows={rows}, reported={reported}'); sys.exit(1)
+elif curation_available:
+  print('ERROR: missing /tmp/ciso-curation-diagnostics.json while curation.available=true'); sys.exit(1)
 
 print('Gate 2 passed: report type, window, and curation consistent')
 " "$REPORT_TYPE"
@@ -436,12 +539,105 @@ print('Gate 3 passed: recommendation metadata valid')
 "
 ```
 
+**Gate 4 — Cross-section data integrity (run together):**
+
+```bash
+python3 -c "
+import json, sys
+d = json.load(open('/tmp/ciso-data.json'))
+p = d.get('platform', {}) or {}
+c = d.get('curation', {}) or {}
+v = d.get('violations', {}) or {}
+
+blocked = int(c.get('blocked', 0) or 0)
+approved = int(c.get('approved', 0) or 0)
+passed = int(c.get('passed', 0) or 0)
+cur_total = int(c.get('total', 0) or 0)
+sum_actions = blocked + approved + passed
+if cur_total < sum_actions:
+  print(f'ERROR: curation.total={cur_total} is less than blocked+approved+passed={sum_actions}'); sys.exit(1)
+
+sev = v.get('by_severity', {}) or {}
+sev_sum = sum(int(sev.get(k, 0) or 0) for k in ('critical', 'high', 'medium', 'low'))
+v_total = int(v.get('total', 0) or 0)
+if sev_sum != v_total:
+  print(f'ERROR: violations.total={v_total} does not match by_severity sum={sev_sum}'); sys.exit(1)
+
+bt = v.get('by_type', {}) or {}
+type_sum = sum(int(bt.get(k, 0) or 0) for k in ('security', 'operational', 'license'))
+if type_sum != v_total:
+  print(f'ERROR: violations.total={v_total} does not match by_type sum={type_sum}'); sys.exit(1)
+
+repos_total = int(p.get('repos_total', 0) or 0)
+repos_indexed = int(p.get('repos_indexed', 0) or 0)
+watches_total = int(p.get('watches_total', 0) or 0)
+policies_total = int(p.get('policies_total', 0) or 0)
+if repos_total > 0 and repos_indexed == 0 and v_total > 0:
+  print('ERROR: repos_indexed is 0 while violations are present; indexed-repos collection likely failed'); sys.exit(1)
+if repos_total > 0 and watches_total == 0 and policies_total == 0 and v_total > 0:
+  print('ERROR: watches/policies both 0 while violations are present; platform metadata collection likely failed'); sys.exit(1)
+
+print('Gate 4 passed: cross-section data integrity valid')
+"
+```
+
+**Gate 5 — Platform + curation enrichment (run after transform + guards):**
+
+```bash
+python3 -c "
+import json, sys
+d = json.load(open('/tmp/ciso-data.json'))
+p = d.get('platform', {}) or {}
+c = d.get('curation', {}) or {}
+g = d.get('governance', {}) or {}
+
+if int(p.get('repos_total', 0) or 0) > 0 and int(p.get('repos_indexed', 0) or 0) == 0:
+  print('ERROR: repos_indexed still 0 after platform merge'); sys.exit(1)
+
+inv = c.get('policy_inventory') or {}
+if int(c.get('blocked', 0) or 0) > 0:
+  if not inv.get('total_registered'):
+    print('ERROR: policy_inventory missing'); sys.exit(1)
+  if not c.get('blocking_events_per_policy'):
+    print('ERROR: blocking_events_per_policy missing'); sys.exit(1)
+  if int(c.get('unique_users', 0) or 0) == 0 and (c.get('top_users') or []):
+    print('ERROR: unique_users=0 but top_users populated'); sys.exit(1)
+
+bad = [r for r in (g.get('curation_policy_effectiveness') or []) if str(r.get('policy','')).lower() == 'unknown']
+if bad:
+  print('ERROR: governance has Unknown curation rows'); sys.exit(1)
+
+cs = p.get('curation_state') or c.get('curation_state') or {}
+if int(cs.get('supported_remote_total', 0) or 0) > 0 and int(cs.get('supported_connected', 0) or 0) == 0:
+  print('ERROR: supported_connected=0 while remotes exist — platform merge likely skipped'); sys.exit(1)
+
+print('Gate 5 passed: platform + curation enrichment present')
+"
+```
+
+Optional live API smoke test before render (debugging only; the runner already runs this):
+
+```bash
+"$SKILL_DIR/internal/verify-ciso-collection-proof.sh" "$SERVER_ID"
+```
+
+**Support-only repair path** (not normal user-facing generation): if an already-created report folder is under-enriched, run the repository support tool from the source checkout:
+
+```bash
+./scripts/repair-ciso-report.sh "$SERVER_ID" /path/to/<server>/<weekly|monthly|custom>/<date>
+```
+
+This helper clears stale `/tmp/ciso-*` files, recollects live curation + violation + platform data, enriches `data.json`, regenerates `report.html`, rewrites `snapshot.json` / `run-meta.json`, and runs the skill-private proof helper. Do not call `internal/enrich-ciso-datajson.sh` directly; it is a private implementation detail used by the runner.
+
 **Every schema field MUST be present.** Use 0, [], "", null, or false for
 unavailable data. The dashboard handles missing data gracefully.
 
 Generate each `observation` string as one or two concise, data-driven
 sentences. Include at least one concrete metric, name, package, policy,
 repository, or XRAY/CVE ID when data exists. Avoid generic advice.
+Write observations in this readability format (single paragraph, clear markers):
+`What changed: ...  Why it matters: ...  Action: ...`
+Keep each observation under 320 characters.
 
 For `curation.observation`, if `curation.total == 0` but diagnostics confirm
 that the API was reachable and the earliest audit event falls after the
@@ -459,6 +655,9 @@ Generate `recommendations` — numbered, actionable items. Include:
 - Inactive watches or policies with no resources
 - License compliance actions
 - Priority labels: P1 (Critical), P2 (High), P3 (Medium)
+For each recommendation `detail`, use concise readable structure:
+`Impact: ... Next step: ...`
+and include at least one concrete identifier (CVE/XRAY/package/repo/policy).
 
 Populate beta fields when available:
 - `meta.schema_version`
@@ -467,8 +666,14 @@ Populate beta fields when available:
 - `violations.critical_issues[*].first_seen`, `days_open`, `exploit_status`,
   `affected_environments`, `playbook_link`
 - `benefit.roi_estimate`
-- `governance.policy_effectiveness`, `governance.repo_watch_coverage`
-- `threat_velocity`
+- `governance.xray_policy_effectiveness` and `governance.curation_policy_effectiveness` (built in `curation-audit-transform`; legacy `policy_effectiveness` = Xray list)
+- `governance.repo_watch_coverage`
+- `threat_velocity` with a rich `trend_summary` (see below)
+- `curation.request_results`, `policy_inventory`, `curation_state`, `policy_violations_by_type`, `blocking_events_per_policy`, `package_types`
+- `meta.curation_uninspected_label` = `Passed without inspection`
+- `violations.top_cves`, `violations.top_watch_policies`
+
+**`threat_velocity.trend_summary` (required when `threat_velocity.available`):** Write 2–4 sentences as the reporting agent, not a stub. Include explicit **from → to** for **blocked**, **violations**, and **critical** using the last two `periods` entries. Add brief interpretation (e.g., gate pressure vs in-repo backlog) and one actionable recommendation grounded in the numbers. Example pattern: “Critical findings moved from 340 to 312 (−8%); curation blocks rose from 198 to 213 (+8%), suggesting stronger gate enforcement while in-repo critical backlog is easing — prioritize remediation on top XRAY IDs and extend dry-run policies to block mode for npm remotes.”
 
 For optional enrichment (exploit status, runbooks, freshness): attempt
 collection, but if unavailable, continue and set schema defaults.
@@ -512,22 +717,37 @@ print('Snapshot written to /tmp/ciso-snapshot.json')
 "
 ```
 
-## Step 7: Inject JSON into dashboard — EXACT COMMAND
+## Step 7: Render and verify artifacts
 
-This is the ONLY way to produce the report. Run this exact command:
+For normal skill execution, `bin/generate-ciso-report.sh` performs render,
+artifact writes, and output verification. Do not run this section separately
+after the runner succeeds.
+
+The command below is retained only as a debugging reference for skill
+development. It is the render method used by the runner, but it must not be
+used to bypass collection or validation gates:
 
 ```bash
 SKILL_DIR="$(find ~/.agents/skills -name 'jfrog-ciso-report' -type d 2>/dev/null | head -1)"
 [ -z "$SKILL_DIR" ] && SKILL_DIR="./Dashboard-ciso-report-skills"
-REPORT_DATE=$(date +%Y-%m-%d)
-SERVER_SLUG=$(echo "$SERVER_ID" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g')
-REPORT_TYPE_SLUG=$(echo "$REPORT_TYPE" | tr '[:upper:]' '[:lower:]')
+REPORT_DATE="${REPORT_DATE:-$(date +%Y-%m-%d)}"
+SERVER_SLUG="${SERVER_SLUG:-$(echo "$SERVER_ID" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g')}"
+REPORT_TYPE_SLUG="${REPORT_TYPE_SLUG:-$(echo "${REPORT_TYPE:-weekly}" | tr '[:upper:]' '[:lower:]')}"
 
 # LOCAL_ROOT resolution order from Step 3:
 # 1) explicit prompt path, 2) CISO_LOCAL_ROOT env, 3) first-run bootstrap prompt
 # Example: LOCAL_ROOT="/path/to/ciso-reports"
 if [ -z "$LOCAL_ROOT" ]; then
   LOCAL_ROOT="${CISO_LOCAL_ROOT:-}"
+fi
+
+if [ -z "$LOCAL_ROOT" ]; then
+  echo "ERROR: LOCAL_ROOT is empty. Ask for a stable local root (recommended: ~/ciso-reports) before continuing."
+  exit 1
+fi
+if [ "$LOCAL_ROOT" = "$HOME" ] && [ "${CISO_ALLOW_HOME_ROOT:-false}" != "true" ]; then
+  echo "ERROR: LOCAL_ROOT resolves to \$HOME ($HOME). Use a dedicated folder (recommended: ~/ciso-reports) or set CISO_ALLOW_HOME_ROOT=true explicitly."
+  exit 1
 fi
 
 if [ -z "$SAVE_DATA_JSON" ]; then
@@ -759,7 +979,7 @@ Uploaded to:  ${REPORT_REPO}/<server-id>/weekly/2026-04-24/
 - Do NOT write CSS or JavaScript
 - Do NOT create your own report layout
 - Do NOT skip the curation API call based on entitlement checks
-- Do NOT skip the python3 injection command
+- Do NOT bypass `bin/generate-ciso-report.sh` with the python3 injection command during normal report generation
 - Do NOT modify dashboard.html beyond replacing __CISO_DATA__
 
 ## Headless / CI usage

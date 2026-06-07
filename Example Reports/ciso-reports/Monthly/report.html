@@ -1302,7 +1302,2765 @@
 
     <script>
         /* ═══ AGENT INJECTS DATA HERE — ONE LINE ONLY ═══ */
-        const DATA = __CISO_DATA__;
+        const DATA = {
+  "meta": {
+    "schema_version": "2.0-beta",
+    "server_id": "LiquidJedi",
+    "url": "https://liquidjedi.jfrog.io/",
+    "host": "liquidjedi.jfrog.io",
+    "generated": "2026-06-07",
+    "curation_audit_ui_path": "/ui/package-curation/audit",
+    "curation_uninspected_label": "Passed without inspection",
+    "date_from": "May 1, 2026",
+    "date_to": "May 31, 2026",
+    "period_start": "2026-05-01T00:00:00Z",
+    "period_end": "2026-05-31T23:59:59Z",
+    "report_type": "Monthly",
+    "window_days": 31
+  },
+  "platform": {
+    "repos_total": 61,
+    "repos_indexed": 37,
+    "watches_total": 1,
+    "policies_total": 4,
+    "watches_active": 1,
+    "policies_security": 2,
+    "policies_operational": 1,
+    "policies_license": 1,
+    "repos_unindexed": 24,
+    "repo_types": [
+      "AIEditorExtensions",
+      "Docker",
+      "Generic",
+      "GitLfs",
+      "Go",
+      "Gradle",
+      "HelmOCI",
+      "HuggingFaceML",
+      "MachineLearning",
+      "Maven",
+      "NimModel",
+      "Npm",
+      "Pub",
+      "Pypi",
+      "ReleaseBundles",
+      "Skills"
+    ],
+    "indexed_repo_names": [
+      "apptrust-demos-docker-dev-local",
+      "apptrust-demos-docker-pre-prod-local",
+      "apptrust-demos-docker-prod-local",
+      "apptrust-demos-maven-dev-local",
+      "apptrust-demos-maven-pre-prod-local",
+      "apptrust-demos-maven-prod-local",
+      "apptrust-demos-npm-dev-local",
+      "apptrust-demos-npm-pre-prod-local",
+      "apptrust-demos-npm-prod-local",
+      "avinashg-skills-local",
+      "cli-scan-results",
+      "dockerhub-remote",
+      "liquid-docker-local",
+      "liquid-docker-remote",
+      "liquid-go-local",
+      "liquid-go-remote",
+      "liquid-gradle-dev-local",
+      "liquid-gradle-maven-remote",
+      "liquid-gradle-release-local",
+      "liquid-helmoci-local",
+      "liquid-helmoci-remote",
+      "liquid-huggingfaceml-local",
+      "liquid-huggingfaceml-remote",
+      "liquid-libs-release-local",
+      "liquid-libs-snapshot-local",
+      "liquid-maven-remote",
+      "liquid-npm-local",
+      "liquid-npm-remote",
+      "liquid-pub-local",
+      "liquid-pub-remote",
+      "liquid-pypi-local",
+      "liquid-pypi-remote",
+      "mlops-npm-local",
+      "mlops-python-local",
+      "mlops-python-remote",
+      "shared-services-project-docker-dev-local",
+      "shared-services-project-docker-prod-local"
+    ],
+    "curation_state": {
+      "remote_total": 14,
+      "connected": 13,
+      "not_connected": 1,
+      "connected_pct": 92.86,
+      "supported_remote_total": 13,
+      "supported_connected": 13,
+      "supported_not_connected": 0,
+      "supported_connected_pct": 100.0,
+      "package_types_total": 10,
+      "by_package_type": [
+        {
+          "package_type": "Docker",
+          "remote_total": 2,
+          "connected": 2,
+          "blocked_packages_period": 0,
+          "blocked_period": 25
+        },
+        {
+          "package_type": "Maven",
+          "remote_total": 2,
+          "connected": 2,
+          "blocked_packages_period": 0,
+          "blocked_period": 34
+        },
+        {
+          "package_type": "PyPI",
+          "remote_total": 2,
+          "connected": 2,
+          "blocked_packages_period": 0,
+          "blocked_period": 0
+        },
+        {
+          "package_type": "Go",
+          "remote_total": 1,
+          "connected": 1,
+          "blocked_packages_period": 0,
+          "blocked_period": 0
+        },
+        {
+          "package_type": "AIEditorExtensions",
+          "remote_total": 1,
+          "connected": 1,
+          "blocked_packages_period": 0,
+          "blocked_period": 0
+        },
+        {
+          "package_type": "helmoci",
+          "remote_total": 1,
+          "connected": 0,
+          "blocked_packages_period": 0,
+          "blocked_period": 0
+        },
+        {
+          "package_type": "HuggingFaceML",
+          "remote_total": 1,
+          "connected": 1,
+          "blocked_packages_period": 0,
+          "blocked_period": 1
+        },
+        {
+          "package_type": "Gradle",
+          "remote_total": 1,
+          "connected": 1,
+          "blocked_packages_period": 0,
+          "blocked_period": 0
+        },
+        {
+          "package_type": "nimmodel",
+          "remote_total": 1,
+          "connected": 1,
+          "blocked_packages_period": 0,
+          "blocked_period": 0
+        },
+        {
+          "package_type": "Pub",
+          "remote_total": 1,
+          "connected": 1,
+          "blocked_packages_period": 0,
+          "blocked_period": 0
+        },
+        {
+          "package_type": "npm",
+          "remote_total": 1,
+          "connected": 1,
+          "blocked_packages_period": 0,
+          "blocked_period": 38
+        }
+      ],
+      "note": "Connected = remote repositories with Artifactory curated=true. Supported-ecosystem counts include remotes whose package type is covered by Curation policies."
+    },
+    "curation_policies_global": 3,
+    "curation_policies_repo": 1,
+    "curation_policies_user": 0,
+    "curation_policies_block": 5,
+    "curation_policies_dry_run": 0,
+    "curation_policies_total": 7,
+    "curation_enabled": true,
+    "curation_repos_count": 14
+  },
+  "curation": {
+    "available": true,
+    "total": 482,
+    "blocked": 98,
+    "approved": 151,
+    "passed": 233,
+    "block_rate": 20.3,
+    "by_reason": {
+      "malicious": 0,
+      "security": 98,
+      "license": 0,
+      "operational": 0
+    },
+    "top_blocked": [],
+    "observation": "What changed: Curation processed 482 package requests and blocked 98. Why it matters: Gate enforcement is active before download. Action: Review top blocking policies and expand connected remotes.",
+    "curation_state": {
+      "remote_total": 14,
+      "connected": 13,
+      "not_connected": 1,
+      "connected_pct": 92.86,
+      "supported_remote_total": 13,
+      "supported_connected": 13,
+      "supported_not_connected": 0,
+      "supported_connected_pct": 100.0,
+      "package_types_total": 10,
+      "by_package_type": [
+        {
+          "package_type": "Docker",
+          "remote_total": 2,
+          "connected": 2,
+          "blocked_packages_period": 0,
+          "blocked_period": 25
+        },
+        {
+          "package_type": "Maven",
+          "remote_total": 2,
+          "connected": 2,
+          "blocked_packages_period": 0,
+          "blocked_period": 34
+        },
+        {
+          "package_type": "PyPI",
+          "remote_total": 2,
+          "connected": 2,
+          "blocked_packages_period": 0,
+          "blocked_period": 0
+        },
+        {
+          "package_type": "Go",
+          "remote_total": 1,
+          "connected": 1,
+          "blocked_packages_period": 0,
+          "blocked_period": 0
+        },
+        {
+          "package_type": "AIEditorExtensions",
+          "remote_total": 1,
+          "connected": 1,
+          "blocked_packages_period": 0,
+          "blocked_period": 0
+        },
+        {
+          "package_type": "helmoci",
+          "remote_total": 1,
+          "connected": 0,
+          "blocked_packages_period": 0,
+          "blocked_period": 0
+        },
+        {
+          "package_type": "HuggingFaceML",
+          "remote_total": 1,
+          "connected": 1,
+          "blocked_packages_period": 0,
+          "blocked_period": 1
+        },
+        {
+          "package_type": "Gradle",
+          "remote_total": 1,
+          "connected": 1,
+          "blocked_packages_period": 0,
+          "blocked_period": 0
+        },
+        {
+          "package_type": "nimmodel",
+          "remote_total": 1,
+          "connected": 1,
+          "blocked_packages_period": 0,
+          "blocked_period": 0
+        },
+        {
+          "package_type": "Pub",
+          "remote_total": 1,
+          "connected": 1,
+          "blocked_packages_period": 0,
+          "blocked_period": 0
+        },
+        {
+          "package_type": "npm",
+          "remote_total": 1,
+          "connected": 1,
+          "blocked_packages_period": 0,
+          "blocked_period": 38
+        }
+      ],
+      "note": "Connected = remote repositories with Artifactory curated=true. Supported-ecosystem counts include remotes whose package type is covered by Curation policies."
+    },
+    "audit_events": [
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.32.0",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-12",
+        "timestamp": "2026-05-12T03:37:31Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.32.0",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-12",
+        "timestamp": "2026-05-12T03:37:31Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-12",
+        "timestamp": "2026-05-12T03:37:31Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-12",
+        "timestamp": "2026-05-12T03:37:30Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-12",
+        "timestamp": "2026-05-12T03:37:30Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-12",
+        "timestamp": "2026-05-12T03:37:30Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.32.0",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-11",
+        "timestamp": "2026-05-11T16:32:42Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-11",
+        "timestamp": "2026-05-11T16:32:42Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.32.0",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-11",
+        "timestamp": "2026-05-11T16:32:42Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-11",
+        "timestamp": "2026-05-11T16:32:42Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-11",
+        "timestamp": "2026-05-11T16:32:42Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-11",
+        "timestamp": "2026-05-11T16:32:42Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-11",
+        "timestamp": "2026-05-11T16:32:19Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-11",
+        "timestamp": "2026-05-11T16:32:18Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-11",
+        "timestamp": "2026-05-11T16:32:18Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.32.0",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-11",
+        "timestamp": "2026-05-11T16:32:18Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-11",
+        "timestamp": "2026-05-11T16:32:18Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.32.0",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-11",
+        "timestamp": "2026-05-11T16:32:18Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "mcpotato/42-eicar-street",
+        "version": "c08e4655be1186b30af960cc04a4f8b10507a52b",
+        "type": "HuggingFaceML",
+        "repo": "liquid-huggingfaceml-remote",
+        "policy": "Block Unidentified Licenses, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-22",
+        "timestamp": "2026-05-22T13:33:13Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.21.1",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-21",
+        "timestamp": "2026-05-21T04:11:30Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.21.1",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-21",
+        "timestamp": "2026-05-21T04:11:29Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-21",
+        "timestamp": "2026-05-21T04:11:29Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-21",
+        "timestamp": "2026-05-21T04:11:29Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-21",
+        "timestamp": "2026-05-21T04:11:29Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-21",
+        "timestamp": "2026-05-21T04:11:29Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.springframework:spring-web",
+        "version": "5.3.31",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-21",
+        "timestamp": "2026-05-21T02:48:44Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.springframework:spring-web",
+        "version": "5.3.31",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-21",
+        "timestamp": "2026-05-21T02:48:43Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.springframework:spring-web",
+        "version": "5.3.31",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-21",
+        "timestamp": "2026-05-21T02:48:43Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.springframework:spring-web",
+        "version": "5.3.31",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-21",
+        "timestamp": "2026-05-21T02:48:43Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-20",
+        "timestamp": "2026-05-20T08:40:19Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-20",
+        "timestamp": "2026-05-20T08:40:18Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.21.1",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-20",
+        "timestamp": "2026-05-20T08:40:18Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-20",
+        "timestamp": "2026-05-20T08:40:18Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.21.1",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-20",
+        "timestamp": "2026-05-20T08:40:18Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-20",
+        "timestamp": "2026-05-20T08:40:18Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "@google/gemini-cli",
+        "version": "0.38.0",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-19",
+        "timestamp": "2026-05-19T17:57:07Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "@google/gemini-cli",
+        "version": "0.38.0",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-19",
+        "timestamp": "2026-05-19T17:54:27Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.logging.log4j:log4j-core",
+        "version": "2.14.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-19",
+        "timestamp": "2026-05-19T03:42:52Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.logging.log4j:log4j-core",
+        "version": "2.14.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-19",
+        "timestamp": "2026-05-19T03:42:51Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-19",
+        "timestamp": "2026-05-19T03:34:51Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-19",
+        "timestamp": "2026-05-19T03:34:51Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-19",
+        "timestamp": "2026-05-19T03:34:51Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-19",
+        "timestamp": "2026-05-19T03:34:51Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.21.1",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-19",
+        "timestamp": "2026-05-19T03:34:50Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.21.1",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-19",
+        "timestamp": "2026-05-19T03:34:50Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "library/golang",
+        "version": "sha256:757779acac4af1b349a20f357c7296097b4a0b89da4ad0e370b339060077282a",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-28",
+        "timestamp": "2026-05-28T10:26:27Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "library/alpine",
+        "version": "sha256:f27cad9117495d32d067133afff942cb2dc745dfe9163e949f6bfe8a6a245339",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Pending Catalog update",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-28",
+        "timestamp": "2026-05-28T10:25:26Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "library/golang",
+        "version": "sha256:757779acac4af1b349a20f357c7296097b4a0b89da4ad0e370b339060077282a",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Pending Catalog update",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-28",
+        "timestamp": "2026-05-28T10:25:25Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "library/node",
+        "version": "sha256:afdf98210b07b586eb71fa22ba2e432e058e4cd1304d31ed60888755b8c865fb",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Pending Catalog update",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T14:13:45Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "library/node",
+        "version": "sha256:afdf98210b07b586eb71fa22ba2e432e058e4cd1304d31ed60888755b8c865fb",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Pending Catalog update",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T14:13:38Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "library/node",
+        "version": "sha256:afdf98210b07b586eb71fa22ba2e432e058e4cd1304d31ed60888755b8c865fb",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Pending Catalog update",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:45:56Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "library/node",
+        "version": "sha256:afdf98210b07b586eb71fa22ba2e432e058e4cd1304d31ed60888755b8c865fb",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Pending Catalog update",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:45:46Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "library/node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:40:53Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "library/node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:40:41Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "library/node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:40:40Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "library/node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:35:47Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "library/node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Pending Catalog update",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:34:55Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "library/node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Pending Catalog update",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:34:40Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "library/node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Pending Catalog update",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:34:40Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Block Unidentified Licenses, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:32:30Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Block Unidentified Licenses, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:25:21Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Block Unidentified Licenses, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:25:08Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Block Unidentified Licenses, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:25:08Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Block Unidentified Licenses, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:25:08Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Block Unidentified Licenses, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:25:08Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Block Unidentified Licenses, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:25:07Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Block Unidentified Licenses, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:25:07Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Block Unidentified Licenses, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:25:07Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Block Unidentified Licenses, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:25:07Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "node",
+        "version": "sha256:929b04d7c782f04f615cf785488fed452b6569f87c73ff666ad553a7554f0006",
+        "type": "Docker",
+        "repo": "dockerhub-remote",
+        "policy": "Block Unidentified Licenses, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-27",
+        "timestamp": "2026-05-27T08:25:07Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:57Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:57Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:57Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:56Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:55Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:55Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:54Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:54Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:53Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:52Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:52Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:52Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:50Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:50Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:50Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:50Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:48Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:48Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:47Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:47Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:42Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:42Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:42Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:42Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:39Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:39Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:32:56Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:31:53Z",
+        "malicious": false
+      }
+    ],
+    "audit_events_display": [
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:57Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:57Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:57Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:56Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:55Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:55Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:54Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:54Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:53Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:52Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:52Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:52Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:50Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:50Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:50Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:50Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:48Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:48Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:47Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:47Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:42Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:42Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:42Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:42Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:39Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:33:39Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "com.thoughtworks.xstream:xstream",
+        "version": "1.4.11.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:32:56Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "org.apache.maven.shared:maven-shared-utils",
+        "version": "3.2.1",
+        "type": "Maven",
+        "repo": "liquid-maven-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-25",
+        "timestamp": "2026-05-25T06:31:53Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.21.1",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-21",
+        "timestamp": "2026-05-21T04:11:30Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.21.1",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-21",
+        "timestamp": "2026-05-21T04:11:29Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-21",
+        "timestamp": "2026-05-21T04:11:29Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-21",
+        "timestamp": "2026-05-21T04:11:29Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-21",
+        "timestamp": "2026-05-21T04:11:29Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-21",
+        "timestamp": "2026-05-21T04:11:29Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-20",
+        "timestamp": "2026-05-20T08:40:19Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-20",
+        "timestamp": "2026-05-20T08:40:18Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.21.1",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-20",
+        "timestamp": "2026-05-20T08:40:18Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-20",
+        "timestamp": "2026-05-20T08:40:18Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.21.1",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-20",
+        "timestamp": "2026-05-20T08:40:18Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-20",
+        "timestamp": "2026-05-20T08:40:18Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-19",
+        "timestamp": "2026-05-19T03:34:51Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-19",
+        "timestamp": "2026-05-19T03:34:51Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-19",
+        "timestamp": "2026-05-19T03:34:51Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "minimist",
+        "version": "0.0.8",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-19",
+        "timestamp": "2026-05-19T03:34:51Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.21.1",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-19",
+        "timestamp": "2026-05-19T03:34:50Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.21.1",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-19",
+        "timestamp": "2026-05-19T03:34:50Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.32.0",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-12",
+        "timestamp": "2026-05-12T03:37:31Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "axios",
+        "version": "0.32.0",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-12",
+        "timestamp": "2026-05-12T03:37:31Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-12",
+        "timestamp": "2026-05-12T03:37:31Z",
+        "malicious": false
+      },
+      {
+        "status": "blocked",
+        "package": "lodash",
+        "version": "4.17.20",
+        "type": "npm",
+        "repo": "liquid-npm-remote",
+        "policy": "Global-block-high-cve-fixable-policy-c001, Policy violations",
+        "requested_by": "avinashg@jfrog.com",
+        "date": "2026-05-12",
+        "timestamp": "2026-05-12T03:37:30Z",
+        "malicious": false
+      }
+    ],
+    "audit_events_display_meta": {
+      "cap": 50,
+      "sort": "malicious_then_package_count_then_newest",
+      "total_blocked": 98
+    },
+    "unique_users": 1,
+    "top_users": [
+      {
+        "user": "avinashg@jfrog.com",
+        "events": 482,
+        "blocked": 98,
+        "approved": 151,
+        "passed": 233
+      }
+    ],
+    "request_results": {
+      "blocked": 98,
+      "approved": 151,
+      "dry_run": 0,
+      "without_inspection": 233
+    },
+    "without_inspection": 233,
+    "policies_enforced": {
+      "available": true,
+      "total_registered": 7,
+      "enabled": 5,
+      "enforcing": 5,
+      "dry_run_excluded": 0,
+      "by_scope": [
+        {
+          "scope": "all_repos",
+          "label": "All remote repositories",
+          "registered": 3,
+          "enforcing": 3
+        },
+        {
+          "scope": "specific_repos",
+          "label": "Selected repositories",
+          "registered": 1,
+          "enforcing": 1
+        },
+        {
+          "scope": "specific_groups",
+          "label": "specific_groups",
+          "registered": 1,
+          "enforcing": 1
+        }
+      ],
+      "by_policy": [
+        {
+          "name": "Global-block-high-cve-fixable-policy-c001",
+          "scope": "all_repos",
+          "scope_label": "All remote repositories",
+          "action": "block",
+          "enabled": true,
+          "audit_hits": 77,
+          "blocked_hits": 77
+        },
+        {
+          "name": "Block Unidentified Licenses",
+          "scope": "all_repos",
+          "scope_label": "All remote repositories",
+          "action": "block",
+          "enabled": true,
+          "audit_hits": 12,
+          "blocked_hits": 12
+        },
+        {
+          "name": "Global-block-malicious-policy-c002",
+          "scope": "all_repos",
+          "scope_label": "All remote repositories",
+          "action": "block",
+          "enabled": true,
+          "audit_hits": 0,
+          "blocked_hits": 0
+        },
+        {
+          "name": "Repo-block-high-cvss-fixable-policy-c001",
+          "scope": "specific_repos",
+          "scope_label": "Selected repositories",
+          "action": "block",
+          "enabled": true,
+          "audit_hits": 0,
+          "blocked_hits": 0
+        },
+        {
+          "name": "SA-Curation-Waiver-Demo",
+          "scope": "specific_groups",
+          "scope_label": "specific_groups",
+          "action": "block",
+          "enabled": true,
+          "audit_hits": 0,
+          "blocked_hits": 0
+        }
+      ]
+    },
+    "policy_inventory": {
+      "block_active": 5,
+      "dry_run_active": 0,
+      "total_registered": 7,
+      "by_risk_type": [
+        {
+          "type": "security",
+          "count": 3
+        },
+        {
+          "type": "legal",
+          "count": 1
+        },
+        {
+          "type": "malicious",
+          "count": 1
+        },
+        {
+          "type": "operational",
+          "count": 1
+        }
+      ],
+      "block_by_risk_type": [
+        {
+          "type": "security",
+          "count": 3
+        },
+        {
+          "type": "legal",
+          "count": 1
+        },
+        {
+          "type": "operational",
+          "count": 1
+        }
+      ],
+      "block_policies": [
+        {
+          "name": "Block Unidentified Licenses",
+          "risk_type": "legal",
+          "scope": "All remote repositories",
+          "condition": "Package has no identified license"
+        },
+        {
+          "name": "Global-block-high-cve-fixable-policy-c001",
+          "risk_type": "security",
+          "scope": "All remote repositories",
+          "condition": "CVE with CVSS score of 9 or above (fix version available)"
+        },
+        {
+          "name": "Global-block-malicious-policy-c002",
+          "risk_type": "security",
+          "scope": "All remote repositories",
+          "condition": "Malicious package"
+        },
+        {
+          "name": "Repo-block-high-cvss-fixable-policy-c001",
+          "risk_type": "security",
+          "scope": "Selected repositories",
+          "condition": "CVE CVSS 7 to 10 with fix available"
+        },
+        {
+          "name": "SA-Curation-Waiver-Demo",
+          "risk_type": "operational",
+          "scope": "specific_groups",
+          "condition": "Package version is immature (permissive)"
+        }
+      ]
+    },
+    "policy_violations_by_type": {
+      "malicious": 0,
+      "security": 98,
+      "license": 0,
+      "operational": 0,
+      "total_blocked": 98
+    },
+    "blocking_events_per_policy": [
+      {
+        "name": "Global-block-high-cve-fixable-policy-c001",
+        "scope_label": "All remote repositories",
+        "blocked_events": 77,
+        "audit_events": 77,
+        "action": "block"
+      },
+      {
+        "name": "Block Unidentified Licenses",
+        "scope_label": "All remote repositories",
+        "blocked_events": 12,
+        "audit_events": 12,
+        "action": "block"
+      }
+    ],
+    "top_policies": [
+      {
+        "name": "Global-block-high-cve-fixable-policy-c001",
+        "scope_label": "All remote repositories",
+        "blocked_events": 77,
+        "audit_events": 77,
+        "action": "block"
+      },
+      {
+        "name": "Block Unidentified Licenses",
+        "scope_label": "All remote repositories",
+        "blocked_events": 12,
+        "audit_events": 12,
+        "action": "block"
+      }
+    ],
+    "package_types": {
+      "total": 10,
+      "top_by_blocked": [
+        {
+          "package_type": "npm",
+          "blocked": 38,
+          "connected_repos": 1,
+          "remote_total": 1
+        },
+        {
+          "package_type": "Maven",
+          "blocked": 34,
+          "connected_repos": 2,
+          "remote_total": 2
+        },
+        {
+          "package_type": "Docker",
+          "blocked": 25,
+          "connected_repos": 2,
+          "remote_total": 2
+        },
+        {
+          "package_type": "HuggingFaceML",
+          "blocked": 1,
+          "connected_repos": 1,
+          "remote_total": 1
+        }
+      ]
+    }
+  },
+  "violations": {
+    "total": 1001,
+    "risk_score": 22.2,
+    "risk_score_previous": 0,
+    "by_type": {
+      "security": 175,
+      "operational": 320,
+      "license": 5
+    },
+    "by_severity": {
+      "critical": 14,
+      "high": 484,
+      "medium": 2,
+      "low": 0
+    },
+    "severity_pct": {
+      "critical": 2.8,
+      "high": 96.8,
+      "medium": 0.4,
+      "low": 0.0
+    },
+    "violation_details": [
+      {
+        "issue_id": "XRAY-962113",
+        "cve": "XRAY-962113",
+        "severity": "Critical",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "go://github.com/golang/go:1.12.2",
+        "watch": "Global-Watch",
+        "description": "Arithmetic over induction variables in loops were not correctly checked for underflow or overflow. As a result, the compiler would allow for invalid i"
+      },
+      {
+        "issue_id": "XRAY-521541",
+        "cve": "XRAY-521541",
+        "severity": "Critical",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "go://github.com/golang/go:1.12.2",
+        "watch": "Global-Watch",
+        "description": "The go command may execute arbitrary code at build time when using cgo. This may occur when running \"go get\" on a malicious module, or when running an"
+      },
+      {
+        "issue_id": "XRAY-198036",
+        "cve": "XRAY-198036",
+        "severity": "Critical",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "go://github.com/golang/go:1.12.2",
+        "watch": "Global-Watch",
+        "description": "Curve.IsOnCurve in crypto/elliptic in Go before 1.16.14 and 1.17.x before 1.17.7 can incorrectly return true in situations with a big.Int value that i"
+      },
+      {
+        "issue_id": "XRAY-513412",
+        "cve": "XRAY-513412",
+        "severity": "Critical",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "go://github.com/golang/go:1.12.2",
+        "watch": "Global-Watch",
+        "description": "Templates do not properly consider backticks (`) as Javascript string delimiters, and do not escape them as expected. Backticks are used, since ES6, f"
+      },
+      {
+        "issue_id": "XRAY-606108",
+        "cve": "XRAY-606108",
+        "severity": "Critical",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "go://github.com/golang/go:1.12.2",
+        "watch": "Global-Watch",
+        "description": "The various Is methods (IsPrivate, IsLoopback, etc) did not work as expected for IPv4-mapped IPv6 addresses, returning false for addresses which would"
+      },
+      {
+        "issue_id": "XRAY-187759",
+        "cve": "XRAY-187759",
+        "severity": "Critical",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "go://github.com/golang/go:1.12.2",
+        "watch": "Global-Watch",
+        "description": "Go before 1.16.9 and 1.17.x before 1.17.2 has a Buffer Overflow via large arguments in a function invocation from a WASM module, when GOARCH=wasm GOOS"
+      },
+      {
+        "issue_id": "XRAY-520141",
+        "cve": "XRAY-520141",
+        "severity": "Critical",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "go://github.com/golang/go:1.12.2",
+        "watch": "Global-Watch",
+        "description": "Not all valid JavaScript whitespace characters are considered to be whitespace. Templates containing whitespace characters outside of the character se"
+      },
+      {
+        "issue_id": "XRAY-616757",
+        "cve": "XRAY-616757",
+        "severity": "Critical",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "go://github.com/golang/go:1.12.2",
+        "watch": "Global-Watch",
+        "description": "Command go env is documented as outputting a shell script containing the Go environment. However, go env doesn't sanitize values, so executing its out"
+      },
+      {
+        "issue_id": "XRAY-521544",
+        "cve": "XRAY-521544",
+        "severity": "Critical",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "go://github.com/golang/go:1.12.2",
+        "watch": "Global-Watch",
+        "description": "The go command may generate unexpected code at build time when using cgo. This may result in unexpected behavior when running a go program which uses "
+      },
+      {
+        "issue_id": "XRAY-940770",
+        "cve": "XRAY-940770",
+        "severity": "Critical",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "go://github.com/golang/go:1.12.2",
+        "watch": "Global-Watch",
+        "description": "During session resumption in crypto/tls, if the underlying Config has its ClientCAs or RootCAs fields mutated between the initial handshake and the re"
+      },
+      {
+        "issue_id": "XRAY-692219",
+        "cve": "XRAY-692219",
+        "severity": "Critical",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "go://github.com/golang/go:1.12.2",
+        "watch": "Global-Watch",
+        "description": "The net/http package improperly accepts a bare LF as a line terminator in chunked data chunk-size lines. This can permit request smuggling if a net/ht"
+      },
+      {
+        "issue_id": "XRAY-85927",
+        "cve": "XRAY-85927",
+        "severity": "Critical",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "go://github.com/golang/go:1.12.2",
+        "watch": "Global-Watch",
+        "description": "net/url in Go before 1.11.13 and 1.12.x before 1.12.8 mishandles malformed hosts in URLs, leading to an authorization bypass in some applications. Thi"
+      },
+      {
+        "issue_id": "XRAY-521542",
+        "cve": "XRAY-521542",
+        "severity": "Critical",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "go://github.com/golang/go:1.12.2",
+        "watch": "Global-Watch",
+        "description": "The go command may execute arbitrary code at build time when using cgo. This may occur when running \"go get\" on a malicious module, or when running an"
+      },
+      {
+        "issue_id": "XRAY-82071",
+        "cve": "XRAY-82071",
+        "severity": "Critical",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "go://github.com/golang/go:1.12.2",
+        "watch": "Global-Watch",
+        "description": "Go through 1.12.5 on Windows mishandles process creation with a nil environment in conjunction with a non-nil token, which allows attackers to obtain "
+      },
+      {
+        "issue_id": "XRAY-971553",
+        "cve": "XRAY-971553",
+        "severity": "High",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "npm://follow-redirects:1.15.11",
+        "watch": "Global-Watch",
+        "description": "When an HTTP request follows a cross-domain redirect (301/302/307/308), follow-redirects only strips authorization, proxy-authorization, and cookie he"
+      },
+      {
+        "issue_id": "44d1f2651354283227f1d9ecfe7e2199dd45fac1c5885caba782f8b2f3bc0a8c",
+        "cve": "44d1f2651354283227f1d9ecfe7e2199dd45fac1c5885caba782f8b2f3bc0a8c",
+        "severity": "High",
+        "cvss": "N/A",
+        "type": "Operational_Risk",
+        "component": "npm://js-tokens:4.0.0",
+        "watch": "Global-Watch",
+        "description": "Custom Rule"
+      },
+      {
+        "issue_id": "3f2a447dafab0e09f92e0ebc51fef584c473e0568096536f21c76eb0abfe7490",
+        "cve": "3f2a447dafab0e09f92e0ebc51fef584c473e0568096536f21c76eb0abfe7490",
+        "severity": "High",
+        "cvss": "N/A",
+        "type": "Operational_Risk",
+        "component": "npm://mkdirp:0.5.1",
+        "watch": "Global-Watch",
+        "description": "Custom Rule"
+      },
+      {
+        "issue_id": "XRAY-975861",
+        "cve": "XRAY-975861",
+        "severity": "High",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "pypi://pillow:11.0.0",
+        "watch": "Global-Watch",
+        "description": "Pillow has an OOB Write with Invalid PSD Tile Extents (Integer Overflow)"
+      },
+      {
+        "issue_id": "XRAY-975861",
+        "cve": "XRAY-975861",
+        "severity": "High",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "pypi://pillow:11.0.0",
+        "watch": "Global-Watch",
+        "description": "Pillow has an OOB Write with Invalid PSD Tile Extents (Integer Overflow)"
+      },
+      {
+        "issue_id": "XRAY-975861",
+        "cve": "XRAY-975861",
+        "severity": "High",
+        "cvss": "N/A",
+        "type": "Security",
+        "component": "pypi://pillow:11.0.0",
+        "watch": "Global-Watch",
+        "description": "Pillow has an OOB Write with Invalid PSD Tile Extents (Integer Overflow)"
+      }
+    ],
+    "critical_issues": [
+      {
+        "id": "XRAY-962113",
+        "description": "Arithmetic over induction variables in loops were not correctly checked for underflow or overflow. As a result, the compiler would allow for invalid indexing to occur at runtime, potentially leading to memory corruption.",
+        "hits": 1,
+        "first_seen": "2026-05-13",
+        "days_open": 0,
+        "exploit_status": "unknown",
+        "affected_environments": [],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-521541",
+        "description": "The go command may execute arbitrary code at build time when using cgo. This may occur when running \"go get\" on a malicious module, or when running any other command which builds untrusted code. This is can by triggered ",
+        "hits": 1,
+        "first_seen": "2026-05-13",
+        "days_open": 0,
+        "exploit_status": "unknown",
+        "affected_environments": [],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-198036",
+        "description": "Curve.IsOnCurve in crypto/elliptic in Go before 1.16.14 and 1.17.x before 1.17.7 can incorrectly return true in situations with a big.Int value that is not a valid field element.",
+        "hits": 1,
+        "first_seen": "2026-05-13",
+        "days_open": 0,
+        "exploit_status": "unknown",
+        "affected_environments": [],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-513412",
+        "description": "Templates do not properly consider backticks (`) as Javascript string delimiters, and do not escape them as expected. Backticks are used, since ES6, for JS template literals. If a template contains a Go template action w",
+        "hits": 1,
+        "first_seen": "2026-05-13",
+        "days_open": 0,
+        "exploit_status": "unknown",
+        "affected_environments": [],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-606108",
+        "description": "The various Is methods (IsPrivate, IsLoopback, etc) did not work as expected for IPv4-mapped IPv6 addresses, returning false for addresses which would return true in their traditional IPv4 forms.",
+        "hits": 1,
+        "first_seen": "2026-05-13",
+        "days_open": 0,
+        "exploit_status": "unknown",
+        "affected_environments": [],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-187759",
+        "description": "Go before 1.16.9 and 1.17.x before 1.17.2 has a Buffer Overflow via large arguments in a function invocation from a WASM module, when GOARCH=wasm GOOS=js is used.",
+        "hits": 1,
+        "first_seen": "2026-05-13",
+        "days_open": 0,
+        "exploit_status": "unknown",
+        "affected_environments": [],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-520141",
+        "description": "Not all valid JavaScript whitespace characters are considered to be whitespace. Templates containing whitespace characters outside of the character set \"\\t\\n\\f\\r\\u0020\\u2028\\u2029\" in JavaScript contexts that also contai",
+        "hits": 1,
+        "first_seen": "2026-05-13",
+        "days_open": 0,
+        "exploit_status": "unknown",
+        "affected_environments": [],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-616757",
+        "description": "Command go env is documented as outputting a shell script containing the Go environment. However, go env doesn't sanitize values, so executing its output as a shell script can cause various bad bahaviors, including execu",
+        "hits": 1,
+        "first_seen": "2026-05-13",
+        "days_open": 0,
+        "exploit_status": "unknown",
+        "affected_environments": [],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-521544",
+        "description": "The go command may generate unexpected code at build time when using cgo. This may result in unexpected behavior when running a go program which uses cgo. This may occur when running an untrusted module which contains di",
+        "hits": 1,
+        "first_seen": "2026-05-13",
+        "days_open": 0,
+        "exploit_status": "unknown",
+        "affected_environments": [],
+        "playbook_link": null
+      },
+      {
+        "id": "XRAY-940770",
+        "description": "During session resumption in crypto/tls, if the underlying Config has its ClientCAs or RootCAs fields mutated between the initial handshake and the resumed handshake, the resumed handshake may succeed when it should have",
+        "hits": 1,
+        "first_seen": "2026-05-13",
+        "days_open": 0,
+        "exploit_status": "unknown",
+        "affected_environments": [],
+        "playbook_link": null
+      }
+    ],
+    "top_cves": [
+      {
+        "id": "XRAY-975861",
+        "cvss": null,
+        "severity": "Critical",
+        "packages": 1,
+        "hits": 5
+      },
+      {
+        "id": "XRAY-977685",
+        "cvss": null,
+        "severity": "Critical",
+        "packages": 1,
+        "hits": 5
+      },
+      {
+        "id": "GPL-2.0",
+        "cvss": null,
+        "severity": "Critical",
+        "packages": 1,
+        "hits": 3
+      },
+      {
+        "id": "XRAY-982013",
+        "cvss": null,
+        "severity": "Critical",
+        "packages": 1,
+        "hits": 3
+      },
+      {
+        "id": "XRAY-963112",
+        "cvss": null,
+        "severity": "Critical",
+        "packages": 1,
+        "hits": 3
+      }
+    ],
+    "top_watch_policies": [
+      {
+        "policy": "Global-Watch",
+        "type": "security",
+        "hits": 500,
+        "delta_pct": 0
+      }
+    ],
+    "observation": "What changed: Xray reported 1001 violations, including 14 critical. Why it matters: Critical concentration drives executive risk. Action: Prioritize the highest-hit XRAY IDs."
+  },
+  "license": {
+    "total": 5,
+    "licenses": [],
+    "observation": "What changed: License signal was collected from Xray violations. Why it matters: Policy violations may block release paths. Action: Review license rows in Xray for remediation ownership."
+  },
+  "operational": {
+    "total": 320,
+    "top_components": [],
+    "observation": "What changed: Operational risk signal was collected from Xray violations. Why it matters: Deprecated or risky components affect reliability. Action: Prioritize operational-risk packages with active usage."
+  },
+  "benefit": {
+    "roi_estimate": null,
+    "observation": "What changed: Prevented downloads reduce downstream remediation work. Why it matters: Curation blocks risk before it enters builds. Action: Track blocked package trends against incident avoidance."
+  },
+  "governance": {
+    "xray_policy_effectiveness": [
+      {
+        "policy": "Global-Watch",
+        "type": "security",
+        "hits": 500,
+        "pct_of_events": 50,
+        "delta_pct": 0
+      }
+    ],
+    "curation_policy_effectiveness": [
+      {
+        "policy": "Global-block-high-cve-fixable-policy-c001",
+        "type": "curation",
+        "hits": 77,
+        "pct_of_events": 79,
+        "delta_pct": 0,
+        "scope_label": "All remote repositories"
+      },
+      {
+        "policy": "Block Unidentified Licenses",
+        "type": "curation",
+        "hits": 12,
+        "pct_of_events": 12,
+        "delta_pct": 0,
+        "scope_label": "All remote repositories"
+      }
+    ],
+    "policy_effectiveness": [
+      {
+        "policy": "Global-Watch",
+        "type": "security",
+        "hits": 500,
+        "pct_of_events": 50,
+        "delta_pct": 0
+      }
+    ],
+    "repo_watch_summary": {
+      "total": 61,
+      "indexed": 37,
+      "unindexed": 24,
+      "withWatch": null,
+      "withoutWatch": null
+    }
+  },
+  "threat_velocity": {
+    "available": false,
+    "periods": [],
+    "trend_summary": "Trend comparison will be available after another validated run."
+  },
+  "comparison": {
+    "available": false
+  },
+  "recommendations": [
+    {
+      "priority": "P1",
+      "effort": "medium",
+      "score": 95,
+      "text": "Review top critical XRAY IDs",
+      "detail": "Impact: Critical vulnerabilities dominate current risk. Next step: assign remediation owners for the highest-hit XRAY IDs in the report."
+    },
+    {
+      "priority": "P2",
+      "effort": "low",
+      "score": 80,
+      "text": "Expand curation coverage",
+      "detail": "Impact: Unconnected remotes can bypass package gate enforcement. Next step: connect remaining supported remote repositories to Curation."
+    }
+  ]
+};
         /* ═══ END DATA ═══ */
 
         const FROG_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1002.96 969.97" style="shape-rendering:geometricPrecision"><g><path fill="#40BE46" fill-rule="nonzero" d="M445.49 636.58l-52.78 14.79c4.83,13.43 8.34,37.52 8.34,69.49l0 158.34 58.97 0 0 -167.6c10.98,-13.43 22.86,-19.92 36.07,-19.92 6.58,0 11.42,1.39 17.17,4.63l16.25 -54.63c-9.23,-4.17 -13.2,-5.1 -22.01,-5.1 -6.58,0 -14.49,1.39 -19.36,3.71 -10.98,5.56 -25.05,18.03 -33.42,30.08 -0.86,-13.44 -3.97,-24.06 -9.23,-33.79zm-204.73 -78.26l0 0 -6.42 0 0 320.88 61.61 0 0 -142.16 77.83 0 0 -52.78 -77.83 0 0 -73.63 97.19 0 3.77 -28.03c-58.44,-4.47 -111.51,-13.86 -156.15,-24.29zm-144.31 363.46l0 0 28.59 33.36c27.7,-11.12 62.44,-36.14 71.28,-75.48 3.08,-12.94 4.37,-21.31 4.37,-62.97l0 -257.64 -62.44 0 0 264.59c0,34.71 -1.32,47.68 -6.16,59.26 -5.72,12.97 -19.82,28.72 -35.64,38.88zm561.01 -162.51l0 0c0,56.02 -10.99,80.08 -36.5,80.08 -11.45,0 -24.65,-6.45 -29.91,-19.42 -4.83,-12.04 -7.48,-32.43 -7.48,-59.73 0,-23.63 2.18,-40.27 6.15,-52.78 4.83,-14.82 16.28,-24.09 30.34,-24.09 10.56,0 19.79,4.63 25.51,12.51 7.91,10.66 11.88,31.5 11.88,63.44zm36.07 92.15l0 0c19.36,-23.16 28.16,-50.96 28.16,-91.69 0,-38.45 -7.94,-64.36 -25.98,-86.6 -19.32,-24.06 -44.41,-35.64 -76.54,-35.64 -60.69,0 -101.16,49.54 -101.16,124.09 0,74.55 40.01,122.7 101.16,122.7 34.78,0 57.21,-12.51 74.36,-32.86zm168.92 -132.92l0 0c0,21.77 -12.77,33.82 -36.07,33.82 -20.68,0 -34.78,-9.73 -34.78,-33.82 0,-22.2 12.77,-35.18 35.21,-35.18 22.44,0 35.64,12.97 35.64,35.18zm104.24 -50.46l0 0 -24.62 -39.34c-13.63,12.97 -30.38,20.38 -46.62,20.38 -7.48,0 -11.45,-0.96 -27.73,-5.09 -16.28,-4.63 -27.7,-6.02 -40.47,-6.02 -57.64,0 -95,31.47 -95,80.11 0,35.18 15.82,56.95 48.38,65.75 -13.2,3.24 -27.73,10.16 -34.31,18.03 -4.83,5.56 -7.05,12.97 -7.05,21.77 0,7.41 1.75,13.9 4.4,19.46 3.08,5.1 7.48,9.27 12.77,11.55 10.56,4.2 27.73,6.98 54.1,7.41 13.63,0 22.01,0.46 25.08,0.46 16.28,0.93 24.62,3.71 30.77,6.98 6.16,3.67 10.56,12.01 10.56,21.28 0,9.26 -5.69,18.53 -14.06,24.09 -7.91,5.53 -20.68,7.84 -37.39,7.84 -27.3,0 -42.22,-10.16 -42.22,-29.15 0,-8.34 0.89,-10.19 2.61,-15.29l-54.53 0c-2.18,4.63 -5.29,11.12 -5.29,24.09 0,16.21 6.19,30.08 18.5,42.12 20.22,19.92 53.24,25.48 85.34,25.48 35.18,0 69.06,-8.34 88.85,-30.57 12.31,-13.9 18.03,-29.15 18.03,-49.07 0,-21.31 -6.16,-37.52 -19.36,-50.46 -15.82,-15.29 -33.85,-20.85 -68.17,-21.31l-31.7 -0.46c-6.15,0 -9.66,-2.32 -9.66,-5.56 0,-6.49 8.37,-12.04 23.33,-19.42 4.4,0.46 6.15,0.46 8.8,0.46 47.95,0 83.12,-29.65 83.12,-70.42 0,-15.72 -4.4,-27.76 -13.2,-38.88 7.48,0.93 9.7,1.39 15.39,1.39 16.28,0 28.59,-5.1 41.37,-17.6zm-741.48 -388.41l0 0c-73.73,18.03 -123.82,53.31 -123.82,93.91 0,25.12 19.22,48.18 51.29,66.38 -9.63,-15.42 -14.89,-31.63 -14.89,-48.38 0,-42.22 32.69,-81.04 87.43,-111.91zm777.75 158.6l0 0c0,-26.61 -16.41,-51.29 -44.31,-71.54 2.51,8.11 3.94,16.41 3.94,24.85 0,76.24 -106.48,141.46 -257.41,168.5 17.04,1.92 34.78,2.98 52.98,2.98 135.21,0 244.8,-55.86 244.8,-124.78zm-86.99 -41.46l0 0c0,-27.96 -23.96,-53.87 -64.76,-75.25 9.56,11.58 14.76,23.92 14.76,36.73 0,67.57 -143.98,122.37 -321.57,122.37 -177.56,0 -321.54,-54.8 -321.54,-122.37 0,-8.6 2.35,-16.97 6.75,-25.05 -28.52,18.86 -44.8,40.54 -44.8,63.56 0,73.16 163.66,132.49 365.58,132.49 201.92,0 365.58,-59.33 365.58,-132.49zm-159.69 -3.28l0 0c-74.49,48.15 -303.97,66.31 -402.81,4.57 -77.46,-48.41 -50.89,-125.15 -272.46,-294.24 -28.96,-22.1 5.36,-45.56 27.07,-30.54 21.67,15.02 1.82,19.03 45.6,62.84 88.38,88.45 87.52,8.93 101.49,39.01 29.35,63.24 94.11,126.93 94.11,126.93 64.89,42.22 116.67,51.42 212.34,-13.3 60.69,-41.07 35.87,65.29 184.68,-11.35 54.27,-27.96 52.02,-9.43 107.18,-86.3 22.9,-31.93 66.68,24.52 17.04,32.36 -19.85,3.14 -53.37,24.85 -67.77,59.17 -20.32,50.73 -11.52,88.28 -46.46,110.85zm-413.59 -130.04l0 0c-18.4,-8.11 -37.66,-39.44 -45.17,-52.02 20.58,-20.15 12.24,-53.87 0.63,-72.4 -11.61,-18.5 -25.71,-13.24 -41.16,-30.25 -15.45,-17.01 5.82,-61.35 25.65,-27.26 74.19,127.66 122.9,74.55 183.52,66.94 58.17,-7.31 109.59,24.39 125.38,-65.35 2.58,-14.69 16.84,-18.2 18.3,6.09 1.49,24.25 10.59,83.35 42.55,91 32,7.61 57.38,-7.51 64.89,-15.88 7.48,-8.37 11.38,-7.18 14.69,13.63 3.27,20.85 11.38,49.6 56.29,17.57 91.86,-65.55 65.55,-90.9 101.25,-107.74 20.35,-9.6 52.38,21.61 6.06,45.03 -66.25,33.49 -73.26,75.08 -115.12,101.49 -70.35,44.44 -48.84,1.79 -162.04,-14.33 -43.58,-6.22 -57.61,42.39 -91.63,28.36 -78.49,-32.43 -133.25,-26.21 -184.08,15.12zm245.33 -236.63l0 0c2.58,19.16 5.79,18.69 12.67,20.48 6.85,1.75 15.55,-9.03 15.85,-19.49 0.3,-10.49 -4.47,-17.07 -14.82,-16.71 -10.32,0.4 -14.03,5.59 -13.7,15.72zm341.13 34.88l0 0c8.24,8.04 30.24,2.61 35.37,-3.14 13.17,-14.76 13.63,-23.66 6.85,-33.55 -6.82,-9.86 -21.18,-8.07 -35.41,2.25 -14.2,10.29 -11.52,29.88 -6.82,34.45zm-6.19 97.48l0 0c-7.08,9.4 -7.28,16.05 -2.25,21.24 5.36,5.53 16.48,10.33 24.49,3.94 7.97,-6.32 7.97,-15.55 1.19,-23.69 -6.82,-8.14 -16.08,-8.14 -23.43,-1.49zm-699.23 -115.25l0 0c10.79,3.31 15.52,13.34 24.62,1.89 4.5,-5.66 4.93,-13.13 -1.02,-21.57 -3.77,-5.26 -21.28,-8.9 -28.72,-1.39 -7.44,7.51 -0.66,19.29 5.13,21.08zm-216.31 -6.45l0 0c19.33,11.84 32,29.78 46.56,13.77 4.9,-5.33 11.02,-15.42 0.46,-34.74 -7.71,-14.13 -33.12,-19.92 -42.09,-14.49 -8.97,5.39 -19.92,26.27 -4.93,35.47zm178.59 91.66l0 0c6.15,6.39 16.61,5.86 22.87,2.42 6.22,-3.51 4.93,-13.17 -1.06,-21.61 -3.74,-5.26 -14.89,-7.71 -22.34,-0.2 -7.44,7.51 -3.77,14.92 0.53,19.39z"/></g></svg>`;
