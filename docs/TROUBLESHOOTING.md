@@ -2,7 +2,7 @@
 
 | Problem | Fix |
 |---------|-----|
-| Skill not detected by agent | Reinstall from GitHub: `npx skills add git@github.com:liquid-jedi/jfrog-agentic-dashboard-skills.git -g --skill jfrog-ciso-report` — see [Installation](INSTALL.md) |
+| Skill not detected by agent | Reinstall with APM or the generic Skills command from [Installation](INSTALL.md), then verify the deployed skill exists |
 | Agent generates its own HTML | Skill not registered or wrong skill active — verify with `npx skills list -g` |
 | Curation shows "Not configured" | Enable curation on the JPD; ensure token has audit API permissions |
 | CLI tools not found | Install `jf`, `jq`, `python3` and ensure they are on PATH |

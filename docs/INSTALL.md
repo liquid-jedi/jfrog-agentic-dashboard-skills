@@ -10,7 +10,7 @@ Get the dashboard skills installed, verified, and ready to run against your JFro
 | **JFrog Xray** | Required for vulnerability and violation data |
 | **JFrog Curation** | Optional — dashboard shows "Not configured" when absent |
 | **JFrog CLI** (`jf`) | Installed and authenticated |
-| **Tools on PATH** | `jf`, `jq`, `python3`, `npx` |
+| **Tools on PATH** | `jf`, `jq`, `python3`; `apm` for APM installs or `npx` for generic Skills installs |
 | **Base skill** | [`jfrog`](https://github.com/jfrog/jfrog-skills) from JFrog Platform Skills |
 
 ### Install JFrog CLI
@@ -47,7 +47,57 @@ npx skills list -g   # must include "jfrog"
 
 ## Install dashboard skills
 
-### From GitHub (consumers)
+### Which install should you choose?
+
+| Install path | Best for | Runtime behavior |
+|--------------|----------|------------------|
+| **Option 1: APM install** | Teams that want reproducible, project-local agent context with `apm.yml` and `apm.lock.yaml` | Run the agent from the APM project folder where the skill was installed. |
+| **Option 2: Generic Skills install** | Users who want the skill available globally from any terminal folder or UI-based agent session | Installs into the user's global skills directory. |
+
+APM is intentionally project-based, similar to how `npm install` works for application dependencies. If you install the skill into `~/ciso-reporting`, start Claude/Codex/Cursor from `~/ciso-reporting` so the runtime can see that project's `.agents/skills/` and `.claude/skills/` folders.
+
+If your operators expect to open Claude/Codex from any folder and simply ask for a CISO report, use the generic global Skills install instead.
+
+### Option 1: APM install
+
+Use this path when you want a reproducible agent package install across supported agent runtimes.
+
+Install APM:
+
+```bash
+curl -sSL https://aka.ms/apm-unix | sh
+apm --version
+```
+
+Install the CISO report package from the published repository:
+
+```bash
+mkdir -p ~/ciso-reporting
+cd ~/ciso-reporting
+apm init -y --target claude,codex,cursor
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#main
+```
+
+Optional: install the persona scaffolder package:
+
+```bash
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#main
+```
+
+Run project-local APM skills from the same folder:
+
+```bash
+cd ~/ciso-reporting
+claude
+```
+
+For Codex or Cursor, open/use the `~/ciso-reporting` folder as the active project/workspace.
+
+Use a version tag only after that tag includes the `packages/apm/` folders. Do not use `#v2.2.0` for APM installs because that release predates APM packaging.
+
+### Option 2: Generic Skills install
+
+Use this path when your agent runtime already uses the Skills CLI flow.
 
 ```bash
 npx skills add git@github.com:liquid-jedi/jfrog-agentic-dashboard-skills.git -g --skill jfrog-ciso-report
@@ -59,7 +109,7 @@ Optional skills from the same repository:
 npx skills add git@github.com:liquid-jedi/jfrog-agentic-dashboard-skills.git -g --skill jfrog-dashboard-blueprint
 ```
 
-### From a local clone (development)
+### Local clone install (development)
 
 Use this when you are editing skills in this repository — changes take effect immediately without copying stale folders.
 
@@ -80,7 +130,7 @@ npx skills add "$REPO_ROOT" -g --skill jfrog-dashboard-blueprint
 
 ## Verify installation
 
-Check the globally installed skills directly:
+For generic Skills installs, check the globally installed skills directly:
 
 ```bash
 npx skills list -g
@@ -90,9 +140,18 @@ Expected result: the global skills list includes `jfrog` and `jfrog-ciso-report`
 
 If you also installed the scaffolder, the list should include `jfrog-dashboard-blueprint`.
 
+For APM installs, inspect the deployed skills in the target project:
+
+```bash
+cd ~/ciso-reporting
+find .agents/skills -maxdepth 2 -type f | sort
+```
+
 ## Update installed skills
 
-There is no separate update command documented in this repo today. To refresh an installed skill, rerun the same `npx skills add ... -g --skill ...` command you used for install, then verify again with `npx skills list -g`.
+For APM installs, rerun the same `apm install ...` command or update the dependency in `apm.yml` and run `apm install`.
+
+For generic Skills installs, rerun the same `npx skills add ... -g --skill ...` command you used for install, then verify again with `npx skills list -g`.
 
 Update from GitHub:
 
@@ -108,6 +167,15 @@ npx skills add "$REPO_ROOT" -g --skill jfrog-ciso-report
 ```
 
 ## First report run
+
+For an APM install, start the agent from the APM project folder:
+
+```bash
+cd ~/ciso-reporting
+claude
+```
+
+For a generic global Skills install, start the agent from any folder where you want to work.
 
 Ask your agent with a direct prompt such as:
 
@@ -130,8 +198,8 @@ If you want to see the output format before running the skill against your own i
 
 - `samples/ciso-report-2026-04-26.html`
 - `samples/` (additional sample outputs)
-- `Example Reports/ciso-reports/liquidjedi/weekly/2026-05-20/report.html`
-- `Example Reports/ciso-reports/liquidjedi/weekly/2026-05-26/report.html`
+- `Example Reports/ciso-reports/weekly/report-1.html`
+- `Example Reports/ciso-reports/Monthly/report-1.html`
 
 These files are static reference artifacts. They are useful for reviewing the generated dashboard layout and narrative style, but they are not live data and are not updated automatically.
 
