@@ -25,7 +25,7 @@ Agents provide adaptability; schema + template provide consistency and governanc
 
 ```text
 Dashboard-ciso-report-skills/         # CISO skill + renderer
-dashboard-blueprint-skills/           # Persona scaffolder
+Dashboard-blueprint-skills/           # Persona scaffolder
 docs/                                 # Operator documentation
 samples/                              # Example HTML reports
 scripts/                              # Prechecks and utilities
@@ -102,7 +102,7 @@ The HTML template is a single self-contained file (HTML/CSS/JS). Edit branding o
 
 ## Creating new persona packs
 
-Use `dashboard-blueprint-skills/` to scaffold from a short interview:
+Use `Dashboard-blueprint-skills/` to scaffold from a short interview:
 
 ```
 Prompt: "Scaffold a new dashboard pack for VP Engineering"
@@ -126,7 +126,7 @@ The blueprint does **not** call JFrog APIs. Implement mapping in `report-data-co
 npx skills add ./dashboard-report-skills-vp-engineering -g -y
 ```
 
-See `dashboard-blueprint-skills/references/blueprint-structure.md` for the full contract.
+See `Dashboard-blueprint-skills/references/blueprint-structure.md` for the full contract.
 
 ---
 

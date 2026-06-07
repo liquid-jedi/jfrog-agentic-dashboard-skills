@@ -346,7 +346,7 @@ Typical contents:
 
 This project includes a separate builder skill for creating new persona packs:
 
-- Skill folder: `dashboard-blueprint-skills/`
+- Skill folder: `Dashboard-blueprint-skills/`
 - Purpose: scaffold a new dashboard/report skill for a persona such as CTO, Head of Engineering, Compliance, or DevOps leadership
 
 Recommended installation:

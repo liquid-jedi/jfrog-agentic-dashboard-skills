@@ -172,7 +172,7 @@ Full install options, GitHub installs, and verification → **[docs/INSTALL.md](
 
 ```text
 Dashboard-ciso-report-skills/               # CISO skill + renderer
-dashboard-blueprint-skills/                 # Persona scaffolder
+Dashboard-blueprint-skills/                 # Persona scaffolder
 docs/                                       # Operator guides
 samples/                                    # Example HTML reports
 Example Reports/                            # Example generated run outputs
