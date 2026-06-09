@@ -10,7 +10,7 @@ description: >-
 metadata:
   role: workflow
   author: Avinash Giri
-  version: 2.4.0
+  version: 2.5.0
 ---
 
 # JFrog CISO Report Generator
@@ -31,13 +31,24 @@ If you generate HTML from scratch, the report will be broken. The dashboard
 template has 1200 lines of CSS, JS, sidebar layout, severity bars, and
 section rendering that you cannot reproduce. Do NOT attempt it.
 
+**Role separation:** Phases 0–3 (collection through render): your only output is JSON — do not generate prose or interpretive text. Phase 4 (after runner succeeds): switch to analyst mode and deliver the executive interpretation as a chat response only; no prose is injected into the report HTML.
+
+**Constraint precedence (highest wins):**
+1. Transport fail-fast (no HTTP response received — always stop)
+2. Runtime integrity contract
+3. Determinism contract
+4. Execution checklist
+5. DO NOT rules
+
+When two constraints conflict, the lower-numbered constraint takes priority.
+
 ## Execution checklist
 
 Before collecting data:
 
 - Confirm tools: `jf`, `jq`, and `python3` must be on PATH. If missing,
   stop and tell the user to install/configure them using `../jfrog/SKILL.md`.
-- Resolve report period. Default to `weekly`, last 7 days, all repos.
+- Resolve report period. Default to `weekly`. Weekly window: `DATE_FROM = today − 7 days at 00:00:00 UTC`, `DATE_TO = today at 23:59:59 UTC` (produces `window_days = 7`). All repos unless the prompt narrows scope.
 - Resolve server. If multiple JFrog CLI servers exist and the prompt does
   not name one, you MUST stop and ask the user to choose. Do NOT use the
   JFrog CLI default server. Do NOT guess.
@@ -59,14 +70,11 @@ Command style rule for IDE agents:
   to expand them.
 - This reduces IDE approval prompts caused by "Contains expansion" checks.
 
-After those checkpoints, execute without further questions. If an API fails,
-set that JSON field to `0`, `[]`, `false`, `null`, or `"N/A"` and continue.
+After those checkpoints, execute without further questions. If an API fails, set the affected field to the schema-typed zero-value: numeric → `0`, array → `[]`, boolean → `false`, string → `""`, nullable object → `null`. Do not use `"N/A"` for any typed field. Continue collection.
 Batch `jf` commands into single bash blocks. Pass `--server-id "$SERVER_ID"`
 to every `jf` command.
 
-Exception (MANDATORY fail-fast): if failures indicate blocked network,
-sandbox denial, DNS/connectivity, TLS handshake issues, or auth transport
-errors that prevent live API collection, stop the run and report the error.
+Exception (MANDATORY fail-fast): distinguish transport failures from API failures. A **transport failure** means no HTTP response was received (TCP connection refused, DNS failure, TLS error, or timeout before any bytes arrive) — stop immediately and report the error. An **API failure** means an HTTP response was received (any status code, including 4xx/5xx) — apply zero-value defaults above and continue. When in doubt: if `jf` exits with a network/connectivity error message rather than an HTTP status code, treat it as a transport failure.
 Do NOT use prior local files, prior snapshots, cached payloads, or "last
 successful run" data as a substitute for current collection unless the user
 explicitly requests fallback mode in the prompt.
@@ -127,6 +135,8 @@ Execute in order.
 Phase 0 → Phase 1 (module tracks in parallel) → Phase 2 (transform) → Phase 3 (render) → Phase 4 (cleanup)
 ```
 
+> **Phase 2 jq error handling:** if a `jq` transform exits non-zero or produces empty output for any field, apply the same zero-value defaults as for API failures (numeric → `0`, array → `[]`, boolean → `false`, string → `""`, object → `{}`) and log the failing expression to stderr before continuing.
+
 ## Determinism contract (mandatory)
 
 For all paginated collection modules:
@@ -142,9 +152,7 @@ Parse from the user's prompt. If no report type is specified, use `weekly`.
 If the prompt asks for an unsupported report type, stop and list valid
 options: `weekly`, `monthly`, or `custom`.
 
-Do not begin by deleting prior runtime files. For portability and clearer
-agent behavior, each run must overwrite runtime payloads during collection
-and perform cleanup at the end of the run.
+The agent must not manually delete prior runtime files at the start of a run. The runner script (`bin/generate-ciso-report.sh`) handles clearing stale `/tmp/ciso-*` files internally as its first action — that is a runner responsibility, not an agent action. The agent overwrites runtime payloads during collection and runs cleanup at the end.
 
 | Prompt says | Type | Window |
 |-------------|------|--------|
@@ -155,6 +163,8 @@ and perform cleanup at the end of the run.
 
 `all repos` is the default scope for every report type unless the prompt
 explicitly narrows the scope.
+
+**Fallback mode trigger** — if the prompt contains "use last run", "fallback mode", or "offline mode": skip all live API calls; load the most recent local snapshot from `LOCAL_ROOT` as input; set `data_source=fallback`, `fallback_mode.used=true`, `fallback_mode.user_requested=true` in `run-meta.json`; label the report header "FALLBACK — data from `<prior_date>`". Stop if no prior snapshot exists.
 
 ## Step 2: Select server — MANDATORY
 
@@ -179,10 +189,18 @@ real values.
 
 ## Step 3: Resolve output and storage
 
+Resolve each sub-step in order. After Step 3d, export all variables before proceeding to Step 4.
+
+### Step 3a: Resolve storage repo
+
 Use `REPORT_REPO="ciso-reports-local"` unless the prompt names another repo.
+
+### Step 3b: Resolve local output root
 
 Also resolve local output root for every run. This determines where local
 artifacts are written even when Artifactory upload is enabled.
+
+### Step 3c: Resolve data persistence flags
 
 Resolve raw DATA persistence mode for local artifacts:
 
@@ -192,6 +210,8 @@ Resolve raw DATA persistence mode for local artifacts:
 | Prompt explicitly asks to keep raw data file (`save data.json`, `keep raw data`) | Set `SAVE_DATA_JSON=true`. |
 | `CISO_SAVE_DATA_JSON` env var is set | Use its value (`true/false`). |
 | No preference provided | Default to `SAVE_DATA_JSON=true`. |
+
+### Step 3d: Resolve token capture
 
 Resolve token usage capture mode for run metadata:
 
@@ -220,6 +240,8 @@ export REPORT_TYPE_LOWER="$(echo "${REPORT_TYPE:-weekly}" | tr '[:upper:]' '[:lo
 export SERVER_SLUG="$(echo "$SERVER_ID" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g')"
 export REPORT_TYPE_SLUG="$REPORT_TYPE_LOWER"
 ```
+
+**→ Export checkpoint:** all variables above must be exported before Step 4 begins.
 
 Before Step 4 begins, print a short status line to the user. This is
 informational only — do not wait for acknowledgement, do not ask a
@@ -317,6 +339,8 @@ If no previous data from either path: set `comparison.available: false`.
 
 > **Note:** local trend analysis requires a stable `LOCAL_ROOT` across runs. If `LOCAL_ROOT` defaults to `$PWD` and the agent is launched from different directories each time, prior snapshots will not be found and trend comparison will always be empty. Set `CISO_LOCAL_ROOT` to a fixed path (e.g. `~/ciso-reports`) for reliable trend data without Artifactory.
 
+> **Rerun note:** when the current run is itself a rerun (output is going into a `rerun-*` subdirectory), also scan the parent date folder for `snapshot.json` before falling back to the cross-date search. Use the most recent snapshot found — whether from a prior date or the same-date primary run.
+
 ## Step 5: Generate the dashboard data and artifacts
 
 The skill stays agentic, but report execution uses a deterministic spine.
@@ -330,6 +354,10 @@ validation gates, and template injection.
 SKILL_DIR="$(find ~/.agents/skills -name 'jfrog-ciso-report' -type d 2>/dev/null | head -1)"
 if [ -z "$SKILL_DIR" ] || [ ! -f "$SKILL_DIR/bin/generate-ciso-report.sh" ]; then
   SKILL_DIR="./Dashboard-ciso-report-skills"
+fi
+if [ ! -f "$SKILL_DIR/bin/generate-ciso-report.sh" ]; then
+  echo "ERROR: Runner script not found. Verify the skill is installed at ~/.agents/skills/jfrog-ciso-report or at ./Dashboard-ciso-report-skills and retry."
+  exit 1
 fi
 "$SKILL_DIR/bin/generate-ciso-report.sh" "$SERVER_ID" "$LOCAL_ROOT" "$REPORT_TYPE_LOWER"
 ```
@@ -363,7 +391,7 @@ non-zero, stop and report the failing gate; do not generate or hand-edit HTML.
 After the runner succeeds, inspect the saved `data.json`, `snapshot.json`, and
 `run-meta.json`. The agent should then provide the executive interpretation:
 
-- Highlight the most important security, curation, governance, and coverage signals.
+- Highlight up to 3 findings per section (security, curation, governance, coverage), ranked first by severity (critical before high), then by absolute delta versus the prior snapshot (largest change first).
 - Call out validation proof (for example indexed repos, watches, policies, curation rows, unique users, named policies).
 - If needed, improve observations/recommendations in a controlled follow-up pass, then re-run validation/render through the runner or repair helper.
 
@@ -384,12 +412,7 @@ This helper clears stale `/tmp/ciso-*` files, recollects live curation + violati
 **Every schema field MUST be present.** Use 0, [], "", null, or false for
 unavailable data. The dashboard handles missing data gracefully.
 
-Generate each `observation` string as one or two concise, data-driven
-sentences. Include at least one concrete metric, name, package, policy,
-repository, or XRAY/CVE ID when data exists. Avoid generic advice.
-Write observations in this readability format (single paragraph, clear markers):
-`What changed: ...  Why it matters: ...  Action: ...`
-Keep each observation under 320 characters.
+Generate each `observation` string as a single structured sentence ≤320 characters total. Use inline markers `What changed:`, `Why it matters:`, and `Action:`. Include at least one concrete metric, name, package, policy, repository, or XRAY/CVE ID when data exists. If all three markers cannot fit within 320 characters, omit `Action:` and keep the other two. Avoid generic advice.
 
 For `curation.observation`, if `curation.total == 0` but diagnostics confirm
 that the API was reachable and the earliest audit event falls after the
@@ -439,7 +462,9 @@ Use structured recommendation metadata in addition to text:
 Beta enforcement: every recommendation MUST include `priority` and `score`.
 Validation is covered by Gate 3 above.
 
-Also save a compact comparison snapshot:
+> **Note (debugging only):** the runner already writes `/tmp/ciso-snapshot.json` as part of normal execution. The block below is provided only for manually reproducing or validating the snapshot format outside the runner. Do not run this in a normal report generation flow.
+
+Compact comparison snapshot (debug/reference only):
 
 ```bash
 python3 -c "
@@ -502,11 +527,14 @@ jf rt upload /tmp/ciso-snapshot.json "${REPORT_REPO}/${FOLDER}/snapshot.json" --
 jf rt upload "$OUTPUT_PATH" "${REPORT_REPO}/${FOLDER}/report.html" --flat --server-id "$SERVER_ID"
 
 # Update manifest
-MANIFEST=$(cat /tmp/ciso-manifest.json 2>/dev/null || echo '{"runs":[]}')
-echo "$MANIFEST" | jq --arg d "$REPORT_DATE" --arg t "$REPORT_TYPE" \
-  --arg sp "${FOLDER}/snapshot.json" --arg rp "${FOLDER}/report.html" \
-  '.runs += [{"date":$d,"type":$t,"snapshot_path":$sp,"report_path":$rp}]' \
-  > /tmp/manifest-updated.json
+# Update manifest (python3 avoids shell substitution, which IDE agents reject)
+python3 -c "
+import json, os, sys
+p = '/tmp/ciso-manifest.json'
+m = json.load(open(p)) if os.path.exists(p) else {'runs': []}
+m['runs'].append({'date': sys.argv[1], 'type': sys.argv[2], 'snapshot_path': sys.argv[3], 'report_path': sys.argv[4]})
+json.dump(m, open('/tmp/manifest-updated.json', 'w'), indent=2)
+" "$REPORT_DATE" "$REPORT_TYPE" "${FOLDER}/snapshot.json" "${FOLDER}/report.html"
 jf rt upload /tmp/manifest-updated.json "${REPORT_REPO}/${SERVER_ID}/manifest.json" --flat --server-id "$SERVER_ID"
 ```
 
@@ -525,11 +553,11 @@ same cleanup command before exiting so failed runs do not leak stale data.
 
 Tell the user:
 ```
-Report saved: /<local-root>/<server-id>/weekly/2026-04-24/report.html
-Data saved: /<local-root>/<server-id>/weekly/2026-04-24/data.json (only when SAVE_DATA_JSON is on)
-Snapshot saved: /<local-root>/<server-id>/weekly/2026-04-24/snapshot.json
-Run metadata: /<local-root>/<server-id>/weekly/2026-04-24/run-meta.json (includes token_usage.total_tokens when available)
-Uploaded to:  ${REPORT_REPO}/<server-id>/weekly/2026-04-24/
+Report saved: /<local-root>/<server-id>/weekly/<REPORT_DATE>/report.html
+Data saved: /<local-root>/<server-id>/weekly/<REPORT_DATE>/data.json (only when SAVE_DATA_JSON is on)
+Snapshot saved: /<local-root>/<server-id>/weekly/<REPORT_DATE>/snapshot.json
+Run metadata: /<local-root>/<server-id>/weekly/<REPORT_DATE>/run-meta.json (includes token_usage.total_tokens when available)
+Uploaded to:  ${REPORT_REPO}/<server-id>/weekly/<REPORT_DATE>/
 ```
 
 ## Edge cases
