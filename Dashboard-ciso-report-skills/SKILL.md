@@ -126,13 +126,13 @@ Execute in order.
 | Phase | Name | What happens |
 |-------|------|----------------|
 | **0** | Preflight | Report type, dates, `SERVER_ID`, `LOCAL_ROOT`, storage, prior snapshot lookup |
-| **1** | Collect | Run `report-data-collection.md` modules directly (`phase1-collect`, `curation`, `violations`) with no required standalone scripts |
+| **1** | Collect | Submit the **entire** `Module: phase1-collect` block from `report-data-collection.md` as a **single shell command**. That block launches platform, curation, and violations as three background processes (`&`) and waits for all three with `wait`. Do NOT split the block into separate tool calls — doing so serialises the tracks and triples collection time. |
 | **2** | Transform | jq mapping + **mandatory** curation audit transform + merge into JSON |
 | **3** | Render & publish | Gates, injection, upload, `run-meta.json` |
 | **4** | Finalize | Cleanup `/tmp/ciso-*` transient files |
 
 ```
-Phase 0 → Phase 1 (module tracks in parallel) → Phase 2 (transform) → Phase 3 (render) → Phase 4 (cleanup)
+Phase 0 → Phase 1 (single-command parallel block) → Phase 2 (transform) → Phase 3 (render) → Phase 4 (cleanup)
 ```
 
 > **Phase 2 jq error handling:** if a `jq` transform exits non-zero or produces empty output for any field, apply the same zero-value defaults as for API failures (numeric → `0`, array → `[]`, boolean → `false`, string → `""`, object → `{}`) and log the failing expression to stderr before continuing.
