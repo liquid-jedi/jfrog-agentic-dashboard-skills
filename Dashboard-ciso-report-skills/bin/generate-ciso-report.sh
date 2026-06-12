@@ -112,40 +112,21 @@ rm -f /tmp/ciso-data.json /tmp/ciso-platform.json /tmp/ciso-curation.json \
   /tmp/ciso-curation-policies.json /tmp/ciso-curation-policies-raw.json \
   /tmp/ciso-indexed-repos.json /tmp/ciso-indexed.json /tmp/ciso-indexed.json.err \
   /tmp/ciso-watches.json /tmp/ciso-policies.json /tmp/ciso-repos-all.json \
-  /tmp/ciso-repos-remote.json /tmp/ciso-version.json /tmp/ciso-violations-page-*.json
+  /tmp/ciso-repos-remote.json /tmp/ciso-version.json /tmp/ciso-violations-page-*.json \
+  /tmp/ciso-violations.json \
+  /tmp/ciso-track-platform.log /tmp/ciso-track-curation.log /tmp/ciso-track-violations.log
 
-echo "=== collect live payloads ==="
-python3 - <<'PY'
-import json
-import os
-import subprocess
-from collections import Counter, defaultdict
-from datetime import datetime, timedelta, timezone
+echo "=== collect live payloads (parallel tracks) ==="
+rm -f /tmp/ciso-track-platform.log /tmp/ciso-track-curation.log /tmp/ciso-track-violations.log
+
+# ── Track 1: platform metadata ────────────────────────────────────────────────
+(python3 - <<'PY'
+import json, os, subprocess
 
 server = os.environ["SERVER_ID"]
-report_type = os.environ["REPORT_TYPE_LOWER"]
-date_from = os.environ["DATE_FROM"]
-date_to = os.environ["DATE_TO"]
 
-def parse_time(value):
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
-
-def fmt(value):
-    return value.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-start = parse_time(date_from)
-end = parse_time(date_to)
-if report_type == "weekly" and (end - start).total_seconds() > 168 * 3600:
-    start = end - timedelta(hours=168)
-    date_from = fmt(start)
-    os.environ["DATE_FROM"] = date_from
-
-def run(cmd, *, body=None):
-    if body is not None:
-        cmd = cmd + ["-H", "Content-Type: application/json", "-d", json.dumps(body)]
+def run(cmd):
     proc = subprocess.run(cmd, capture_output=True, text=True)
-    if proc.returncode != 0:
-        raise SystemExit(f"ERROR: command failed: {' '.join(cmd)}\n{proc.stderr}")
     raw = proc.stdout or ""
     try:
         return json.loads(raw or "null")
@@ -155,8 +136,46 @@ def run(cmd, *, body=None):
 def jf_rt(path):
     return run(["jf", "rt", "curl", "-s", "--server-id", server, "-XGET", path])
 
-def jf_xr(path, method="GET", body=None):
-    return run(["jf", "xr", "curl", "-s", "--server-id", server, "-X" + method, path], body=body)
+def jf_xr(path):
+    return run(["jf", "xr", "curl", "-s", "--server-id", server, "-XGET", path])
+
+print("track: platform")
+json.dump(jf_rt("/api/repositories") or [], open("/tmp/ciso-repos-all.json", "w"), indent=2)
+json.dump(jf_rt("/api/repositories?type=remote") or [], open("/tmp/ciso-repos-remote.json", "w"), indent=2)
+json.dump(jf_xr("/api/v2/watches") or [], open("/tmp/ciso-watches.json", "w"), indent=2)
+json.dump(jf_xr("/api/v2/policies") or [], open("/tmp/ciso-policies.json", "w"), indent=2)
+json.dump(jf_xr("/api/v1/binMgr/default/repos") or {}, open("/tmp/ciso-indexed-repos.json", "w"), indent=2)
+print("track: platform done")
+PY
+) > /tmp/ciso-track-platform.log 2>&1 &
+PID_PLATFORM=$!
+
+# ── Track 2: curation (policies + audit) ─────────────────────────────────────
+(python3 - <<'PY'
+import json, os, subprocess
+from datetime import datetime, timedelta, timezone
+
+server = os.environ["SERVER_ID"]
+report_type = os.environ["REPORT_TYPE_LOWER"]
+date_from = os.environ["DATE_FROM"]
+date_to = os.environ["DATE_TO"]
+
+def parse_time(v):
+    return datetime.fromisoformat(v.replace("Z", "+00:00"))
+
+def fmt(v):
+    return v.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+def jf_xr_raw(path):
+    proc = subprocess.run(
+        ["jf", "xr", "curl", "-s", "--server-id", server, "-XGET", path],
+        capture_output=True, text=True
+    )
+    raw = proc.stdout or ""
+    try:
+        return json.loads(raw or "null")
+    except Exception:
+        return {}
 
 def get_xr_with_status(path):
     proc = subprocess.run(
@@ -168,43 +187,40 @@ def get_xr_with_status(path):
     body = raw[:-3] if len(raw) >= 3 and raw[-3:].isdigit() else raw
     return status, json.loads(body or "{}")
 
-def month_windows(start_dt, end_dt):
+start = parse_time(date_from)
+end = parse_time(date_to)
+if report_type == "weekly" and (end - start).total_seconds() > 168 * 3600:
+    start = end - timedelta(hours=168)
+    date_from = fmt(start)
+
+def month_windows():
     if report_type != "monthly":
         return [(date_from, date_to)]
-    out = []
-    cur = start_dt
-    while cur < end_dt:
-        nxt = min(cur + timedelta(days=6), end_dt)
+    out, cur = [], start
+    while cur < end:
+        nxt = min(cur + timedelta(days=6), end)
         out.append((fmt(cur), fmt(nxt)))
         cur = nxt
     return out
 
-print("collect: platform")
-json.dump(jf_rt("/api/repositories") or [], open("/tmp/ciso-repos-all.json", "w"), indent=2)
-json.dump(jf_rt("/api/repositories?type=remote") or [], open("/tmp/ciso-repos-remote.json", "w"), indent=2)
-json.dump(jf_xr("/api/v2/watches") or [], open("/tmp/ciso-watches.json", "w"), indent=2)
-json.dump(jf_xr("/api/v2/policies") or [], open("/tmp/ciso-policies.json", "w"), indent=2)
-json.dump(jf_xr("/api/v1/binMgr/default/repos") or {}, open("/tmp/ciso-indexed-repos.json", "w"), indent=2)
-
-print("collect: curation policies")
+# Curation policies
+print("track: curation policies")
 policies, offset, total_policies = [], 0, 0
 while True:
-    body = jf_xr(f"/api/v1/curation/policies?num_of_rows=200&offset={offset}") or {}
-    batch = body.get("data") or []
-    total_policies = int((body.get("meta") or {}).get("total_count") or total_policies or len(batch))
+    body = jf_xr_raw(f"/api/v1/curation/policies?num_of_rows=200&offset={offset}") or {}
+    batch = (body.get("data") or []) if isinstance(body, dict) else []
+    total_policies = int((body.get("meta") or {}).get("total_count") or total_policies or len(batch)) if isinstance(body, dict) else 0
     policies.extend(batch)
     if not batch or len(policies) >= total_policies:
         break
     offset += len(batch)
 json.dump({"data": policies, "meta": {"total_count": total_policies}}, open("/tmp/ciso-curation-policies.json", "w"), indent=2)
 
-print("collect: curation audit")
-all_rows = []
-pages_fetched = 0
-reported_total = 0
-http_status = 200
+# Curation audit
+print("track: curation audit")
+all_rows, pages_fetched, reported_total, http_status = [], 0, 0, 200
 limit = 2000
-for wstart, wend in month_windows(start, end):
+for wstart, wend in month_windows():
     offset = 0
     while True:
         path = (
@@ -215,14 +231,14 @@ for wstart, wend in month_windows(start, end):
         )
         http_status, page = get_xr_with_status(path)
         if http_status in (403, 404):
-            all_rows = []
-            reported_total = 0
+            all_rows, reported_total = [], 0
             break
         batch = page.get("data") or []
         all_rows.extend(batch)
         pages_fetched += 1
-        reported_total += int((page.get("meta") or {}).get("total_count") or 0) if report_type == "monthly" and offset == 0 else 0
-        if report_type != "monthly":
+        if report_type == "monthly" and offset == 0:
+            reported_total += int((page.get("meta") or {}).get("total_count") or 0)
+        else:
             reported_total = max(reported_total, int((page.get("meta") or {}).get("total_count") or 0))
         if len(batch) < limit:
             break
@@ -239,18 +255,31 @@ json.dump({
     "date_from": date_from,
     "date_to": date_to,
 }, open("/tmp/ciso-curation-diagnostics.json", "w"), indent=2)
+print(f"track: curation done rows={len(all_rows)} pages={pages_fetched} status={http_status}")
+PY
+) > /tmp/ciso-track-curation.log 2>&1 &
+PID_CURATION=$!
 
-print("collect: violations")
-violations = []
-total_violations = 0
-offset = 0
-page_idx = 0
+# ── Track 3: violations ───────────────────────────────────────────────────────
+(python3 - <<'PY'
+import json, os, subprocess
+
+server = os.environ["SERVER_ID"]
+date_from = os.environ["DATE_FROM"]
+date_to = os.environ["DATE_TO"]
+
+violations, total_violations, offset, page_idx = [], 0, 0, 0
 while True:
     body = {
         "filters": {"created_from": date_from, "created_until": date_to},
         "pagination": {"limit": 500, "offset": offset, "order_by": "severity", "direction": "desc"},
     }
-    page = jf_xr("/api/v1/violations", "POST", body) or {}
+    proc = subprocess.run(
+        ["jf", "xr", "curl", "-s", "--server-id", server, "-XPOST", "/api/v1/violations",
+         "-H", "Content-Type: application/json", "-d", json.dumps(body)],
+        capture_output=True, text=True
+    )
+    page = json.loads(proc.stdout or "{}") if proc.stdout else {}
     batch = page.get("violations") or []
     total_violations = int(page.get("total_violations") or total_violations or len(batch))
     violations.extend(batch)
@@ -259,25 +288,62 @@ while True:
     if len(batch) < 500 or offset + len(batch) >= total_violations:
         break
     offset += 500
+json.dump({"violations": violations, "total_violations": total_violations}, open("/tmp/ciso-violations.json", "w"), indent=2)
+print(f"track: violations done rows={len(violations)} total={total_violations}")
+PY
+) > /tmp/ciso-track-violations.log 2>&1 &
+PID_VIOLATIONS=$!
+
+# ── Wait for all three tracks ─────────────────────────────────────────────────
+FAIL=0
+for pid in "$PID_PLATFORM" "$PID_CURATION" "$PID_VIOLATIONS"; do
+  wait "$pid" || FAIL=1
+done
+cat /tmp/ciso-track-platform.log /tmp/ciso-track-curation.log /tmp/ciso-track-violations.log
+if [ "$FAIL" -ne 0 ]; then
+  echo "ERROR: one or more collection tracks failed. See logs above." >&2
+  exit 1
+fi
+echo "All tracks complete"
+
+echo "=== merge collection ==="
+python3 - <<'PY'
+import json, os, subprocess
+from collections import Counter, defaultdict
+from datetime import datetime, timezone
+
+server = os.environ["SERVER_ID"]
+report_type = os.environ["REPORT_TYPE_LOWER"]
+date_from = os.environ["DATE_FROM"]
+date_to = os.environ["DATE_TO"]
+
+def parse_time(value):
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+# Load curation track outputs
+curation_data = json.load(open("/tmp/ciso-curation.json")) if os.path.isfile("/tmp/ciso-curation.json") else {"data": [], "meta": {"total_count": 0}}
+all_rows = curation_data.get("data") or []
+reported_total = int((curation_data.get("meta") or {}).get("total_count") or len(all_rows))
+diag = json.load(open("/tmp/ciso-curation-diagnostics.json")) if os.path.isfile("/tmp/ciso-curation-diagnostics.json") else {"http_status": 200}
+http_status = int(diag.get("http_status") or 200)
+
+# Load violations track outputs
+viol_data = json.load(open("/tmp/ciso-violations.json")) if os.path.isfile("/tmp/ciso-violations.json") else {"violations": [], "total_violations": 0}
+violations = viol_data.get("violations") or []
+total_violations = int(viol_data.get("total_violations") or len(violations))
 
 def sev_key(value):
     v = str(value or "").lower()
-    if v.startswith("crit"):
-        return "critical"
-    if v.startswith("high"):
-        return "high"
-    if v.startswith("med"):
-        return "medium"
-    if v.startswith("low"):
-        return "low"
+    if v.startswith("crit"): return "critical"
+    if v.startswith("high"): return "high"
+    if v.startswith("med"): return "medium"
+    if v.startswith("low"): return "low"
     return None
 
 def type_key(value):
     v = str(value or "").lower()
-    if "operational" in v:
-        return "operational"
-    if "license" in v:
-        return "license"
+    if "operational" in v: return "operational"
+    if "license" in v: return "license"
     return "security"
 
 sev = Counter()
