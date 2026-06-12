@@ -127,6 +127,8 @@ server = os.environ["SERVER_ID"]
 
 def run(cmd):
     proc = subprocess.run(cmd, capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise SystemExit(f"ERROR: command failed: {' '.join(cmd)}\n{proc.stderr}")
     raw = proc.stdout or ""
     try:
         return json.loads(raw or "null")
@@ -261,33 +263,39 @@ PY
 PID_CURATION=$!
 
 # ── Track 3: violations ───────────────────────────────────────────────────────
+# --http1.1 forces HTTP/1.1 to prevent CURLE_HTTP2_STREAM (exit 92) on large
+# instances. limit=500 is kept for efficiency (~23 pages for 11k violations).
+# Override with CISO_VIOLATIONS_LIMIT env var if needed.
 (python3 - <<'PY'
 import json, os, subprocess
 
 server = os.environ["SERVER_ID"]
 date_from = os.environ["DATE_FROM"]
 date_to = os.environ["DATE_TO"]
+limit = int(os.environ.get("CISO_VIOLATIONS_LIMIT", "500"))
 
 violations, total_violations, offset, page_idx = [], 0, 0, 0
 while True:
     body = {
         "filters": {"created_from": date_from, "created_until": date_to},
-        "pagination": {"limit": 500, "offset": offset, "order_by": "severity", "direction": "desc"},
+        "pagination": {"limit": limit, "offset": offset, "order_by": "severity", "direction": "desc"},
     }
     proc = subprocess.run(
-        ["jf", "xr", "curl", "-s", "--server-id", server, "-XPOST", "/api/v1/violations",
+        ["jf", "xr", "curl", "-s", "--http1.1", "--server-id", server, "-XPOST", "/api/v1/violations",
          "-H", "Content-Type: application/json", "-d", json.dumps(body)],
         capture_output=True, text=True
     )
+    if proc.returncode != 0:
+        raise SystemExit(f"violations page {page_idx} failed (exit {proc.returncode}): {proc.stderr[:300]}")
     page = json.loads(proc.stdout or "{}") if proc.stdout else {}
     batch = page.get("violations") or []
     total_violations = int(page.get("total_violations") or total_violations or len(batch))
     violations.extend(batch)
     json.dump(page, open(f"/tmp/ciso-violations-page-{page_idx}.json", "w"), indent=2)
     page_idx += 1
-    if len(batch) < 500 or offset + len(batch) >= total_violations:
+    if len(batch) < limit or offset + len(batch) >= total_violations:
         break
-    offset += 500
+    offset += limit
 json.dump({"violations": violations, "total_violations": total_violations}, open("/tmp/ciso-violations.json", "w"), indent=2)
 print(f"track: violations done rows={len(violations)} total={total_violations}")
 PY
