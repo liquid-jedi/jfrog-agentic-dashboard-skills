@@ -1,0 +1,18 @@
+{
+  "name": "jfrog-ciso-report",
+  "version": "2.5.0",
+  "description": "Generate a branded CISO Security and Curation HTML dashboard from a JFrog Platform instance.",
+  "author": {
+    "name": "Avinash Giri"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/liquid-jedi/jfrog-agentic-dashboard-skills",
+  "repository": "https://github.com/liquid-jedi/jfrog-agentic-dashboard-skills",
+  "keywords": [
+    "jfrog",
+    "ciso",
+    "security",
+    "curation",
+    "dashboard"
+  ]
+}
