@@ -719,6 +719,103 @@
             margin-top: .3rem
         }
 
+        .rec-banner {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            background: linear-gradient(135deg, #1a2b4a 0%, #283248 100%);
+            color: #fff;
+            border-radius: var(--r);
+            padding: .75rem 1rem;
+            margin-bottom: .75rem
+        }
+
+        .rec-banner-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0
+        }
+
+        .rec-banner-text strong {
+            display: block;
+            font-size: var(--fs-m);
+            font-family: 'DM Sans', 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            line-height: 1.3
+        }
+
+        .rec-banner-text span {
+            font-size: var(--fs-xs);
+            opacity: .75
+        }
+
+        .rec-banner-counts {
+            margin-left: auto;
+            display: flex;
+            gap: .5rem;
+            flex-shrink: 0
+        }
+
+        .rec-count-pill {
+            padding: .2rem .55rem;
+            border-radius: 20px;
+            font-size: var(--fs-xxs);
+            font-weight: 700;
+            letter-spacing: .02em
+        }
+
+        .rec-count-pill.p1 { background: rgba(192,86,10,.25); color: #ffb380 }
+        .rec-count-pill.p2 { background: rgba(212,145,10,.2); color: #ffd580 }
+        .rec-count-pill.p3 { background: rgba(120,144,160,.2); color: #c8d8e8 }
+
+        .rec-card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .35rem;
+            margin-top: .45rem
+        }
+
+        .rec-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .25rem;
+            padding: .25rem .6rem;
+            border-radius: 5px;
+            font-size: var(--fs-xxs);
+            font-weight: 600;
+            text-decoration: none;
+            background: var(--alt);
+            border: 1px solid var(--border);
+            color: var(--blue);
+            cursor: pointer;
+            transition: background .15s
+        }
+
+        .rec-action-btn:hover { background: #e8f0fe; border-color: var(--blue) }
+
+        .es-narrative {
+            font-size: var(--fs-s);
+            line-height: 1.7;
+            color: var(--tx);
+            background: linear-gradient(135deg, #f0fdf1 0%, #f4f9ff 100%);
+            border: 1px solid #c8e6c9;
+            border-left: 4px solid var(--frog);
+            border-radius: var(--r);
+            padding: .75rem 1rem;
+            margin-bottom: .65rem
+        }
+
+        .es-narrative-label {
+            font-size: var(--fs-xxs);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--fdk);
+            font-weight: 700;
+            margin-bottom: .3rem;
+            display: flex;
+            align-items: center;
+            gap: .3rem
+        }
+
         .kpi {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -2247,9 +2344,34 @@
                 bullets.push('No material blocked downloads or violations were detected in this reporting window.');
             }
 
+            // Build narrative — use agent-supplied text if present, otherwise derive from data
+            let narrative = m.executive_narrative || '';
+            if (!narrative) {
+                const period = `${m.date_from} – ${m.date_to}`;
+                const blockedLine = Number(c.blocked) > 0
+                    ? `JFrog Curation intercepted <strong>${n(c.blocked)} packages</strong> at the gate — stopping risky or vulnerable dependencies before they entered your build pipeline.`
+                    : `Curation evaluated all package requests this period with no blocks triggered, indicating clean supply chain activity.`;
+                const violLine = Number(v.total) > 0
+                    ? `Inside the perimeter, Xray surfaced <strong>${n(v.total)} violations</strong> across indexed repositories, with <strong>${n(v.by_severity.critical)} critical</strong> and <strong>${n(v.by_severity.high)} high</strong> severity findings requiring attention.`
+                    : `Xray scans found no violations in indexed repositories this period — a clean bill of health inside the perimeter.`;
+                const posture = Number(v.by_severity.critical) > 100
+                    ? `Risk posture is <strong>elevated</strong> — critical concentration warrants immediate remediation focus.`
+                    : Number(v.by_severity.critical) > 20
+                        ? `Risk posture is <strong>moderate</strong> — critical findings are present and should be triaged this week.`
+                        : `Risk posture is <strong>stable</strong> — no immediate escalation required.`;
+                const recs = DATA.recommendations && DATA.recommendations.length > 0
+                    ? `Priority focus: ${DATA.recommendations[0].text || DATA.recommendations[0].detail || 'review the actions below'}.`
+                    : '';
+                narrative = `During the period <strong>${period}</strong>, your JFrog platform maintained active security coverage across ${n((DATA.platform || {}).repos_total || 0)} repositories. ${blockedLine} ${violLine} ${posture}${recs ? ' ' + recs : ''}`;
+            }
+
             return `
                 <div class="exec-summary">
                     <div class="es-title">Executive Summary</div>
+                    <div class="es-narrative">
+                        <div class="es-narrative-label">🛡 JFrog Security Posture</div>
+                        <p>${narrative}</p>
+                    </div>
                     ${bullets.length ? `<ul class="es-list">${bullets.map((b) => `<li>${b}</li>`).join('')}</ul>` : ''}
                     ${stats.length ? `<div class="es-stats">${stats.join('')}</div>` : ''}
                 </div>`;
@@ -3112,6 +3234,41 @@
                 .map((x, i) => ({ i, x }))
                 .filter(({ x }) => !x || !x.priority || !Number.isFinite(Number(x.score)));
 
+            // Build banner counts
+            const p1Count = ordered.filter(x => (x.priority || '').toUpperCase() === 'P1').length;
+            const p2Count = ordered.filter(x => (x.priority || '').toUpperCase() === 'P2').length;
+            const p3Count = ordered.filter(x => (x.priority || '').toUpperCase() === 'P3').length;
+            const bannerMsg = p1Count > 0
+                ? `${ordered.length} action${ordered.length > 1 ? 's' : ''} require your attention — ${p1Count} critical, ${p2Count} high priority`
+                : `${ordered.length} recommended action${ordered.length > 1 ? 's' : ''} — ${p2Count} high priority, ${p3Count} standard`;
+
+            const baseUrl = (DATA.meta.url || '').replace(/\/$/, '');
+            const xrayLink = baseUrl ? `${baseUrl}/ui/violations` : null;
+            const curationLink = baseUrl ? `${baseUrl}/ui/package-curation/audit` : null;
+            const policiesLink = baseUrl ? `${baseUrl}/ui/policies` : null;
+
+            const banner = `<div class="rec-banner">
+                <div class="rec-banner-icon">⚡</div>
+                <div class="rec-banner-text">
+                    <strong>${bannerMsg}</strong>
+                    <span>Review each action below and assign an owner. P1 items should be addressed within 48 hours.</span>
+                </div>
+                <div class="rec-banner-counts">
+                    ${p1Count > 0 ? `<span class="rec-count-pill p1">P1 × ${p1Count}</span>` : ''}
+                    ${p2Count > 0 ? `<span class="rec-count-pill p2">P2 × ${p2Count}</span>` : ''}
+                    ${p3Count > 0 ? `<span class="rec-count-pill p3">P3 × ${p3Count}</span>` : ''}
+                </div>
+            </div>`;
+
+            // Map recommendation source to a deep-link
+            const actionLink = (x) => {
+                const src = (x.source || '').toLowerCase();
+                const text = (x.text || x.detail || '').toLowerCase();
+                if (src === 'curation' || text.includes('curation')) return curationLink;
+                if (text.includes('polic')) return policiesLink;
+                return xrayLink;
+            };
+
             let items = ordered.map((x, idx) => {
                 let badge = '';
                 const inferredTitle = String(x && (x.text || x.detail || x.description) || '').split(/[.;]/)[0].trim();
@@ -3121,23 +3278,30 @@
                 else if (priority === 'P2') badge = '<span class="pri p2">P2</span>';
                 else if (priority === 'P3') badge = '<span class="pri p3">P3</span>';
 
-                const cleanTitle = title;
                 const src = (x.source || 'xray').toLowerCase();
                 const srcBadge = src === 'curation'
                     ? '<span class="badge" style="background:#e8f5e9;color:#2e7d32;margin-right:.35rem">Curation</span>'
                     : '<span class="badge" style="background:#e3f2fd;color:#1565c0;margin-right:.35rem">Xray</span>';
                 const scoreLabel = sc(x) >= 0 ? `Score: ${sc(x)}` : '';
                 const meta = [scoreLabel, x.effort ? `Effort: ${x.effort}` : '', x.owner ? `Owner: ${x.owner}` : '', x.due_date ? `Due: ${x.due_date}` : '']
-                    .filter(Boolean)
-                    .join(' · ');
+                    .filter(Boolean).join(' · ');
                 const deps = x.dependencies && x.dependencies.length > 0 ? `Depends on: ${x.dependencies.join(', ')}` : '';
+
+                const link = actionLink(x);
+                const actionBtns = link
+                    ? `<div class="rec-card-actions">
+                        <a class="rec-action-btn" href="${link}" target="_blank">→ Open in JFrog</a>
+                        ${x.owner ? '' : '<span class="rec-action-btn" style="color:var(--muted);cursor:default">👤 Assign owner</span>'}
+                       </div>`
+                    : '';
 
                 const pClass = priority === 'P1' ? 'p1' : priority === 'P2' ? 'p2' : priority === 'P3' ? 'p3' : '';
                 return `<div class="rec-card ${pClass}">
-                    <div class="rec-card-title">${badge}${srcBadge}${cleanTitle}</div>
+                    <div class="rec-card-title">${badge}${srcBadge}${title}</div>
                     <div class="rec-card-body">${x.detail || ''}</div>
                     ${meta ? `<div class="rec-card-meta">${meta}</div>` : ''}
                     ${deps ? `<div class="rec-card-meta">${deps}</div>` : ''}
+                    ${actionBtns}
                 </div>`;
             }).join('');
 
@@ -3147,6 +3311,7 @@
 
             return `
                 ${secHead('05', 'Prioritized actions', 'What to do next — ordered by score and priority.')}
+                ${banner}
                 ${warning}
                 <div class="rec-cards">${items}</div>`;
         }
@@ -3160,6 +3325,7 @@
             document.getElementById('content').innerHTML = [
                 safeRender('Report Header', buildHeader),
                 safeRender('Executive Summary', buildExecutiveSummary),
+                safeRender('Combined Security Value', buildBenefit),
                 safeRender('Executive KPIs', buildKPIs),
                 safeRender('Period Comparison', buildComparison),
                 safeRender('Threat Velocity', buildThreatVelocity),
@@ -3168,7 +3334,6 @@
                 safeRender('Xray — Security Posture', buildViolations),
                 safeRender('License Compliance', buildLicense),
                 safeRender('Operational Risk', buildOperational),
-                safeRender('Combined Security Value', buildBenefit),
                 safeRender('Governance Effectiveness', buildGovernance),
                 safeRender('Severity and Risk Method', buildScoringGuide),
                 `<div class="footer">JFrog CISO Report — ${DATA.meta.server_id} — Generated by Jfrog Dashboard Skills</div>`
