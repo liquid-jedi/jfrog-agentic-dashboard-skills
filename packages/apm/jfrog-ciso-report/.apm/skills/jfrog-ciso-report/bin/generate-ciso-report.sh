@@ -489,6 +489,64 @@ PY
 echo "=== enrich and transform ==="
 CISO_ENRICH_ALLOW_EXISTING_TMP=true "$SKILL_DIR/internal/enrich-ciso-datajson.sh" "$SERVER_ID" /tmp/ciso-data.json /tmp/ciso-data.json
 
+echo "=== comparison (prior snapshot) ==="
+python3 - <<'PY'
+import json, os
+from pathlib import Path
+
+local_root = os.environ.get('LOCAL_ROOT', '')
+server_slug = os.environ.get('SERVER_SLUG', '')
+report_type_slug = os.environ.get('REPORT_TYPE_SLUG', '')
+report_date = os.environ.get('REPORT_DATE', '')
+
+scan_dir = Path(local_root) / server_slug / report_type_slug
+prior_snap_path = None
+if scan_dir.is_dir():
+    candidates = sorted([
+        p for p in scan_dir.glob('*/snapshot.json')
+        if p.parent.name != report_date and not p.parent.name.startswith('rerun-')
+    ])
+    if candidates:
+        prior_snap_path = candidates[-1]
+
+data = json.load(open('/tmp/ciso-data.json'))
+if prior_snap_path:
+    prev = json.load(open(prior_snap_path))
+    pc = prev.get('curation', {})
+    pv = prev.get('violations', {})
+    dc = data.get('curation', {})
+    dv = data.get('violations', {})
+    def delta(a, b):
+        return (a - b) if (a is not None and b is not None) else None
+    def pct(a, b):
+        return round((a - b) / b * 100, 1) if b else None
+    data['comparison'] = {
+        'available': True,
+        'previous_date': prev.get('date', ''),
+        'curation': {
+            'total': dc.get('total', 0),
+            'total_previous': pc.get('total', 0),
+            'total_delta': delta(dc.get('total'), pc.get('total')),
+            'blocked': dc.get('blocked', 0),
+            'blocked_previous': pc.get('blocked', 0),
+            'blocked_delta': delta(dc.get('blocked'), pc.get('blocked')),
+            'blocked_pct': pct(dc.get('blocked'), pc.get('blocked')),
+        },
+        'violations': {
+            'total': dv.get('total', 0),
+            'total_previous': pv.get('total', 0),
+            'total_delta': delta(dv.get('total'), pv.get('total')),
+            'critical': (dv.get('by_severity') or {}).get('critical', 0),
+            'critical_previous': pv.get('critical', 0),
+            'critical_delta': delta((dv.get('by_severity') or {}).get('critical', 0), pv.get('critical', 0)),
+        },
+    }
+    print(f"comparison: prior={prev.get('date')} blocked_delta={data['comparison']['curation']['blocked_delta']} viol_delta={data['comparison']['violations']['total_delta']}")
+    json.dump(data, open('/tmp/ciso-data.json', 'w'), indent=2)
+else:
+    print(f"comparison: no prior snapshot found in {scan_dir}")
+PY
+
 echo "=== hard validation ==="
 python3 - <<'PY'
 import json

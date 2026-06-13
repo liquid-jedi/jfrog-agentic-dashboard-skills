@@ -680,8 +680,9 @@ table.dt{width:100%;border-collapse:collapse;font-size:12.5px}
 .showmore{display:block;width:100%;padding:10px;font-size:12px;font-weight:600;color:var(--green-600);
   background:var(--canvas);border:none;border-top:1px solid var(--line-2);cursor:pointer;font-family:inherit}
 .showmore:hover{background:var(--line-2)}
-.expanded + .showmore .more-label,.showmore .less-label{display:none}
-.expanded + .showmore .less-label{display:inline}
+.showmore .less-label{display:none}
+.showmore.expanded .more-label{display:none}
+.showmore.expanded .less-label{display:inline}
 
 /* severity + status chips */
 .sev{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:999px;white-space:nowrap}
@@ -1074,7 +1075,7 @@ function buildCuration(){
     </tr>`).join('');
   const auditTable = `<div class="panel flush" id="auditPanel"><div class="ph"><h3>Blocked package audit log</h3><span class="meta">${fmt(ev.length)} shown${c.audit_events_display_meta&&c.audit_events_display_meta.cap?` · capped at ${c.audit_events_display_meta.cap}`:''}</span></div>
     <table class="dt"><thead><tr><th>Status</th><th>Package</th><th>Version</th><th>Type</th><th>Repository</th><th>Requested by</th><th>Date</th></tr></thead><tbody>${evRows||`<tr><td colspan="7" class="empty" style="padding:20px">No blocked events recorded.</td></tr>`}</tbody></table>
-    ${ev.length>shown?`<button class="showmore" data-target="auditPanel"><span class="more-label">Show all ${fmt(ev.length)} events</span><span class="less-label">Show fewer</span></button>`:''}</div>`;
+    ${ev.length>shown?`<button class="showmore" data-target="auditPanel"><span class="more-label">Show all ${fmt(ev.length)} events</span><span class="less-label">Show top ${shown}</span></button>`:''}</div>`;
 
   const obs = c.observation ? `<div class="note"><b>What this means.</b> ${esc(c.observation)}</div>` : '';
 
@@ -1107,7 +1108,7 @@ function buildCuration(){
     <div class="ph"><h3>Full block policy catalog</h3><span class="meta">${fmt(blockPols.length)} block policies configured</span></div>
     <table class="dt"><thead><tr><th>Policy name</th><th>Risk type</th><th>Scope</th><th>Condition</th></tr></thead>
     <tbody>${catRows}</tbody></table>
-    ${blockPols.length>catShown?`<button class="showmore" data-target="polCatPanel"><span class="more-label">Show all ${fmt(blockPols.length)} policies</span><span class="less-label">Show fewer</span></button>`:''}
+    ${blockPols.length>catShown?`<button class="showmore" data-target="polCatPanel"><span class="more-label">Show all ${fmt(blockPols.length)} policies</span><span class="less-label">Show top ${catShown}</span></button>`:''}
   </div>` : '';
 
   return kpis + obs +
@@ -1166,7 +1167,7 @@ function buildXray(){
     <td class="mono" style="font-size:11px;color:var(--muted)">${esc(r.first_seen||'')}</td></tr>`).join('');
   const ciPanel = `<div class="panel flush" id="ciPanel"><div class="ph"><h3>Critical issue detail</h3><span class="meta">${fmt(ci.length)} critical issues</span></div>
     <table class="dt"><thead><tr><th>Issue</th><th>Description</th><th class="r">Hits</th><th>First seen</th></tr></thead><tbody>${ciRows||`<tr><td colspan="4" class="empty" style="padding:20px">No critical issue detail.</td></tr>`}</tbody></table>
-    ${ci.length>shown?`<button class="showmore" data-target="ciPanel"><span class="more-label">Show all ${fmt(ci.length)} issues</span><span class="less-label">Show fewer</span></button>`:''}</div>`;
+    ${ci.length>shown?`<button class="showmore" data-target="ciPanel"><span class="more-label">Show all ${fmt(ci.length)} issues</span><span class="less-label">Show top ${shown}</span></button>`:''}</div>`;
 
   const obs = v.observation ? `<div class="note"><b>What this means.</b> ${esc(v.observation)}</div>` : '';
   return kpis + obs + `<div class="grid-2 wide-l">${distPanel}${watchPanel}</div>` + `<div class="grid-2">${cvePanel}${ciPanel}</div>`;
@@ -1353,6 +1354,7 @@ window.filterRepos = function(el){
     btn.addEventListener('click', () => {
       const panel = document.getElementById(btn.dataset.target);
       if (panel) panel.classList.toggle('expanded');
+      btn.classList.toggle('expanded');
     });
   });
 })();
