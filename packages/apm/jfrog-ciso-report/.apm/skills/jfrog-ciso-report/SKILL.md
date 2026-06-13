@@ -507,7 +507,7 @@ The render implementation (slug exports, `LOCAL_DIR` construction, Python templa
 echo "=== Verification ==="
 grep -c "const DATA = {" "$OUTPUT_PATH"
 # Must print: 1
-grep -c "buildSidebar" "$OUTPUT_PATH"
+grep -c "buildMast" "$OUTPUT_PATH"
 # Must print: 1 or more
 wc -l "$OUTPUT_PATH"
 # Must be > 1000 lines
