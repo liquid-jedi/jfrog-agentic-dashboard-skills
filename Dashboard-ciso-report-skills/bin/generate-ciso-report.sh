@@ -477,10 +477,7 @@ data = {
     "governance": {},
     "threat_velocity": {"available": False, "periods": [], "trend_summary": "Trend comparison will be available after another validated run."},
     "comparison": {"available": False},
-    "recommendations": [
-        {"priority": "P1", "effort": "medium", "score": 95, "text": "Review top critical XRAY IDs", "detail": "Impact: Critical vulnerabilities dominate current risk. Next step: assign remediation owners for the highest-hit XRAY IDs in the report."},
-        {"priority": "P2", "effort": "low", "score": 80, "text": "Expand curation coverage", "detail": "Impact: Unconnected remotes can bypass package gate enforcement. Next step: connect remaining supported remote repositories to Curation."},
-    ],
+    "recommendations": [],
 }
 json.dump(data, open("/tmp/ciso-data.json", "w"), indent=2)
 print(f"base data: curation_total={data['curation']['total']} violations={data['violations']['total']}")
@@ -488,6 +485,103 @@ PY
 
 echo "=== enrich and transform ==="
 CISO_ENRICH_ALLOW_EXISTING_TMP=true "$SKILL_DIR/internal/enrich-ciso-datajson.sh" "$SERVER_ID" /tmp/ciso-data.json /tmp/ciso-data.json
+
+echo "=== build recommendations ==="
+python3 - <<'PY'
+import json
+from collections import Counter, defaultdict
+
+data = json.load(open("/tmp/ciso-data.json"))
+p  = data.get("platform") or {}
+c  = data.get("curation") or {}
+v  = data.get("violations") or {}
+
+recs = []
+
+# ── P1: top critical XRAY IDs (group by shared component/package keyword) ─────
+critical_issues = v.get("critical_issues") or []
+# Group issues by shared component root (first 20 chars of component path)
+groups = defaultdict(list)
+for ci in critical_issues:
+    cid = ci.get("id", "")
+    comp = (ci.get("component") or "unknown").split("/")[-1][:40]
+    # Group by truncated component as a simple heuristic
+    key = comp[:20]
+    groups[key].append((cid, ci.get("hits", 0), comp, ci.get("description", "")))
+
+# Emit one P1 per group with the top 3 IDs
+for key, items in sorted(groups.items(), key=lambda kv: -sum(i[1] for i in kv[1]))[:5]:
+    items_sorted = sorted(items, key=lambda x: -x[1])
+    total_hits = sum(i[1] for i in items_sorted)
+    ids = ", ".join(i[0] for i in items_sorted[:3])
+    extra = f" + {len(items_sorted)-3} more" if len(items_sorted) > 3 else ""
+    comp_name = items_sorted[0][2]
+    desc = items_sorted[0][3][:120] if items_sorted[0][3] else ""
+    recs.append({
+        "priority": "P1",
+        "effort": "medium",
+        "score": min(98, 70 + total_hits // 2),
+        "text": f"Remediate {comp_name} ({ids}{extra} — {total_hits} hits)",
+        "detail": f"Impact: {desc or 'Critical vulnerability — immediate remediation required.'}. Next step: review affected artifacts in Xray console for {ids.split(',')[0]}."
+    })
+
+# ── P2: unindexed repos ─────────────────────────────────────────────────────────
+repos_unindexed = (p.get("repos_total") or 0) - (p.get("repos_indexed") or 0)
+repos_total = p.get("repos_total") or 0
+if repos_unindexed > 0 and repos_total > 0:
+    pct = round(repos_unindexed / repos_total * 100)
+    recs.append({
+        "priority": "P2",
+        "effort": "medium",
+        "score": 80,
+        "text": f"Extend Xray coverage to {repos_unindexed} unindexed repositories ({pct}% blind spot)",
+        "detail": f"Impact: {pct}% coverage gap means violations in {repos_unindexed} repos are invisible to any watch or policy. Next step: enable indexing on all remote repos via Xray → Repositories → Indexed Resources, prioritizing Docker, npm, and Maven."
+    })
+
+# ── P2: dry-run policies ────────────────────────────────────────────────────────
+dry_run_count = p.get("curation_policies_dry_run") or 0
+dry_run_hits = 0
+bep = c.get("blocking_events_per_policy") or []
+pvt = c.get("policy_violations_by_type") or {}
+# Sum hits from policies that contain "aged" in their name (audit-mode aged-package policies)
+for pol in bep:
+    if "aged" in (pol.get("policy") or "").lower():
+        dry_run_hits += pol.get("hits") or 0
+if dry_run_count > 0:
+    detail_hit = f" — {dry_run_hits} events logged in audit mode" if dry_run_hits else ""
+    recs.append({
+        "priority": "P2",
+        "effort": "low",
+        "score": 72,
+        "text": f"Promote {dry_run_count} dry-run curation policies to block mode",
+        "detail": f"Impact: {dry_run_count} policies are running in dry-run (audit-only){detail_hit}. Promoting them to block mode would increase enforced gate coverage. Next step: review audit-log false-positive rate, then enable block mode in Curation policy settings."
+    })
+
+# ── P3: passed without inspection ──────────────────────────────────────────────
+without_inspection = c.get("without_inspection") or c.get("passed") or 0
+if without_inspection > 0:
+    recs.append({
+        "priority": "P3",
+        "effort": "low",
+        "score": 60,
+        "text": f"Investigate {without_inspection:,} requests that passed without inspection",
+        "detail": f"Impact: Passed-without-inspection events bypass curation analysis entirely and may indicate unsupported ecosystems or configuration gaps. Next step: cross-reference curation_state with the remote repo list to identify uncovered ecosystems."
+    })
+
+# Fallback if no critical issues were found
+if not any(r["priority"] == "P1" for r in recs):
+    recs.insert(0, {
+        "priority": "P1",
+        "effort": "medium",
+        "score": 90,
+        "text": "Review and remediate top critical Xray violations",
+        "detail": "Impact: Critical violations represent immediate risk. Next step: open the Xray tab, sort by Critical severity, and assign remediation owners for the top-hit XRAY IDs."
+    })
+
+data["recommendations"] = recs
+json.dump(data, open("/tmp/ciso-data.json", "w"), indent=2)
+print(f"recommendations: {len(recs)} generated (P1={sum(1 for r in recs if r['priority']=='P1')}, P2={sum(1 for r in recs if r['priority']=='P2')}, P3={sum(1 for r in recs if r['priority']=='P3')})")
+PY
 
 echo "=== comparison (prior snapshot) ==="
 python3 - <<'PY'
