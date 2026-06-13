@@ -389,8 +389,7 @@ for item in violations:
     })
 
 severity_total = sum(sev[k] for k in ("critical", "high", "medium", "low"))
-raw_score = sev["critical"] * 100 + sev["high"] * 20 + sev["medium"] * 5 + sev["low"]
-risk_score = round((raw_score / (severity_total * 100)) * 100, 1) if severity_total else 0.0
+risk_score = 0.0  # placeholder — recalculated after enrich using 3-factor formula
 
 def display_date(value):
     try:
@@ -639,6 +638,51 @@ if prior_snap_path:
     json.dump(data, open('/tmp/ciso-data.json', 'w'), indent=2)
 else:
     print(f"comparison: no prior snapshot found in {scan_dir}")
+PY
+
+echo "=== compute 3-factor risk score ==="
+python3 - <<'PY'
+import json, math
+
+data = json.load(open("/tmp/ciso-data.json"))
+v    = data.get("violations") or {}
+p    = data.get("platform")   or {}
+sev  = v.get("by_severity")   or {}
+
+crit  = int(sev.get("critical", 0))
+high  = int(sev.get("high",     0))
+med   = int(sev.get("medium",   0))
+low   = int(sev.get("low",      0))
+total = crit + high + med + low
+
+repos_total   = int(p.get("repos_total",   0))
+repos_indexed = int(p.get("repos_indexed", 0))
+
+# Factor 1 — Severity composition (50%)
+# Weighted average of severity tiers (Critical=4, High=2, Med=1, Low≈0.25)
+# All-critical → 100, all-high → 50, all-medium → 25, all-low → ~6
+sev_score = (crit*4 + high*2 + med*1) / (total*4) * 100 if total else 0.0
+
+# Factor 2 — Volume, log-scaled (30%)
+# log10(total) / log10(10000) × 100  →  1 viol ≈ 0, 100 ≈ 50, 10 000 = 100
+vol_score = min(100.0, math.log10(max(1, total)) / math.log10(10000) * 100) if total else 0.0
+
+# Factor 3 — Coverage gap (20%)
+# Fraction of repos NOT indexed → 100% unindexed = 100
+cov_score = (1 - repos_indexed / repos_total) * 100 if repos_total else 0.0
+
+risk_score = round(sev_score*0.5 + vol_score*0.3 + cov_score*0.2, 1)
+breakdown  = {
+    "severity":  round(sev_score, 1),
+    "volume":    round(vol_score, 1),
+    "coverage":  round(cov_score, 1),
+    "weights":   {"severity": 0.5, "volume": 0.3, "coverage": 0.2},
+}
+
+data["violations"]["risk_score"]           = risk_score
+data["violations"]["risk_score_breakdown"] = breakdown
+json.dump(data, open("/tmp/ciso-data.json", "w"), indent=2)
+print(f"risk_score: {risk_score}  (sev={breakdown['severity']} vol={breakdown['volume']} cov={breakdown['coverage']})")
 PY
 
 echo "=== hard validation ==="
