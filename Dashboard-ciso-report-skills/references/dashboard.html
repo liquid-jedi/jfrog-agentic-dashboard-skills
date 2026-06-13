@@ -897,6 +897,17 @@ function buildBriefing(){
   const crit = sev.critical || 0;
   const noTrend = !(DATA.comparison && DATA.comparison.available) && !(v.risk_score_previous);
   const ring = `background:conic-gradient(${band.color} 0 ${Math.min(100,score)}%, #e6ebf2 ${Math.min(100,score)}% 100%)`;
+  const scoreFmt = (() => {
+    const c = sev.critical||0, h = sev.high||0, med = sev.medium||0, l = sev.low||0;
+    const raw = c*100 + h*20 + med*5 + l;
+    const denom = (c+h+med+l)*100 || 1;
+    const parts = [];
+    if(c) parts.push(`${fmt(c)} crit×100`);
+    if(h) parts.push(`${fmt(h)} high×20`);
+    if(med) parts.push(`${fmt(med)} med×5`);
+    if(l) parts.push(`${fmt(l)} low×1`);
+    return {raw, denom, parts, pct: Math.round(raw/denom*100)};
+  })();
 
   const actions = computeActions().slice(0, 3);
   const cards = actions.map(a => `
@@ -915,6 +926,10 @@ function buildBriefing(){
         </div>
         <div class="gauge-band" style="color:${band.color}">${band.label} risk</div>
         <div class="gauge-note">${noTrend ? 'No prior period — this run sets your baseline.' : 'Composite of severity, exposure &amp; coverage.'}</div>
+        <div style="margin-top:10px;font-size:10.5px;color:var(--muted);font-family:var(--mono);line-height:1.6;text-align:center">
+          ${scoreFmt.parts.map(p=>`<div>${esc(p)}</div>`).join('')}
+          <div style="margin-top:3px;border-top:1px solid var(--line-2);padding-top:3px;color:var(--navy);font-weight:700">${scoreFmt.raw.toLocaleString()} / ${scoreFmt.denom.toLocaleString()} = ${scoreFmt.pct}%</div>
+        </div>
       </div>
       <div class="headline-cell">
         <div class="eyebrow">The headline</div>
@@ -1269,7 +1284,20 @@ function buildGovernance(){
   const methodPanel = `<div class="panel" style="margin-bottom:14px">
     <div class="ph"><h3>Risk &amp; severity methodology</h3><span class="meta">How to read this report</span></div>
     <div class="pbody">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px">
+        <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px">Score formula</div>
+          <div style="font-size:12px;color:var(--fg-2);line-height:1.8">
+            <div style="font-family:var(--mono);background:var(--canvas);border:1px solid var(--line-2);border-radius:var(--r-m);padding:10px 12px;font-size:11px">
+              <div style="color:var(--navy);font-weight:700;margin-bottom:6px">raw = Σ weighted hits</div>
+              <div>Critical &nbsp;× <b>100</b></div>
+              <div>High &nbsp;&nbsp;&nbsp;&nbsp; × <b>20</b></div>
+              <div>Medium &nbsp; × <b>5</b></div>
+              <div>Low &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; × <b>1</b></div>
+              <div style="margin-top:6px;border-top:1px solid var(--line-2);padding-top:6px">score = raw ÷ max × 100</div>
+              <div style="color:var(--muted);margin-top:4px">100 = all violations critical</div>
+            </div>
+          </div>
+        </div>
         <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px">Risk score bands</div>
           <table class="dt" style="font-size:12px"><tbody>${bandRows2}</tbody></table></div>
         <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px">Xray severity levels</div>
