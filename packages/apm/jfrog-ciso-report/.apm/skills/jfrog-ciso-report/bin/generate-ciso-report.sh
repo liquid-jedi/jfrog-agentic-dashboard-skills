@@ -618,7 +618,7 @@ p = Path(os.environ["OUTPUT_PATH"])
 s = p.read_text()
 if s.count("const DATA = {") != 1:
     raise SystemExit("ERROR: rendered report must contain exactly one DATA object")
-if "buildSidebar" not in s:
+if "buildMast" not in s:
     raise SystemExit("ERROR: rendered report missing dashboard JS")
 if s.count("\n") + 1 < 1000:
     raise SystemExit("ERROR: rendered report is unexpectedly small")
