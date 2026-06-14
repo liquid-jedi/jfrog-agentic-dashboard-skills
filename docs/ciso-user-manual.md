@@ -35,7 +35,7 @@ See **[INSTALL.md](INSTALL.md)** for prerequisites, APM install, generic Skills 
 Quick reference — APM install:
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v2.3.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v2.5.0
 ```
 
 Quick reference — local development install:
@@ -406,6 +406,15 @@ Runtime payloads are generated artifacts, not source-of-truth code:
 
 ## Recommendation Contract
 
+Recommendations are generated automatically from live data after platform enrichment. The runner produces:
+
+- **P1** — one recommendation per critical-issue component group (real XRAY IDs, hit counts, description from violation data)
+- **P2** — unindexed repository coverage gap, with percentage blind spot
+- **P2** — dry-run curation policies that should be promoted to block mode, with audit-event count
+- **P3** — packages that passed without inspection (bypass events)
+
+A fallback P1 is added if no critical issues exist.
+
 Every recommendation must include:
 
 - `priority` (`P1`, `P2`, `P3`)
@@ -441,18 +450,32 @@ Severity meanings:
 - Medium: meaningful exposure with lower immediate blast radius.
 - Low: limited immediate impact, typically suited to batched remediation.
 
-Recommended normalization:
+Risk score formula (3-factor composite, computed after platform enrichment):
 
 ```text
-raw = (Critical*100) + (High*20) + (Medium*5) + (Low*1)
-risk_score = (raw / (total_violations*100)) * 100
+# Factor 1 — Severity mix (50%)
+# Weighted average of severity tiers. All-critical = 100, all-low ≈ 6.
+sev = (critical×4 + high×2 + medium×1) / (total×4) × 100
+
+# Factor 2 — Volume, log-scaled (30%)
+# 0 violations = 0, ~100 = 50, 10 000+ = 100.
+vol = min(100, log10(max(1, total)) / log10(10000) × 100)
+
+# Factor 3 — Coverage gap (20%)
+# Fraction of repositories not indexed by Xray.
+cov = (1 - repos_indexed / repos_total) × 100
+
+risk_score = sev×0.5 + vol×0.3 + cov×0.2
 ```
+
+The score and each component are stored in `violations.risk_score` and `violations.risk_score_breakdown` in `data.json`. The gauge ring in the report shows the live breakdown.
 
 Interpretation:
 
 - Lower is better.
 - Rising trend is bad.
-- Typical bands: 0-15 good, 15-35 monitor, 35-60 bad, 60+ very bad.
+- Typical bands: 0–15 low, 15–35 moderate, 35–60 high, 60+ critical.
+- A score of 0 violations with some unindexed repos still shows residual risk from the coverage gap factor.
 
 ### Curation
 

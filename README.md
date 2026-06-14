@@ -47,10 +47,10 @@ Single HTML file — open in a browser, email to stakeholders, or archive in Art
 | Area | Highlights |
 |------|------------|
 | **Supply chain (Curation)** | Evaluated / blocked / approved, blocks by reason, audit trail |
-| **Vulnerabilities (Xray)** | Violations by type & severity, risk score, critical issue list with context |
+| **Vulnerabilities (Xray)** | Violations by type & severity, risk score (3-factor composite), critical issue list with context |
 | **Compliance** | License and operational risk breakdowns |
-| **Executive** | KPI strip, curation vs detection value, recommendations with metadata |
-| **Governance (beta)** | Policy effectiveness, watch coverage, threat velocity trends |
+| **Executive** | KPI strip, curation vs detection value, data-driven recommendations with priority & effort |
+| **Governance (beta)** | Policy effectiveness, watch coverage, period-over-period comparison |
 
 ---
 
@@ -119,8 +119,8 @@ npx skills list -g
 
 Expected result: the deployed or global skills include both `jfrog` and `jfrog-ciso-report`.
 
-**Current shipped versions:** `jfrog-ciso-report` `2.3.0`, `jfrog-dashboard-blueprint` `2.1.1`.
-**Previous release versions:** `jfrog-ciso-report` `2.2.0`, `jfrog-dashboard-blueprint` `2.1.0`.
+**Current shipped versions:** `jfrog-ciso-report` `2.5.0`, `jfrog-dashboard-blueprint` `2.1.1`.
+**Previous release versions:** `jfrog-ciso-report` `2.4.0`, `jfrog-dashboard-blueprint` `2.1.0`.
 
 **6. Run the readiness check** (recommended for local-clone installs):
 
@@ -208,6 +208,15 @@ The `Example Reports/` folder contains static HTML reports generated from real r
 
 ## Recent highlights
 
+**v2.5.0 (June 2026)**
+- **3-factor risk score** — replaces the old weighted-hits formula (which was count-invariant: 1 critical = 1,000 critical = 100/100). New formula: severity mix (50%) + log-scaled volume (30%) + Xray coverage gap (20%). Result is defensible and proportional.
+- **Score breakdown in gauge** — ring chart shows each component score live (e.g. `Severity mix 100×50% = 50 / Volume 67.5×30% = 20.2 / Coverage gap 43×20% = 8.6`).
+- **Tab-based dashboard** — 5-panel layout (Overview, Curation, Xray, Governance, Recommendations); self-contained single HTML with fonts inlined as base64.
+- **Data-driven recommendations** — generated from live data after enrichment: P1 per critical-issue component group (real XRAY IDs + hit counts), P2 for unindexed repo coverage gaps, P2 for dry-run policy promotion, P3 for passed-without-inspection events.
+- **Period-over-period comparison** — runner scans prior snapshots automatically and computes curation/violation deltas.
+- **Show all / fewer toggle** — fixed toggle on long tables (Curation audit, blocking policies, critical issues).
+
+**v2.3.0 and earlier**
 - Instance-aware filenames and safe same-day reruns (`rerun-HHMMSS/`)
 - Structured local artifacts: `report.html`, `snapshot.json`, `run-meta.json`
 - Stable local-root bootstrap on first run (or set `CISO_LOCAL_ROOT` up front)
