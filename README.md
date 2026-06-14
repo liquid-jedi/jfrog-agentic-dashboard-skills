@@ -178,16 +178,43 @@ Generate a weekly CISO report. Local only.
 Generate a CISO report for 2026-05-01 to 2026-05-31.
 ```
 
-Output lands at:
+### Output folder layout
+
+Both local and Artifactory storage follow the same `<server-id>/<report-type>/<date>/` path convention so you can compare or browse either location with the same mental model.
+
+| | Local (`~/ciso-reports/`) | Artifactory (`ciso-reports-local/`) |
+|-|--------------------------|-------------------------------------|
+| **report.html** | ✅ Generated every run | ✅ Uploaded on request |
+| **snapshot.json** | ✅ Compact KPI snapshot for trend comparison | ✅ Uploaded — used for prior-period comparison |
+| **data.json** | ✅ Full enriched payload (debug/audit) | ❌ Not uploaded |
+| **run-meta.json** | ✅ Run timestamp, env, skill version | ❌ Not uploaded |
+| **manifest.json** | ❌ | ✅ Server-level index of all runs |
+| **rerun-HHMMSS/** | ✅ Same-day reruns land here | ❌ |
+
 ```
-~/ciso-reports/<server-id>/<report-type>/<YYYY-MM-DD>/
-├── report.html       ← open this in a browser
-├── data.json
-├── snapshot.json
-└── run-meta.json
+LOCAL (~/ciso-reports/)               ARTIFACTORY (ciso-reports-local/)
+──────────────────────────────────    ────────────────────────────────────────
+<server-id>/                          <server-id>/
+├── weekly/                           ├── manifest.json   ← index of all runs
+│   └── 2026-06-14/                   ├── weekly/
+│       ├── report.html               │   └── 2026-06-14/
+│       ├── data.json                 │       ├── report.html
+│       ├── snapshot.json             │       └── snapshot.json
+│       ├── run-meta.json             └── monthly/
+│       └── rerun-153012/                 └── 2026-06-01/
+│           ├── report.html                   ├── report.html
+│           ├── data.json                     └── snapshot.json
+│           ├── snapshot.json
+│           └── run-meta.json
+└── monthly/
+    └── 2026-06-01/
+        ├── report.html
+        ├── data.json
+        ├── snapshot.json
+        └── run-meta.json
 ```
 
-Same-day reruns go to `rerun-HHMMSS/` automatically — prior runs are never overwritten.
+Same-day reruns land in `rerun-HHMMSS/` locally — prior runs are never overwritten. Artifactory uploads always use the canonical date path (no rerun dirs).
 
 ### Hands-free mode
 
