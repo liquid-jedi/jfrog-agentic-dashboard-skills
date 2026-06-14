@@ -960,7 +960,6 @@ function buildTabs(){
     {id:'overview', label:'Overview'},
     {id:'curation', label:'Curation', badge:fmt((DATA.curation&&DATA.curation.blocked)||0)},
     {id:'xray', label:'Xray', badge:crit?fmt(crit):'', crit:true},
-    {id:'governance', label:'Governance &amp; Compliance'},
     {id:'recommendations', label:'Recommendations', badge:fmt(computeActions().length)}
   ];
   return `<div class="tabbar">${tabs.map((t,i)=>`<button class="tab${i===0?' on':''}" data-tab="${t.id}">${t.label}${t.badge?`<span class="badge${t.crit?' crit':''}">${t.badge}</span>`:''}</button>`).join('')}</div>`;
@@ -1102,45 +1101,33 @@ function buildCuration(){
       <td class="r">${(t.blocked_period||t.blocked||0)>0?`<span class="num">${fmt(t.blocked_period||t.blocked)}</span>`:`<span style="color:var(--muted)">—</span>`}</td></tr>`;
   }).join('');
   const typePanel = `<div class="panel flush"><div class="ph"><h3>Gate coverage by ecosystem</h3><span class="meta">connected remotes / total</span></div>
-    <table class="dt"><thead><tr><th>Package type</th><th class="r">Connected</th><th class="r">Blocked</th></tr></thead><tbody>${typeRows}</tbody></table>
-    ${(()=>{
-      const notConn = typesSorted.filter(t=>(t.connected||0) < (t.remote_total||0));
-      if (!notConn.length) return '';
-      const chips = notConn.map(t=>`<span class="tag-pill" style="background:var(--crit-bg,#fff1f0);color:var(--crit);border-color:var(--crit)">${esc(t.package_type)} (${fmt((t.remote_total||0)-(t.connected||0))} unconnected)</span>`).join(' ');
-      return `<div style="padding:10px 16px 12px;border-top:1px solid var(--line-2);font-size:12px"><span style="font-weight:600;color:var(--crit)">⚠ Unconnected ecosystems:</span> ${chips}</div>`;
-    })()}
-  </div>`;
+    <table class="dt"><thead><tr><th>Package type</th><th class="r">Connected</th><th class="r">Blocked</th></tr></thead><tbody>${typeRows}</tbody></table></div>`;
 
-  // audit CTA
+  // Unconnected ecosystems — separate panel using full byType (not capped at 8)
+  const uncoveredPanel = (() => {
+    const notConn = [...byType].filter(t => (t.connected||0) < (t.remote_total||0))
+      .sort((a,b) => ((b.remote_total||0)-(b.connected||0)) - ((a.remote_total||0)-(a.connected||0)));
+    if (!notConn.length) return '';
+    const rows = notConn.map(t => {
+      const unconn = (t.remote_total||0) - (t.connected||0);
+      const pc = pctOf(t.connected, t.remote_total);
+      return `<tr>
+        <td class="ptcell"><span class="pt">${esc(t.package_type)}</span></td>
+        <td class="r"><span style="font-weight:700;color:var(--crit)">${fmt(unconn)} unconnected</span></td>
+        <td class="r" style="width:200px"><div class="minibar"><div class="t"><div class="f" style="width:${pc}%;background:var(--crit)"></div></div><span class="num">${fmt(t.connected)} / ${fmt(t.remote_total)}</span></div></td>
+        <td class="r">${(t.blocked_period||t.blocked||0)>0?`<span class="num">${fmt(t.blocked_period||t.blocked)}</span>`:`<span style="color:var(--muted)">—</span>`}</td>
+      </tr>`;
+    }).join('');
+    return `<div class="panel flush">
+      <div class="ph"><h3 style="color:var(--crit)">Ecosystems not through the curation gate</h3><span class="meta">${fmt(notConn.length)} ecosystem${notConn.length===1?'':'s'} with unconnected remotes — downloads bypass policy checks</span></div>
+      <table class="dt"><thead><tr><th>Package type</th><th class="r">Gap</th><th class="r">Connected / Total</th><th class="r">Blocks this period</th></tr></thead><tbody>${rows}</tbody></table>
+    </div>`;
+  })();
+
+  // Audit CTA — full detail lives in the Curation Audit UI, not replicated here
   const auditUrl = ((m.url||'').replace(/\/$/,'')) + (m.curation_audit_ui_path || '/ui/package-curation/audit');
-  const cta = `<div class="audit-cta"><div class="txt"><b>Review every blocked download in Curation Audit</b><span>${fmt((c.audit_events_display_meta&&c.audit_events_display_meta.total_blocked)||c.blocked)} blocked events this window · full detail with policy, requester &amp; timestamp</span></div><a class="btn" href="${esc(auditUrl)}">Open Curation Audit →</a></div>`;
-
-  // audit log table — collapsed by default, expanded on user request
-  const ev = (c.audit_events_display && c.audit_events_display.length ? c.audit_events_display : c.audit_events) || [];
-  const shown = 12;
-  const evRows = ev.map((e,i)=>`
-    <tr class="${i>=shown?'row-more':''}">
-      <td><span class="status st-block">BLOCKED</span></td>
-      <td class="comp">${esc(e.package)}</td>
-      <td class="mono" style="color:var(--fg-2);font-size:11px">${esc(e.version||'')}</td>
-      <td><span class="tag-pill">${esc(e.type||'')}</span></td>
-      <td class="comp" style="color:var(--fg-2)">${esc(truncate(e.repo,28))}</td>
-      <td class="comp" style="color:var(--fg-2)">${esc(e.requested_by||'')}</td>
-      <td class="mono" style="font-size:11px;color:var(--muted)">${esc(e.date||'')}</td>
-    </tr>`).join('');
-  const auditTable = ev.length === 0
-    ? `<div class="panel flush" id="auditPanel"><div class="ph"><h3>Blocked package audit log</h3></div><div class="pbody"><div class="empty" style="padding:20px">No blocked events recorded.</div></div></div>`
-    : `<div class="panel flush" id="auditPanel">
-    <div class="ph"><h3>Blocked package audit log</h3><span class="meta">${fmt(ev.length)} events${c.audit_events_display_meta&&c.audit_events_display_meta.cap?` · capped at ${c.audit_events_display_meta.cap}`:''}</span></div>
-    <div class="audit-collapsed" id="auditCollapsed" style="padding:12px 16px;display:flex;align-items:center;gap:10px">
-      <button class="btn-link" onclick="document.getElementById('auditCollapsed').style.display='none';document.getElementById('auditExpanded').style.display='block'">Reveal ${fmt(ev.length)} blocked events ▾</button>
-    </div>
-    <div id="auditExpanded" style="display:none">
-      <table class="dt"><thead><tr><th>Status</th><th>Package</th><th>Version</th><th>Type</th><th>Repository</th><th>Requested by</th><th>Date</th></tr></thead><tbody>${evRows}</tbody></table>
-      ${ev.length>shown?`<button class="showmore" data-target="auditPanel"><span class="more-label">Show all ${fmt(ev.length)} events</span><span class="less-label">Show top ${shown}</span></button>`:''}
-      <div style="padding:8px 16px 4px"><button class="btn-link" onclick="document.getElementById('auditCollapsed').style.display='flex';document.getElementById('auditExpanded').style.display='none'">▲ Collapse</button></div>
-    </div>
-  </div>`;
+  const auditCount = (c.audit_events_display_meta&&c.audit_events_display_meta.total_blocked) || c.blocked || 0;
+  const cta = `<div class="audit-cta"><div class="txt"><b>Full blocked-download audit trail</b><span>${fmt(auditCount)} blocked events this window · every request with package, version, policy, requester &amp; timestamp</span></div><a class="btn" href="${esc(auditUrl)}">Open Curation Audit →</a></div>`;
 
   const obs = c.observation ? `<div class="note"><b>What this means.</b> ${esc(c.observation)}</div>` : '';
 
@@ -1162,24 +1149,37 @@ function buildCuration(){
     <div class="pbody"><div style="display:grid;grid-template-columns:repeat(${byRisk.length||4},1fr);gap:12px">${riskChips}</div></div>
   </div>` : '';
 
-  const catShown = 12;
-  const catRows = blockPols.map((pol,i) => `<tr class="${i>=catShown?'row-more':''}">
-    <td class="comp" style="font-weight:600">${esc(pol.name)}</td>
-    <td><span class="tag-pill" style="text-transform:capitalize;color:${riskTypeColors[pol.risk_type]||'var(--fg-2)'}">${esc(pol.risk_type||'—')}</span></td>
-    <td class="comp" style="color:var(--fg-2)">${esc(pol.scope||'')}</td>
-    <td class="desc">${esc(truncate(pol.condition||'',90))}</td>
-  </tr>`).join('');
+  // Block policy catalog grouped by risk type — each group is a <details> accordion
+  const catGroupOrder = ['security','malicious','legal','operational','unknown'];
+  const catGroupColors = {security:'var(--high)',malicious:'var(--crit)',legal:'var(--info)',operational:'var(--med)',unknown:'var(--muted)'};
+  const catGroupLabel  = {security:'Security',malicious:'Malicious',legal:'Legal',operational:'Operational',unknown:'Other'};
+  const catGrouped = {};
+  blockPols.forEach(pol => { const k = (pol.risk_type||'unknown').toLowerCase(); (catGrouped[k]||(catGrouped[k]=[])).push(pol); });
+  const catGroupSections = catGroupOrder.filter(k => catGrouped[k]?.length).map(k => {
+    const pols = catGrouped[k];
+    const rows = pols.map(pol => `<tr>
+      <td class="comp" style="font-weight:600">${esc(pol.name)}</td>
+      <td class="comp" style="color:var(--fg-2)">${esc(pol.scope||'')}</td>
+      <td class="desc">${esc(truncate(pol.condition||'',100))}</td>
+    </tr>`).join('');
+    return `<details style="border-top:1px solid var(--line-2)">
+      <summary style="padding:11px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;user-select:none">
+        <span class="tag-pill" style="color:${catGroupColors[k]};min-width:84px;text-align:center">${catGroupLabel[k]}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--navy)">${pols.length} polic${pols.length===1?'y':'ies'}</span>
+        <span style="font-size:11.5px;color:var(--muted);margin-left:auto">${pols.map(p=>esc(truncate(p.name,22))).slice(0,3).join(', ')}${pols.length>3?' …':''}</span>
+      </summary>
+      <table class="dt" style="margin:0"><thead><tr><th>Policy name</th><th>Scope</th><th>Condition</th></tr></thead><tbody>${rows}</tbody></table>
+    </details>`;
+  }).join('');
   const catPanel = blockPols.length ? `<div class="panel flush" id="polCatPanel">
-    <div class="ph"><h3>Full block policy catalog</h3><span class="meta">${fmt(blockPols.length)} block policies configured</span></div>
-    <table class="dt"><thead><tr><th>Policy name</th><th>Risk type</th><th>Scope</th><th>Condition</th></tr></thead>
-    <tbody>${catRows}</tbody></table>
-    ${blockPols.length>catShown?`<button class="showmore" data-target="polCatPanel"><span class="more-label">Show all ${fmt(blockPols.length)} policies</span><span class="less-label">Show top ${catShown}</span></button>`:''}
+    <div class="ph"><h3>Block policy catalog</h3><span class="meta">${fmt(blockPols.length)} policies · expand a category to see all</span></div>
+    ${catGroupSections}
   </div>` : '';
 
   return kpis + obs +
     `<div class="grid-3"><div class="span-2">${polPanel}</div>${reasonPanel}</div>` +
     `<div class="grid-2">${userPanel}${typePanel}</div>` +
-    cta + auditTable + riskPanel + catPanel +
+    uncoveredPanel + cta + riskPanel + catPanel +
     (() => {
       const g = DATA.governance || {};
       const ce = g.curation_policy_effectiveness || [];
@@ -1208,11 +1208,10 @@ function buildXray(){
   const sevRows = sevDef.map(s=>`<div class="sevr"><span class="dot" style="background:${s[2]}"></span><span class="lbl">${s[0]}</span><span class="ct">${fmt(sev[s[1]])}</span><span class="pc">${(v.severity_pct&&v.severity_pct[s[1]]!=null?v.severity_pct[s[1]]:pctOf(sev[s[1]],distTotal))}%</span></div>`).join('');
 
   const kpis = `<div class="kpis">
-    <div class="kpi k-navy"><div class="n">${(v.posture_signals||{}).severity_mix != null ? (v.posture_signals||{}).severity_mix + '<small>%</small>' : '—'}</div><div class="l">Severity mix</div><div class="d">weighted toward critical</div></div>
     <div class="kpi k-crit"><div class="n">${fmt(sev.critical)}</div><div class="l">Critical</div><div class="d">${(v.severity_pct&&v.severity_pct.critical)||pctOf(sev.critical,distTotal)}% of findings</div></div>
     <div class="kpi k-med"><div class="n">${fmt(sev.high)}</div><div class="l">High</div><div class="d">${(v.severity_pct&&v.severity_pct.high)||pctOf(sev.high,distTotal)}% of findings</div></div>
-    <div class="kpi k-info"><div class="n">${fmt(uniqueFindings)}</div><div class="l">Unique findings</div><div class="d">deduplicated</div></div>
-    <div class="kpi k-green"><div class="n">${fmt(v.total)}</div><div class="l">Total instances</div><div class="d">across artifacts</div></div>
+    <div class="kpi k-info"><div class="n">${fmt(uniqueFindings)}</div><div class="l">Unique findings</div><div class="d">CVEs &amp; violations deduplicated</div></div>
+    <div class="kpi k-green"><div class="n">${fmt(v.total)}</div><div class="l">Total instances</div><div class="d">across all artifacts</div></div>
   </div>`;
 
   const distPanel = `<div class="panel flush"><div class="ph"><h3>Severity distribution</h3><span class="meta">${fmt(uniqueFindings)} unique findings</span></div><div class="pbody">
@@ -1227,25 +1226,19 @@ function buildXray(){
   const watchPanel = `<div class="panel flush"><div class="ph"><h3>Most-triggered watches</h3></div>
     <table class="dt"><thead><tr><th>Watch / policy</th><th>Type</th><th class="r">Hits</th></tr></thead><tbody>${watchRows||`<tr><td colspan="3" class="empty" style="padding:20px">No watch activity.</td></tr>`}</tbody></table></div>`;
 
-  // top CVEs
-  const tcRows = (v.top_cves||[]).slice(0,6).map(r=>`<tr><td class="idcell">${esc(r.id)}</td>
-    <td><span class="sev ${sevClass(r.severity)}">${esc(String(r.severity||'').toUpperCase())}</span></td>
-    <td class="r"><span class="num">${esc(r.packages!=null?fmt(r.packages):'—')}</span></td>
-    <td class="r"><span class="num">${fmt(r.hits)}</span></td></tr>`).join('');
-  const cvePanel = `<div class="panel flush"><div class="ph"><h3>Highest-impact issues</h3><span class="meta">by artifact hits</span></div>
-    <table class="dt"><thead><tr><th>Issue</th><th>Severity</th><th class="r">Packages</th><th class="r">Hits</th></tr></thead><tbody>${tcRows||`<tr><td colspan="4" class="empty" style="padding:20px">No issues.</td></tr>`}</tbody></table></div>`;
-
-  // critical issues detail (with description) — expandable
+  // Critical issues — sourced from Xray violations API, severity=Critical, enriched with JFrog Research descriptions
   const ci = v.critical_issues || [];
-  const shown = 8;
-  const ciRows = ci.map((r,i)=>`<tr class="${i>=shown?'row-more':''}">
+  const ciShown = 10;
+  const ciRows = ci.map((r,i)=>`<tr class="${i>=ciShown?'row-more':''}">
     <td class="idcell">${esc(r.id)}</td>
-    <td class="desc">${esc(truncate(r.description, 150))}</td>
+    <td class="desc">${esc(truncate(r.description, 160))}</td>
     <td class="r"><span class="num">${fmt(r.hits)}</span></td>
     <td class="mono" style="font-size:11px;color:var(--muted)">${esc(r.first_seen||'')}</td></tr>`).join('');
-  const ciPanel = `<div class="panel flush" id="ciPanel"><div class="ph"><h3>Critical issue detail</h3><span class="meta">${fmt(ci.length)} critical issues</span></div>
-    <table class="dt"><thead><tr><th>Issue</th><th>Description</th><th class="r">Hits</th><th>First seen</th></tr></thead><tbody>${ciRows||`<tr><td colspan="4" class="empty" style="padding:20px">No critical issue detail.</td></tr>`}</tbody></table>
-    ${ci.length>shown?`<button class="showmore" data-target="ciPanel"><span class="more-label">Show all ${fmt(ci.length)} issues</span><span class="less-label">Show top ${shown}</span></button>`:''}</div>`;
+  const ciPanel = `<div class="panel flush" id="ciPanel">
+    <div class="ph"><h3>Critical issues</h3><span class="meta">${fmt(ci.length)} issues · source: Xray violations API · severity=Critical · enriched by JFrog Research</span></div>
+    <table class="dt"><thead><tr><th>Issue ID</th><th>Description</th><th class="r">Artifact hits</th><th>First seen</th></tr></thead><tbody>${ciRows||`<tr><td colspan="4" class="empty" style="padding:20px">No critical issues recorded in this window.</td></tr>`}</tbody></table>
+    ${ci.length>ciShown?`<button class="showmore" data-target="ciPanel"><span class="more-label">Show all ${fmt(ci.length)} issues</span><span class="less-label">Show top ${ciShown}</span></button>`:''}
+  </div>`;
 
   const obs = v.observation ? `<div class="note"><b>What this means.</b> ${esc(v.observation)}</div>` : '';
 
@@ -1267,23 +1260,35 @@ function buildXray(){
     ? `<div class="panel flush"><div class="ph"><h3>Operational risk</h3><span class="meta">${fmt(o.total)} findings</span></div><div class="pbody">${(o.top_components||[]).slice(0,8).map(x=>`<div class="sevr"><span class="lbl">${esc(x.component||x.name||'Component')}</span><span class="ct">${fmt(x.count||x.hits||0)}</span></div>`).join('')||'<div class="cov-sub">Detail available in Xray.</div>'}</div></div>`
     : `<div class="panel flush"><div class="ph"><h3>Operational risk</h3></div><div class="empty"><div class="ico">\u2713</div><b>No operational findings</b><p>No deprecated or end-of-life component risks were reported this window.</p></div></div>`;
 
-  // Indexed repositories (moved from Governance tab)
-  const repoNames = p2.indexed_repo_names || [];
-  const repoPanel = repoNames.length ? `<div class="panel" style="margin-bottom:14px">
-    <div class="ph"><h3>Indexed repositories</h3><span class="meta">${fmt(repoNames.length)} indexed \u00b7 ${fmt((p2.repos_total||0)-(repoNames.length))} unindexed</span></div>
-    <div class="pbody">
-      <input type="text" id="repoSearch" placeholder="Filter ${fmt(repoNames.length)} repositories\u2026"
-        style="width:100%;padding:7px 10px;border:1px solid var(--hair);border-radius:var(--r-m);font-size:12px;font-family:var(--mono);color:var(--ink);background:var(--canvas);outline:none;margin-bottom:10px"
-        oninput="filterRepos(this)">
-      <div id="repoList" style="max-height:200px;overflow-y:auto;margin:0 -16px;padding:0 16px 4px">
-        <ul style="list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:2px 20px">
-          ${repoNames.map(n=>`<li data-r="${esc(n)}" style="font-family:var(--mono);font-size:11px;color:var(--fg-2);padding:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(n)}">${esc(n)}</li>`).join('')}
-        </ul>
-      </div>
-    </div>
-  </div>` : '';
+  
 
-  return kpis + obs + `<div class="grid-2 wide-l">${distPanel}${watchPanel}</div>` + `<div class="grid-2">${cvePanel}${ciPanel}</div>` + xePanel + `<div class="grid-2">${licBlock}${opBlock}</div>` + repoPanel;
+  // Unindexed repositories — show repos not covered by Xray; if individual names unavailable show count + link
+  const repoPanel = (() => {
+    const unindexedNames = p2.unindexed_repo_names || [];
+    const unindexedCount = (p2.repos_total||0) - (p2.repos_indexed||0);
+    if (unindexedNames.length) {
+      return `<div class="panel" style="margin-bottom:14px">
+        <div class="ph"><h3>Unindexed repositories</h3><span class="meta" style="color:var(--crit)">${fmt(unindexedNames.length)} repos with no Xray coverage — violations in these are invisible to this report</span></div>
+        <div class="pbody">
+          <input type="text" id="repoSearch" placeholder="Filter ${fmt(unindexedNames.length)} repositories\u2026"
+            style="width:100%;padding:7px 10px;border:1px solid var(--hair);border-radius:var(--r-m);font-size:12px;font-family:var(--mono);color:var(--ink);background:var(--canvas);outline:none;margin-bottom:10px"
+            oninput="filterRepos(this)">
+          <div id="repoList" style="max-height:200px;overflow-y:auto;margin:0 -16px;padding:0 16px 4px">
+            <ul style="list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:2px 20px">
+              ${unindexedNames.map(n=>`<li data-r="${esc(n)}" style="font-family:var(--mono);font-size:11px;color:var(--crit);padding:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(n)}">${esc(n)}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+      </div>`;
+    }
+    if (unindexedCount > 0) {
+      const xrayUrl = ((p2.url||DATA.meta?.url||'').replace(/\/$/,'')) + '/ui/xray/indexedResources';
+      return `<div class="note"><b>${fmt(unindexedCount)} repositories are not indexed by Xray.</b> Violations in these repos are invisible to this report. <a href="${esc(xrayUrl)}" style="color:var(--navy);font-weight:600">Review in Xray → Indexed Resources</a></div>`;
+    }
+    return '';
+  })();
+
+  return kpis + obs + `<div class="grid-2 wide-l">${distPanel}${watchPanel}</div>` + ciPanel + xePanel + `<div class="grid-2">${licBlock}${opBlock}</div>` + repoPanel;
 }
 
 /* ═══ GOVERNANCE & COMPLIANCE TAB ═══ */
@@ -1416,7 +1421,6 @@ window.filterRepos = function(el){
     panelWrap('overview', true, 'Overview', safe('Overview', buildOverview)) +
     panelWrap('curation', false, 'Curation — Supply-chain gate', safe('Curation', buildCuration)) +
     panelWrap('xray', false, 'Xray — Security posture', safe('Xray', buildXray)) +
-    panelWrap('governance', false, 'Governance &amp; Compliance', safe('Governance', buildGovernance)) +
     panelWrap('recommendations', false, 'Recommendations', safe('Recommendations', buildRecommendations)) +
     buildFooter();
 
