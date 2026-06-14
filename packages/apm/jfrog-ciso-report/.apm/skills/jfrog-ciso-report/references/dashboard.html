@@ -582,20 +582,24 @@ a:hover{text-decoration:underline}
 
 /* ════════════════ BRIEFING (Direction A) ════════════════ */
 .brief{background:var(--surface);border-bottom:1px solid var(--line)}
-.brief-hero{display:grid;grid-template-columns:280px 1fr}
-.gauge-cell{padding:30px 28px;border-right:1px solid var(--line);background:var(--canvas);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-.gauge-ring{width:158px;height:158px;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;position:relative}
-.gauge-ring::after{content:"";position:absolute;inset:15px;background:var(--canvas);border-radius:50%}
-.gauge-val{position:relative;z-index:1}
-.gauge-val b{font-size:42px;font-weight:800;color:var(--navy);line-height:1;letter-spacing:-.02em}
-.gauge-val small{display:block;font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px}
-.gauge-band{margin-top:15px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
-.gauge-note{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4;max-width:200px}
+.brief-hero{display:grid;grid-template-columns:340px 1fr}
+/* Posture signals strip */
+.posture-signals{padding:28px 20px;border-right:1px solid var(--line);background:var(--canvas);
+  display:flex;flex-direction:column;justify-content:center;gap:0}
+.sig-item{padding:14px 8px;text-align:center}
+.sig-sep{height:1px;background:var(--line-2);margin:0 12px}
+.sig-val{font-size:38px;font-weight:800;color:var(--navy);line-height:1;letter-spacing:-.02em}
+.sig-val small{font-size:16px;font-weight:700;color:var(--navy-600)}
+.sig-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:5px 0 3px}
+.sig-sub{font-size:11.5px;color:var(--fg-2);display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}
+.sig-delta{font-size:11px;font-weight:700;padding:1px 5px;border-radius:var(--r-s);font-family:var(--mono)}
+.sig-up-bad{background:#fff1f0;color:var(--crit)}
+.sig-up-good{background:#f0fdf4;color:var(--green-600)}
+.sig-dn-bad{background:#fff1f0;color:var(--crit)}
+.sig-dn-good{background:#f0fdf4;color:var(--green-600)}
+.sig-no-prior{background:var(--canvas);color:var(--muted);font-size:10px}
 .headline-cell{padding:30px 34px;display:flex;flex-direction:column;justify-content:center}
-.eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green-600)}
-.headline-cell h1{font-size:25px;font-weight:800;color:var(--navy);line-height:1.28;margin:9px 0 16px;letter-spacing:-.015em}
+.headline-cell h1{font-size:25px;font-weight:800;color:var(--navy);line-height:1.28;margin:0 0 16px;letter-spacing:-.015em}
 .headline-cell h1 .g{color:var(--green-600)}
 .headline-cell h1 .r{color:var(--crit)}
 .prevbar{display:flex;height:32px;border-radius:var(--r-m);overflow:hidden;margin-bottom:8px;background:var(--crit)}
@@ -604,8 +608,9 @@ a:hover{text-decoration:underline}
 .prevcap{display:flex;justify-content:space-between;font-size:12px;color:var(--fg-2)}
 .prevcap b{color:var(--navy)}
 
-.attention{padding:22px 34px 28px;background:var(--canvas)}
-.attention > h2{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+/* Attention strip (used in Overview tab) */
+.attention{padding:22px 24px 24px;background:var(--canvas)}
+.attention > div > h2{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
 .act-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .act-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:16px 18px;display:flex;flex-direction:column}
 .act-pill{align-self:flex-start;font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--r-s);letter-spacing:.03em;text-transform:uppercase}
@@ -614,8 +619,12 @@ a:hover{text-decoration:underline}
 .pill-p3{background:var(--info-tint);color:var(--info)}
 .act-card h3{font-size:14px;font-weight:700;color:var(--navy);margin:11px 0 6px;line-height:1.35}
 .act-card p{font-size:12px;color:var(--fg-2);line-height:1.5;flex:1}
+.act-effort{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:8px}
 .act-metric{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--navy);margin-top:12px;padding-top:11px;border-top:1px solid var(--line-2)}
 .act-metric span{color:var(--muted);font-weight:600}
+/* Generic text button */
+.btn-link{background:none;border:none;cursor:pointer;font-size:12px;font-weight:700;color:var(--navy);padding:0;text-decoration:underline;text-underline-offset:2px}
+.btn-link:hover{color:var(--green-600)}
 
 /* ════════════════ TABS (Direction B) ════════════════ */
 .tabbar{display:flex;gap:0;background:var(--surface);border-bottom:1px solid var(--line);
@@ -890,73 +899,56 @@ function buildMast(){
 /* ═══ BRIEFING (Direction A) ═══ */
 function buildBriefing(){
   const v = DATA.violations || {}, c = DATA.curation || {}, sev = v.by_severity || {};
-  const score = v.risk_score != null ? v.risk_score : 0;
-  const band = riskBand(score);
   const blocked = c.blocked || 0;
   const present = v.total || 0;
   const crit = sev.critical || 0;
-  const noTrend = !(DATA.comparison && DATA.comparison.available) && !(v.risk_score_previous);
-  const ring = `background:conic-gradient(${band.color} 0 ${Math.min(100,score)}%, #e6ebf2 ${Math.min(100,score)}% 100%)`;
-  const scoreFmt = (() => {
-    const rb = v.risk_score_breakdown;
-    if (rb) {
-      const sv = rb.severity, vl = rb.volume, cv = rb.coverage;
-      const parts = [
-        `Severity mix  ${sv} × 50% = ${Math.round(sv*0.5*10)/10}`,
-        `Volume (log)  ${vl} × 30% = ${Math.round(vl*0.3*10)/10}`,
-        `Coverage gap  ${cv} × 20% = ${Math.round(cv*0.2*10)/10}`,
-      ];
-      return {parts, raw: score, denom: 100, pct: Math.round(score), mode: '3factor'};
-    }
-    // legacy fallback
-    const c = sev.critical||0, h = sev.high||0, med = sev.medium||0, l = sev.low||0;
-    const raw = c*100 + h*20 + med*5 + l;
-    const denom = (c+h+med+l)*100 || 1;
-    const parts = [];
-    if(c) parts.push(`${fmt(c)} crit×100`);
-    if(h) parts.push(`${fmt(h)} high×20`);
-    if(med) parts.push(`${fmt(med)} med×5`);
-    if(l) parts.push(`${fmt(l)} low×1`);
-    return {raw, denom, parts, pct: Math.round(raw/denom*100)};
-  })();
+  const sig = v.posture_signals || {};
+  const cmp = DATA.comparison || {};
+  const sd  = cmp.signal_deltas || {};
+  const noPrior = !(cmp.available);
 
-  const actions = computeActions().slice(0, 3);
-  const cards = actions.map(a => `
-    <div class="act-card">
-      <span class="act-pill pill-${(a.pri||'p3').toLowerCase()}">${esc(a.pri)} · ${esc(a.effort||'')}</span>
-      <h3>${esc(a.title)}</h3>
-      <p>${esc(a.body)}</p>
-      ${a.metric ? `<div class="act-metric">${esc(a.metric.split('·')[0])}${a.metric.includes('·') ? ` <span>·${esc(a.metric.split('·').slice(1).join('·'))}</span>` : ''}</div>` : ''}
-    </div>`).join('');
+  // Helper: format delta as ▲/▼ with colour
+  function sigDelta(val, invertGood) {
+    if (val == null) return `<span class="sig-delta sig-no-prior">No prior period</span>`;
+    const up = val > 0;
+    const good = invertGood ? !up : up;  // for coverage_gap: down is good
+    const arrow = up ? '▲' : '▼';
+    const cls = up ? (good ? 'sig-up-good' : 'sig-up-bad') : (good ? 'sig-dn-good' : 'sig-dn-bad');
+    return `<span class="sig-delta ${cls}">${arrow}${Math.abs(val)}</span>`;
+  }
+
+  // Posture signals strip (replaces gauge)
+  const signals = `<div class="posture-signals">
+    <div class="sig-item">
+      <div class="sig-val">${sig.severity_mix != null ? sig.severity_mix + '<small>%</small>' : '—'}</div>
+      <div class="sig-label">Severity mix</div>
+      <div class="sig-sub">Weighted toward critical${sigDelta(sd.severity_mix, false)}</div>
+    </div>
+    <div class="sig-sep"></div>
+    <div class="sig-item">
+      <div class="sig-val">${fmt(sig.violation_volume)}</div>
+      <div class="sig-label">Violation volume</div>
+      <div class="sig-sub">Total inside repos${sigDelta(sd.violation_volume, false)}</div>
+    </div>
+    <div class="sig-sep"></div>
+    <div class="sig-item">
+      <div class="sig-val">${sig.coverage_gap != null ? sig.coverage_gap + '<small>%</small>' : '—'}</div>
+      <div class="sig-label">Coverage gap</div>
+      <div class="sig-sub">Repos not indexed${sigDelta(sd.coverage_gap, true)}</div>
+    </div>
+  </div>`;
 
   return `<div class="brief">
     <div class="brief-hero">
-      <div class="gauge-cell">
-        <div class="gauge-ring" style="${ring}">
-          <div class="gauge-val"><b>${esc(score)}</b><small>/ 100</small></div>
-        </div>
-        <div class="gauge-band" style="color:${band.color}">${band.label} risk</div>
-        <div class="gauge-note">${noTrend ? 'No prior period — this run sets your baseline.' : 'Composite of severity, exposure &amp; coverage.'}</div>
-        <div style="margin-top:10px;font-size:10.5px;color:var(--muted);font-family:var(--mono);line-height:1.6;text-align:center">
-          ${scoreFmt.parts.map(p=>`<div>${esc(p)}</div>`).join('')}
-          ${scoreFmt.mode === '3factor'
-            ? `<div style="margin-top:3px;border-top:1px solid var(--line-2);padding-top:3px;color:var(--navy);font-weight:700">Risk score: ${score}</div>`
-            : `<div style="margin-top:3px;border-top:1px solid var(--line-2);padding-top:3px;color:var(--navy);font-weight:700">${scoreFmt.raw.toLocaleString()} / ${scoreFmt.denom.toLocaleString()} = ${scoreFmt.pct}%</div>`}
-        </div>
-      </div>
+      ${signals}
       <div class="headline-cell">
-        <div class="eyebrow">The headline</div>
-        <h1>Your gate stopped <span class="g">${fmt(blocked)}</span> risky package${blocked===1?'':'s'} — but <span class="r">${fmt(present)} violations</span> already live inside your repositories.</h1>
+        <h1>Your gate stopped <span class="g">${fmt(blocked)}</span> risky package${blocked===1?'':'s'} — but <span class="r">${fmt(present)} violation${present===1?'':'s'}</span> already live inside your repositories.</h1>
         <div class="prevbar">
           <div class="blocked" style="width:${Math.max(0.4, pctOf(blocked, blocked+present)).toFixed(2)}%"></div>
           <div class="present">${fmt(present)} present inside repositories${crit ? ` &nbsp;·&nbsp; ${fmt(crit)} critical` : ''}</div>
         </div>
         <div class="prevcap"><span><b>${fmt(blocked)}</b> blocked at the gate this period</span><span>Prevention is working — exposure &amp; coverage are the gap</span></div>
       </div>
-    </div>
-    <div class="attention">
-      <h2>What needs your attention</h2>
-      <div class="act-grid">${cards}</div>
     </div>
   </div>`;
 }
@@ -982,9 +974,34 @@ function panelWrap(id, on, title, html){
 function buildOverview(){
   const v = DATA.violations || {}, c = DATA.curation || {}, p = DATA.platform || {}, sev = v.by_severity || {};
   const cn = connStats();
-  const band = riskBand(v.risk_score);
+  const sig = v.posture_signals || {};
+  const sd  = (DATA.comparison || {}).signal_deltas || {};
+
+  // Attention strip — top 3 actions, bleeds full-width
+  const allActions = computeActions();
+  const topCards = allActions.slice(0, 3).map(a => `
+    <div class="act-card">
+      <span class="act-pill pill-${(a.pri||'p3').toLowerCase()}">${esc(a.pri)}</span>
+      <h3>${esc(a.title)}</h3>
+      <p>${esc(a.body)}</p>
+      ${a.effort ? `<div class="act-effort">EFFORT: ${esc(a.effort)}</div>` : ''}
+      ${a.metric ? `<div class="act-metric">${esc(a.metric.split('·')[0])}${a.metric.includes('·') ? ` <span>·${esc(a.metric.split('·').slice(1).join('·'))}</span>` : ''}</div>` : ''}
+    </div>`).join('');
+  const attnBlock = `<div class="attention" style="margin:-22px -24px 20px">
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
+      <h2 style="margin:0">What needs your attention</h2>
+      ${allActions.length > 3 ? `<button class="btn-link" onclick="document.querySelector('[data-tab=recommendations]').click()">See all ${allActions.length} →</button>` : ''}
+    </div>
+    <div class="act-grid">${topCards}</div>
+  </div>`;
+
+  // Severity-mix delta badge
+  const sevMixDelta = sd.severity_mix;
+  const sevMixSub = sevMixDelta != null
+    ? (sevMixDelta > 0 ? `▲${sevMixDelta} vs prior` : sevMixDelta < 0 ? `▼${Math.abs(sevMixDelta)} vs prior` : 'No change vs prior')
+    : 'weighted toward critical';
   const kpis = `<div class="kpis">
-    <div class="kpi k-navy"><div class="n">${esc(v.risk_score!=null?v.risk_score:'—')}</div><div class="l">Risk score</div><div class="d">${band.label} · baseline</div></div>
+    <div class="kpi k-navy"><div class="n">${sig.severity_mix != null ? sig.severity_mix + '<small>%</small>' : '—'}</div><div class="l">Severity mix</div><div class="d">${sevMixSub}</div></div>
     <div class="kpi k-green"><div class="n">${fmt(c.blocked)}</div><div class="l">Blocked at gate</div><div class="d">${pctOf(c.blocked,c.total)<1?'<1':pctOf(c.blocked,c.total)}% of requests</div></div>
     <div class="kpi k-crit"><div class="n">${fmt(sev.critical)}</div><div class="l">Critical inside</div><div class="d">of ${fmt(v.total)} total</div></div>
     <div class="kpi k-info"><div class="n">${pctOf(p.repos_indexed,p.repos_total)}<small>%</small></div><div class="l">Repos indexed</div><div class="d">${fmt(p.repos_indexed)} / ${fmt(p.repos_total)}</div></div>
@@ -1015,7 +1032,7 @@ function buildOverview(){
   </div></div>`;
 
   const obs = (DATA.curation && DATA.curation.observation) || '';
-  return kpis + `<div class="grid-2 wide-l">${topPanel}${covPanel}</div>`;
+  return attnBlock + kpis + `<div class="grid-2 wide-l">${topPanel}${covPanel}</div>`;
 }
 function covRow(label, a, b, color, subOverride){
   const pc = pctOf(a, b);
@@ -1038,7 +1055,7 @@ function buildCuration(){
     <div class="kpi k-crit"><div class="n">${fmt(c.blocked)}</div><div class="l">Blocked</div><div class="d">${(c.block_rate!=null?c.block_rate:pctOf(c.blocked,c.total))}% block rate</div></div>
     <div class="kpi k-green"><div class="n">${fmt(c.approved)}</div><div class="l">Approved</div><div class="d">passed policy</div></div>
     <div class="kpi k-med"><div class="n">${fmt(rr.dry_run)}</div><div class="l">Dry-run observed</div><div class="d">not enforced</div></div>
-    <div class="kpi k-info"><div class="n">${cn.pct}<small>%</small></div><div class="l">Remotes connected</div><div class="d">${fmt(cn.connected)} / ${fmt(cn.total)}</div></div>
+    <div class="kpi k-info"><div class="n">${fmt(c.unique_users)}</div><div class="l">Active developers</div><div class="d">unique requesters</div></div>
   </div>`;
 
   // block reasons
@@ -1054,9 +1071,12 @@ function buildCuration(){
   // top blocking policies
   const tp = (c.top_policies && c.top_policies.length ? c.top_policies : c.blocking_events_per_policy) || [];
   const maxP = Math.max(1, ...tp.map(x=>x.blocked_events||0));
-  const polRows = tp.slice(0,6).map(x=>`
-    <tr><td class="comp">${esc(x.name)}</td><td>${esc(x.scope_label||'')}</td>
-    <td class="r" style="width:140px"><div class="minibar"><div class="t"><div class="f" style="width:${pctOf(x.blocked_events,maxP)}%;background:var(--crit)"></div></div><span class="num">${fmt(x.blocked_events)}</span></div></td></tr>`).join('');
+  const polRows = tp.slice(0,6).map(x=>{
+    let scopeLabel = x.scope_label || '';
+    if (/seen in audit only/i.test(scopeLabel)) scopeLabel = 'Audit-only (not enforced)';
+    return `<tr><td class="comp">${esc(x.name)}</td><td>${esc(scopeLabel)}</td>
+    <td class="r" style="width:140px"><div class="minibar"><div class="t"><div class="f" style="width:${pctOf(x.blocked_events,maxP)}%;background:var(--crit)"></div></div><span class="num">${fmt(x.blocked_events)}</span></div></td></tr>`;
+  }).join('');
   const polPanel = `<div class="panel flush"><div class="ph"><h3>Top blocking policies</h3></div>
     <table class="dt"><thead><tr><th>Policy</th><th>Scope</th><th class="r">Blocks</th></tr></thead><tbody>${polRows||`<tr><td colspan="3" class="empty" style="padding:20px">No blocking policies triggered.</td></tr>`}</tbody></table></div>`;
 
@@ -1068,7 +1088,7 @@ function buildCuration(){
     <td class="r"><span class="num">${fmt(u.events)}</span></td>
     <td class="r">${(u.blocked||0)>0?`<span class="status st-block">${fmt(u.blocked)}</span>`:`<span class="num" style="color:var(--muted)">0</span>`}</td>
     <td class="r" style="width:120px"><div class="minibar"><div class="t"><div class="f" style="width:${pctOf(u.events,maxEv)}%;background:var(--navy-600)"></div></div></div></td></tr>`).join('');
-  const userPanel = `<div class="panel flush"><div class="ph"><h3>Most active developers</h3><span class="meta">${fmt(c.unique_users)} unique users</span></div>
+  const userPanel = `<div class="panel flush"><div class="ph"><h3>Most active developers</h3></div>
     <table class="dt"><thead><tr><th>User</th><th class="r">Requests</th><th class="r">Blocked</th><th class="r">Activity</th></tr></thead><tbody>${userRows||`<tr><td colspan="4" class="empty" style="padding:20px">No user activity.</td></tr>`}</tbody></table></div>`;
 
   // connection by package type
@@ -1082,13 +1102,20 @@ function buildCuration(){
       <td class="r">${(t.blocked_period||t.blocked||0)>0?`<span class="num">${fmt(t.blocked_period||t.blocked)}</span>`:`<span style="color:var(--muted)">—</span>`}</td></tr>`;
   }).join('');
   const typePanel = `<div class="panel flush"><div class="ph"><h3>Gate coverage by ecosystem</h3><span class="meta">connected remotes / total</span></div>
-    <table class="dt"><thead><tr><th>Package type</th><th class="r">Connected</th><th class="r">Blocked</th></tr></thead><tbody>${typeRows}</tbody></table></div>`;
+    <table class="dt"><thead><tr><th>Package type</th><th class="r">Connected</th><th class="r">Blocked</th></tr></thead><tbody>${typeRows}</tbody></table>
+    ${(()=>{
+      const notConn = typesSorted.filter(t=>(t.connected||0) < (t.remote_total||0));
+      if (!notConn.length) return '';
+      const chips = notConn.map(t=>`<span class="tag-pill" style="background:var(--crit-bg,#fff1f0);color:var(--crit);border-color:var(--crit)">${esc(t.package_type)} (${fmt((t.remote_total||0)-(t.connected||0))} unconnected)</span>`).join(' ');
+      return `<div style="padding:10px 16px 12px;border-top:1px solid var(--line-2);font-size:12px"><span style="font-weight:600;color:var(--crit)">⚠ Unconnected ecosystems:</span> ${chips}</div>`;
+    })()}
+  </div>`;
 
   // audit CTA
   const auditUrl = ((m.url||'').replace(/\/$/,'')) + (m.curation_audit_ui_path || '/ui/package-curation/audit');
   const cta = `<div class="audit-cta"><div class="txt"><b>Review every blocked download in Curation Audit</b><span>${fmt((c.audit_events_display_meta&&c.audit_events_display_meta.total_blocked)||c.blocked)} blocked events this window · full detail with policy, requester &amp; timestamp</span></div><a class="btn" href="${esc(auditUrl)}">Open Curation Audit →</a></div>`;
 
-  // audit log table
+  // audit log table — collapsed by default, expanded on user request
   const ev = (c.audit_events_display && c.audit_events_display.length ? c.audit_events_display : c.audit_events) || [];
   const shown = 12;
   const evRows = ev.map((e,i)=>`
@@ -1101,9 +1128,19 @@ function buildCuration(){
       <td class="comp" style="color:var(--fg-2)">${esc(e.requested_by||'')}</td>
       <td class="mono" style="font-size:11px;color:var(--muted)">${esc(e.date||'')}</td>
     </tr>`).join('');
-  const auditTable = `<div class="panel flush" id="auditPanel"><div class="ph"><h3>Blocked package audit log</h3><span class="meta">${fmt(ev.length)} shown${c.audit_events_display_meta&&c.audit_events_display_meta.cap?` · capped at ${c.audit_events_display_meta.cap}`:''}</span></div>
-    <table class="dt"><thead><tr><th>Status</th><th>Package</th><th>Version</th><th>Type</th><th>Repository</th><th>Requested by</th><th>Date</th></tr></thead><tbody>${evRows||`<tr><td colspan="7" class="empty" style="padding:20px">No blocked events recorded.</td></tr>`}</tbody></table>
-    ${ev.length>shown?`<button class="showmore" data-target="auditPanel"><span class="more-label">Show all ${fmt(ev.length)} events</span><span class="less-label">Show top ${shown}</span></button>`:''}</div>`;
+  const auditTable = ev.length === 0
+    ? `<div class="panel flush" id="auditPanel"><div class="ph"><h3>Blocked package audit log</h3></div><div class="pbody"><div class="empty" style="padding:20px">No blocked events recorded.</div></div></div>`
+    : `<div class="panel flush" id="auditPanel">
+    <div class="ph"><h3>Blocked package audit log</h3><span class="meta">${fmt(ev.length)} events${c.audit_events_display_meta&&c.audit_events_display_meta.cap?` · capped at ${c.audit_events_display_meta.cap}`:''}</span></div>
+    <div class="audit-collapsed" id="auditCollapsed" style="padding:12px 16px;display:flex;align-items:center;gap:10px">
+      <button class="btn-link" onclick="document.getElementById('auditCollapsed').style.display='none';document.getElementById('auditExpanded').style.display='block'">Reveal ${fmt(ev.length)} blocked events ▾</button>
+    </div>
+    <div id="auditExpanded" style="display:none">
+      <table class="dt"><thead><tr><th>Status</th><th>Package</th><th>Version</th><th>Type</th><th>Repository</th><th>Requested by</th><th>Date</th></tr></thead><tbody>${evRows}</tbody></table>
+      ${ev.length>shown?`<button class="showmore" data-target="auditPanel"><span class="more-label">Show all ${fmt(ev.length)} events</span><span class="less-label">Show top ${shown}</span></button>`:''}
+      <div style="padding:8px 16px 4px"><button class="btn-link" onclick="document.getElementById('auditCollapsed').style.display='flex';document.getElementById('auditExpanded').style.display='none'">▲ Collapse</button></div>
+    </div>
+  </div>`;
 
   const obs = c.observation ? `<div class="note"><b>What this means.</b> ${esc(c.observation)}</div>` : '';
 
@@ -1142,7 +1179,20 @@ function buildCuration(){
   return kpis + obs +
     `<div class="grid-3"><div class="span-2">${polPanel}</div>${reasonPanel}</div>` +
     `<div class="grid-2">${userPanel}${typePanel}</div>` +
-    cta + auditTable + riskPanel + catPanel;
+    cta + auditTable + riskPanel + catPanel +
+    (() => {
+      const g = DATA.governance || {};
+      const ce = g.curation_policy_effectiveness || [];
+      const ceRows = ce.slice(0,6).map(x => {
+        let scopeLabel = x.scope_label || '';
+        if (/seen in audit only/i.test(scopeLabel)) scopeLabel = 'Audit-only (not enforced)';
+        return `<tr><td class="comp">${esc(x.policy)}</td><td>${esc(scopeLabel)}</td>
+          <td class="r"><span class="num">${fmt(x.hits)}</span></td><td class="r"><span class="num">${esc(x.pct_of_events!=null?x.pct_of_events+'%':'\u2014')}</span></td></tr>`;
+      }).join('');
+      if (!ce.length) return '';
+      return `<div class="panel flush"><div class="ph"><h3>Curation policy effectiveness</h3><span class="meta">blocks attributed</span></div>
+        <table class="dt"><thead><tr><th>Policy</th><th>Scope</th><th class="r">Blocks</th><th class="r">Share</th></tr></thead><tbody>${ceRows}</tbody></table></div>`;
+    })();
 }
 
 /* ═══ XRAY TAB ═══ */
@@ -1158,7 +1208,7 @@ function buildXray(){
   const sevRows = sevDef.map(s=>`<div class="sevr"><span class="dot" style="background:${s[2]}"></span><span class="lbl">${s[0]}</span><span class="ct">${fmt(sev[s[1]])}</span><span class="pc">${(v.severity_pct&&v.severity_pct[s[1]]!=null?v.severity_pct[s[1]]:pctOf(sev[s[1]],distTotal))}%</span></div>`).join('');
 
   const kpis = `<div class="kpis">
-    <div class="kpi k-navy"><div class="n">${esc(v.risk_score!=null?v.risk_score:'—')}</div><div class="l">Risk score</div><div class="d">${riskBand(v.risk_score).label}</div></div>
+    <div class="kpi k-navy"><div class="n">${(v.posture_signals||{}).severity_mix != null ? (v.posture_signals||{}).severity_mix + '<small>%</small>' : '—'}</div><div class="l">Severity mix</div><div class="d">weighted toward critical</div></div>
     <div class="kpi k-crit"><div class="n">${fmt(sev.critical)}</div><div class="l">Critical</div><div class="d">${(v.severity_pct&&v.severity_pct.critical)||pctOf(sev.critical,distTotal)}% of findings</div></div>
     <div class="kpi k-med"><div class="n">${fmt(sev.high)}</div><div class="l">High</div><div class="d">${(v.severity_pct&&v.severity_pct.high)||pctOf(sev.high,distTotal)}% of findings</div></div>
     <div class="kpi k-info"><div class="n">${fmt(uniqueFindings)}</div><div class="l">Unique findings</div><div class="d">deduplicated</div></div>
@@ -1198,15 +1248,10 @@ function buildXray(){
     ${ci.length>shown?`<button class="showmore" data-target="ciPanel"><span class="more-label">Show all ${fmt(ci.length)} issues</span><span class="less-label">Show top ${shown}</span></button>`:''}</div>`;
 
   const obs = v.observation ? `<div class="note"><b>What this means.</b> ${esc(v.observation)}</div>` : '';
-  return kpis + obs + `<div class="grid-2 wide-l">${distPanel}${watchPanel}</div>` + `<div class="grid-2">${cvePanel}${ciPanel}</div>`;
-}
 
-/* ═══ GOVERNANCE & COMPLIANCE TAB ═══ */
-function buildGovernance(){
-  const g = DATA.governance || {}, p = DATA.platform || {}, l = DATA.license || {}, o = DATA.operational || {}, b = DATA.benefit || {};
-  const cmp = DATA.comparison || {}, tv = DATA.threat_velocity || {};
-
-  // xray policy effectiveness
+  // Xray policy effectiveness (moved from Governance tab)
+  const g = DATA.governance || {}, l = DATA.license || {}, o = DATA.operational || {};
+  const p2 = DATA.platform || {};
   const xe = g.xray_policy_effectiveness || g.policy_effectiveness || [];
   const maxX = Math.max(1, ...xe.map(x=>x.hits||0));
   const xeRows = xe.slice(0,6).map(x=>`<tr><td class="comp">${esc(x.policy)}</td><td><span class="tag-pill">${esc(x.type||'')}</span></td>
@@ -1214,12 +1259,37 @@ function buildGovernance(){
   const xePanel = `<div class="panel flush"><div class="ph"><h3>Xray policy effectiveness</h3><span class="meta">violations triggered</span></div>
     <table class="dt"><thead><tr><th>Policy</th><th>Type</th><th class="r">Hits</th></tr></thead><tbody>${xeRows||`<tr><td colspan="3" class="empty" style="padding:20px">No data.</td></tr>`}</tbody></table></div>`;
 
-  // curation policy effectiveness
-  const ce = g.curation_policy_effectiveness || [];
-  const ceRows = ce.slice(0,6).map(x=>`<tr><td class="comp">${esc(x.policy)}</td><td>${esc(x.scope_label||'')}</td>
-    <td class="r"><span class="num">${fmt(x.hits)}</span></td><td class="r"><span class="num">${esc(x.pct_of_events!=null?x.pct_of_events+'%':'—')}</span></td></tr>`).join('');
-  const cePanel = `<div class="panel flush"><div class="ph"><h3>Curation policy effectiveness</h3><span class="meta">blocks attributed</span></div>
-    <table class="dt"><thead><tr><th>Policy</th><th>Scope</th><th class="r">Blocks</th><th class="r">Share</th></tr></thead><tbody>${ceRows||`<tr><td colspan="4" class="empty" style="padding:20px">No data.</td></tr>`}</tbody></table></div>`;
+  // License + operational compliance (moved from Governance tab)
+  const licBlock = (l.total>0)
+    ? `<div class="panel flush"><div class="ph"><h3>License compliance</h3><span class="meta">${fmt(l.total)} violations</span></div><div class="pbody">${(l.licenses||[]).slice(0,8).map(x=>`<div class="sevr"><span class="lbl">${esc(x.license||x.name||'License')}</span><span class="ct">${fmt(x.count||x.hits||0)}</span></div>`).join('')||'<div class="cov-sub">Detail available in Xray.</div>'}</div></div>`
+    : `<div class="panel flush"><div class="ph"><h3>License compliance</h3></div><div class="empty"><div class="ico">\u2713</div><b>No license violations</b><p>No license-policy violations were reported in this window.</p></div></div>`;
+  const opBlock = (o.total>0)
+    ? `<div class="panel flush"><div class="ph"><h3>Operational risk</h3><span class="meta">${fmt(o.total)} findings</span></div><div class="pbody">${(o.top_components||[]).slice(0,8).map(x=>`<div class="sevr"><span class="lbl">${esc(x.component||x.name||'Component')}</span><span class="ct">${fmt(x.count||x.hits||0)}</span></div>`).join('')||'<div class="cov-sub">Detail available in Xray.</div>'}</div></div>`
+    : `<div class="panel flush"><div class="ph"><h3>Operational risk</h3></div><div class="empty"><div class="ico">\u2713</div><b>No operational findings</b><p>No deprecated or end-of-life component risks were reported this window.</p></div></div>`;
+
+  // Indexed repositories (moved from Governance tab)
+  const repoNames = p2.indexed_repo_names || [];
+  const repoPanel = repoNames.length ? `<div class="panel" style="margin-bottom:14px">
+    <div class="ph"><h3>Indexed repositories</h3><span class="meta">${fmt(repoNames.length)} indexed \u00b7 ${fmt((p2.repos_total||0)-(repoNames.length))} unindexed</span></div>
+    <div class="pbody">
+      <input type="text" id="repoSearch" placeholder="Filter ${fmt(repoNames.length)} repositories\u2026"
+        style="width:100%;padding:7px 10px;border:1px solid var(--hair);border-radius:var(--r-m);font-size:12px;font-family:var(--mono);color:var(--ink);background:var(--canvas);outline:none;margin-bottom:10px"
+        oninput="filterRepos(this)">
+      <div id="repoList" style="max-height:200px;overflow-y:auto;margin:0 -16px;padding:0 16px 4px">
+        <ul style="list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:2px 20px">
+          ${repoNames.map(n=>`<li data-r="${esc(n)}" style="font-family:var(--mono);font-size:11px;color:var(--fg-2);padding:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(n)}">${esc(n)}</li>`).join('')}
+        </ul>
+      </div>
+    </div>
+  </div>` : '';
+
+  return kpis + obs + `<div class="grid-2 wide-l">${distPanel}${watchPanel}</div>` + `<div class="grid-2">${cvePanel}${ciPanel}</div>` + xePanel + `<div class="grid-2">${licBlock}${opBlock}</div>` + repoPanel;
+}
+
+/* ═══ GOVERNANCE & COMPLIANCE TAB ═══ */
+function buildGovernance(){
+  const p = DATA.platform || {}, b = DATA.benefit || {};
+  const cmp = DATA.comparison || {}, tv = DATA.threat_velocity || {};
 
   // platform inventory KPIs
   const inv = `<div class="kpis">
@@ -1230,14 +1300,6 @@ function buildGovernance(){
     <div class="kpi k-crit"><div class="n">${fmt(p.curation_policies_dry_run)}</div><div class="l">In dry-run</div><div class="d">not enforced</div></div>
   </div>`;
 
-  // license + operational compliance
-  const licBlock = (l.total>0)
-    ? `<div class="panel flush"><div class="ph"><h3>License compliance</h3><span class="meta">${fmt(l.total)} violations</span></div><div class="pbody">${(l.licenses||[]).slice(0,8).map(x=>`<div class="sevr"><span class="lbl">${esc(x.license||x.name||'License')}</span><span class="ct">${fmt(x.count||x.hits||0)}</span></div>`).join('')||'<div class="cov-sub">Detail available in Xray.</div>'}</div></div>`
-    : `<div class="panel flush"><div class="ph"><h3>License compliance</h3></div><div class="empty"><div class="ico">✓</div><b>No license violations</b><p>No license-policy violations were reported in this window.</p></div></div>`;
-  const opBlock = (o.total>0)
-    ? `<div class="panel flush"><div class="ph"><h3>Operational risk</h3><span class="meta">${fmt(o.total)} findings</span></div><div class="pbody">${(o.top_components||[]).slice(0,8).map(x=>`<div class="sevr"><span class="lbl">${esc(x.component||x.name||'Component')}</span><span class="ct">${fmt(x.count||x.hits||0)}</span></div>`).join('')||'<div class="cov-sub">Detail available in Xray.</div>'}</div></div>`
-    : `<div class="panel flush"><div class="ph"><h3>Operational risk</h3></div><div class="empty"><div class="ico">✓</div><b>No operational findings</b><p>No deprecated or end-of-life component risks were reported this window.</p></div></div>`;
-
   // trend / comparison
   const trendNote = (!cmp.available && !tv.available)
     ? `<div class="note"><b>Trend comparison.</b> This run sets your baseline — period-over-period deltas and threat-velocity charts become available from the next validated report. ${esc(tv.trend_summary||'')}</div>`
@@ -1245,22 +1307,6 @@ function buildGovernance(){
 
   // benefit
   const benefitNote = b.observation ? `<div class="note good"><b>Value delivered.</b> ${esc(b.observation)}</div>` : '';
-
-  // ── Indexed repositories (searchable) ─────────────────────────────────
-  const repoNames = p.indexed_repo_names || [];
-  const repoPanel = repoNames.length ? `<div class="panel" style="margin-bottom:14px">
-    <div class="ph"><h3>Indexed repositories</h3><span class="meta">${fmt(repoNames.length)} indexed · ${fmt((p.repos_total||0)-(repoNames.length))} unindexed</span></div>
-    <div class="pbody">
-      <input type="text" id="repoSearch" placeholder="Filter ${fmt(repoNames.length)} repositories…"
-        style="width:100%;padding:7px 10px;border:1px solid var(--hair);border-radius:var(--r-m);font-size:12px;font-family:var(--mono);color:var(--ink);background:var(--canvas);outline:none;margin-bottom:10px"
-        oninput="filterRepos(this)">
-      <div id="repoList" style="max-height:200px;overflow-y:auto;margin:0 -16px;padding:0 16px 4px">
-        <ul style="list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:2px 20px">
-          ${repoNames.map(n=>`<li data-r="${esc(n)}" style="font-family:var(--mono);font-size:11px;color:var(--fg-2);padding:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(n)}">${esc(n)}</li>`).join('')}
-        </ul>
-      </div>
-    </div>
-  </div>` : '';
 
   // ── Scoring / methodology reference ─────────────────────────────────────
   const bands = [
@@ -1298,16 +1344,13 @@ function buildGovernance(){
     <div class="ph"><h3>Risk &amp; severity methodology</h3><span class="meta">How to read this report</span></div>
     <div class="pbody">
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px">
-        <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px">Score formula</div>
-          <div style="font-size:12px;color:var(--fg-2);line-height:1.8">
-            <div style="font-family:var(--mono);background:var(--canvas);border:1px solid var(--line-2);border-radius:var(--r-m);padding:10px 12px;font-size:11px">
-              <div style="color:var(--navy);font-weight:700;margin-bottom:6px">3-factor composite</div>
-              <div>Severity mix &nbsp;× <b>50%</b></div>
-              <div>Volume (log) &nbsp;× <b>30%</b></div>
-              <div>Coverage gap &nbsp;× <b>20%</b></div>
-              <div style="margin-top:6px;border-top:1px solid var(--line-2);padding-top:6px">0 = clean &nbsp;·&nbsp; 100 = fully exposed</div>
-              <div style="color:var(--muted);margin-top:4px">Volume log-scaled: 100 violations ≈ 50</div>
-            </div>
+        <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px">Posture signals</div>
+          <div style="font-family:var(--mono);background:var(--canvas);border:1px solid var(--line-2);border-radius:var(--r-m);padding:10px 12px;font-size:11px;line-height:1.8">
+            <div style="color:var(--navy);font-weight:700;margin-bottom:6px">Three independent signals</div>
+            <div><b>Severity mix %</b> — weighted toward critical (4×crit + 2×high + 1×med)</div>
+            <div><b>Violation volume</b> — raw count, no normalisation</div>
+            <div><b>Coverage gap %</b> — repos without Xray indexing</div>
+            <div style="margin-top:6px;border-top:1px solid var(--line-2);padding-top:6px;color:var(--muted)">No composite weighting — operators define their own risk threshold</div>
           </div>
         </div>
         <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px">Risk score bands</div>
@@ -1320,7 +1363,7 @@ function buildGovernance(){
     </div>
   </div>`;
 
-  return inv + trendNote + `<div class="grid-2">${xePanel}${cePanel}</div>` + `<div class="grid-2">${licBlock}${opBlock}</div>` + benefitNote + repoPanel + methodPanel;
+  return inv + trendNote + benefitNote + methodPanel;
 }
 
 /* ═══ RECOMMENDATIONS TAB ═══ */
@@ -1349,7 +1392,7 @@ function buildFooter(){
   const m = DATA.meta || {};
   return `<div class="footer">
     <b>${esc((m.report_type||'Weekly'))} Security Report</b> · ${esc(m.host||m.server_id||'')} · ${esc(m.date_from||'')} – ${esc(m.date_to||'')} · generated ${esc(m.generated||'')}.<br>
-    Curation figures from package-gate audit events; Xray figures from the violations API for this window. Risk score is a composite of severity, exposure and coverage (0–100, higher = greater risk). Schema ${esc(m.schema_version||'')}.
+    Curation figures from package-gate audit events; Xray figures from the violations API for this window. Posture signals (severity mix, violation volume, coverage gap) are independent measures — no composite weighting applied. Schema ${esc(m.schema_version||'')}.
   </div>`;
 }
 
@@ -1368,8 +1411,8 @@ window.filterRepos = function(el){
   const root = document.getElementById('report');
   root.innerHTML =
     safe('Masthead', buildMast) +
-    safe('Briefing', buildBriefing) +
     safe('Tabs', buildTabs) +
+    safe('Briefing', buildBriefing) +
     panelWrap('overview', true, 'Overview', safe('Overview', buildOverview)) +
     panelWrap('curation', false, 'Curation — Supply-chain gate', safe('Curation', buildCuration)) +
     panelWrap('xray', false, 'Xray — Security posture', safe('Xray', buildXray)) +

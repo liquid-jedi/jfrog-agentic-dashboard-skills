@@ -634,15 +634,31 @@ if prior_snap_path:
             'critical_delta': delta((dv.get('by_severity') or {}).get('critical', 0), pv.get('critical', 0)),
         },
     }
+    # Signal deltas — compare posture signals against prior snapshot if stored
+    prev_signals = prev.get('posture_signals', {})
+    curr_signals = (dv.get('posture_signals') or
+                    (data.get('violations') or {}).get('posture_signals') or {})
+    def sig_delta(curr, prev_v):
+        if curr is None or prev_v is None: return None
+        return round(curr - prev_v, 1)
+    data['comparison']['signal_deltas'] = {
+        'severity_mix':     sig_delta(curr_signals.get('severity_mix'),     prev_signals.get('severity_mix')),
+        'violation_volume': sig_delta(curr_signals.get('violation_volume'), prev_signals.get('violation_volume')),
+        'coverage_gap':     sig_delta(curr_signals.get('coverage_gap'),     prev_signals.get('coverage_gap')),
+        'coverage_gap_prev': prev_signals.get('coverage_gap'),
+    }
     print(f"comparison: prior={prev.get('date')} blocked_delta={data['comparison']['curation']['blocked_delta']} viol_delta={data['comparison']['violations']['total_delta']}")
+    print(f"signal deltas: sev_mix={data['comparison']['signal_deltas']['severity_mix']} vol={data['comparison']['signal_deltas']['violation_volume']} gap={data['comparison']['signal_deltas']['coverage_gap']}")
     json.dump(data, open('/tmp/ciso-data.json', 'w'), indent=2)
 else:
     print(f"comparison: no prior snapshot found in {scan_dir}")
 PY
 
-echo "=== compute 3-factor risk score ==="
+echo "=== compute posture signals ==="
+# Three independent signals — no composite score or vendor-defined weighting.
+# Operators can derive their own composite from these values if desired.
 python3 - <<'PY'
-import json, math
+import json
 
 data = json.load(open("/tmp/ciso-data.json"))
 v    = data.get("violations") or {}
@@ -658,31 +674,32 @@ total = crit + high + med + low
 repos_total   = int(p.get("repos_total",   0))
 repos_indexed = int(p.get("repos_indexed", 0))
 
-# Factor 1 — Severity composition (50%)
-# Weighted average of severity tiers (Critical=4, High=2, Med=1, Low≈0.25)
+# Signal 1 — Severity mix (0–100)
+# What fraction of violations are the worst kind, weighted by severity tier.
 # All-critical → 100, all-high → 50, all-medium → 25, all-low → ~6
-sev_score = (crit*4 + high*2 + med*1) / (total*4) * 100 if total else 0.0
+sev_mix = round((crit*4 + high*2 + med*1) / (total*4) * 100, 1) if total else 0.0
 
-# Factor 2 — Volume, log-scaled (30%)
-# log10(total) / log10(10000) × 100  →  1 viol ≈ 0, 100 ≈ 50, 10 000 = 100
-vol_score = min(100.0, math.log10(max(1, total)) / math.log10(10000) * 100) if total else 0.0
+# Signal 2 — Violation volume (raw count, no normalisation)
+# Let the operator judge scale in context. Trends shown via comparison deltas.
+vol_total = v.get("total", 0)
 
-# Factor 3 — Coverage gap (20%)
-# Fraction of repos NOT indexed → 100% unindexed = 100
-cov_score = (1 - repos_indexed / repos_total) * 100 if repos_total else 0.0
+# Signal 3 — Coverage gap (0–100)
+# Percentage of repos with no Xray indexing → blind spots.
+coverage_gap = round((1 - repos_indexed / repos_total) * 100, 1) if repos_total else 0.0
 
-risk_score = round(sev_score*0.5 + vol_score*0.3 + cov_score*0.2, 1)
-breakdown  = {
-    "severity":  round(sev_score, 1),
-    "volume":    round(vol_score, 1),
-    "coverage":  round(cov_score, 1),
-    "weights":   {"severity": 0.5, "volume": 0.3, "coverage": 0.2},
+signals = {
+    "severity_mix":       sev_mix,    # % weighted toward critical
+    "violation_volume":   vol_total,   # raw count across all repos
+    "coverage_gap":       coverage_gap # % repos not indexed
 }
 
-data["violations"]["risk_score"]           = risk_score
-data["violations"]["risk_score_breakdown"] = breakdown
+data["violations"]["posture_signals"] = signals
+# Remove any legacy composite score fields from prior runs
+data["violations"].pop("risk_score", None)
+data["violations"].pop("risk_score_breakdown", None)
+
 json.dump(data, open("/tmp/ciso-data.json", "w"), indent=2)
-print(f"risk_score: {risk_score}  (sev={breakdown['severity']} vol={breakdown['volume']} cov={breakdown['coverage']})")
+print(f"posture signals: sev_mix={sev_mix}%  vol={vol_total}  coverage_gap={coverage_gap}%")
 PY
 
 echo "=== hard validation ==="
@@ -781,6 +798,8 @@ snap = {
         "medium": d.get("violations", {}).get("by_severity", {}).get("medium", 0),
         "low": d.get("violations", {}).get("by_severity", {}).get("low", 0),
     },
+    # Posture signals stored for period-over-period delta computation
+    "posture_signals": d.get("violations", {}).get("posture_signals", {}),
     "components": len(d.get("operational", {}).get("top_components", [])),
     "license": d.get("license", {}).get("total", 0),
 }
