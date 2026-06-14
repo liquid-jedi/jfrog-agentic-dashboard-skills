@@ -17,16 +17,21 @@ Every organization needs different reports. CISOs, engineering leads, and compli
 - **Extensible personas** — new dashboards start from the blueprint skill, not a copy-paste rewrite.
 
 ```mermaid
-flowchart TB
+flowchart LR
   subgraph agent [AI Agent + Skill]
-    COL[Collect via jf + APIs]
-    JSON[Build persona JSON]
+    direction TB
+    COL["① Collect\njf + APIs"]
+    ENR["② Enrich\nplatform data"]
+    SCR["③ Score\n3-factor risk"]
+    REC["④ Recommendations\nfrom live data"]
+    CMP["⑤ Compare\nprior snapshot"]
   end
   subgraph output [Deterministic output]
+    direction TB
     TPL[dashboard.html template]
     HTML[report.html]
   end
-  COL --> JSON --> TPL --> HTML
+  COL --> ENR --> SCR --> REC --> CMP --> TPL --> HTML
 ```
 
 ---
@@ -37,7 +42,18 @@ flowchart TB
 |-------|---------|
 | **`jfrog-ciso-report`** | CISO Security & Curation dashboard (production) |
 | **`jfrog-dashboard-blueprint`** | Scaffold new persona packs from an interview |
+### Install paths
 
+```mermaid
+flowchart TD
+  GH["GitHub repo\nliquid-jedi/jfrog-agentic-dashboard-skills"]
+  GH --> APM["apm install\n(project-local, lockfile)"]
+  GH --> NPX["npx skills add\n(global user install)"]
+  APM --> BDL[".apm/ bundle\njfrog-ciso-report"]
+  NPX --> BDL
+  BDL --> SK["Installed skill\nSKILL.md · bin/ · references/"]
+  SK --> AGT["AI Agent\nClaude · Cursor · Codex"]
+```
 ---
 
 ## CISO dashboard at a glance
@@ -209,7 +225,14 @@ The `Example Reports/` folder contains static HTML reports generated from real r
 ## Recent highlights
 
 **v2.5.0 (June 2026)**
-- **3-factor risk score** — replaces the old weighted-hits formula (which was count-invariant: 1 critical = 1,000 critical = 100/100). New formula: severity mix (50%) + log-scaled volume (30%) + Xray coverage gap (20%). Result is defensible and proportional.
+- **3-factor risk score** — replaces the old weighted-hits formula (which was count-invariant: 1 critical = 1,000 critical = 100/100). New formula:
+
+```mermaid
+flowchart LR
+  S["Severity mix\ncrit×4 + high×2 + med×1\n÷ total×4  × 100"] -- "×50%" --> R
+  V["Volume\nlog₁₀(total) ÷ log₁₀(10 000) × 100\n0 viol=0 · 100 viol≈50 · 10k=100"] -- "×30%" --> R
+  C["Coverage gap\n1 − indexed÷total repos\n× 100"] -- "×20%" --> R["Risk score\n0–100"]
+```
 - **Score breakdown in gauge** — ring chart shows each component score live (e.g. `Severity mix 100×50% = 50 / Volume 67.5×30% = 20.2 / Coverage gap 43×20% = 8.6`).
 - **Tab-based dashboard** — 5-panel layout (Overview, Curation, Xray, Governance, Recommendations); self-contained single HTML with fonts inlined as base64.
 - **Data-driven recommendations** — generated from live data after enrichment: P1 per critical-issue component group (real XRAY IDs + hit counts), P2 for unindexed repo coverage gaps, P2 for dry-run policy promotion, P3 for passed-without-inspection events.
