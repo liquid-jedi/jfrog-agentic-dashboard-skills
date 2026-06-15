@@ -652,6 +652,10 @@ a:hover{text-decoration:underline}
 .kpi .n small{font-size:14px;font-weight:700;color:var(--muted)}
 .kpi .l{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-top:7px;padding-left:9px}
 .kpi .d{font-size:11.5px;color:var(--fg-2);margin-top:3px;padding-left:9px}
+.kpis.compact-4{grid-template-columns:repeat(4,1fr)}
+.insight-card .d b{color:var(--navy)}
+.insight-card .d.warn{color:var(--crit)}
+.insight-card .d.good{color:var(--green-700)}
 
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
 .grid-2.wide-l{grid-template-columns:1.45fr 1fr}
@@ -701,6 +705,14 @@ table.dt{width:100%;border-collapse:collapse;font-size:12.5px}
 .status{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px}
 .st-block{background:var(--crit-tint);color:var(--crit)} .st-pass{background:var(--green-tint);color:var(--green-700)}
 .tag-pill{display:inline-block;font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px;background:var(--canvas);border:1px solid var(--line);color:var(--fg-2)}
+.cat-btn{width:100%;border:none;border-top:1px solid var(--line-2);background:var(--surface);padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;text-align:left;font-family:inherit}
+.cat-btn:hover{background:var(--canvas)}
+.cat-btn .chev{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--canvas);border:1px solid var(--line);font-size:11px;color:var(--muted);transition:transform .15s}
+.cat-btn.on .chev{transform:rotate(90deg);color:var(--navy)}
+.cat-btn .cat-title{font-size:13px;font-weight:800;color:var(--navy)}
+.cat-btn .cat-sub{font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46%}
+.cat-body{display:none;border-top:1px solid var(--line-2)}
+.cat-section.open .cat-body{display:block}
 
 /* coverage bars */
 .cov-row{margin-bottom:16px}
@@ -765,7 +777,7 @@ table.dt{width:100%;border-collapse:collapse;font-size:12.5px}
 
 @media(max-width:920px){
   .brief-hero{grid-template-columns:1fr}.gauge-cell{border-right:none;border-bottom:1px solid var(--line)}
-  .kpis{grid-template-columns:repeat(2,1fr)}.act-grid{grid-template-columns:1fr}
+  .kpis,.kpis.compact-4{grid-template-columns:repeat(2,1fr)}.act-grid{grid-template-columns:1fr}
   .grid-2,.grid-2.wide-l,.grid-3{grid-template-columns:1fr}.span-2{grid-column:auto}
   .tabbar{overflow-x:auto}
 }
@@ -846,12 +858,33 @@ function connStats(){
     return {total:cs.supported_remote_total, connected:cs.supported_connected||0, notConnected:cs.supported_not_connected||0, pct:Math.round(cs.supported_connected_pct||pctOf(cs.supported_connected,cs.supported_remote_total))};
   return {total:cs.remote_total||0, connected:cs.connected||0, notConnected:cs.not_connected||0, pct:Math.round(cs.connected_pct||pctOf(cs.connected,cs.remote_total))};
 }
+function severityCounts(sev){
+  sev = sev || {};
+  return `C ${fmt(sev.critical)} | H ${fmt(sev.high)} | M ${fmt(sev.medium)} | L ${fmt(sev.low)}`;
+}
 
 /* ── derive prioritized actions from the data ── */
 function computeActions(){
   const p = DATA.platform || {}, v = DATA.violations || {}, sev = v.by_severity || {};
+  const vei = v.executive_insights || {}, cei = (DATA.curation && DATA.curation.executive_insights) || {};
   const cn = connStats();
   const acts = [];
+  const sla = vei.sla_risk_backlog || {};
+  if ((sla.sla_breach_issues||0) > 0) acts.push({pri:'P1', effort:'Medium', title:`Clear ${fmt(sla.sla_breach_issues)} critical SLA breaches`,
+    body:`Critical findings older than ${fmt(sla.sla_days||30)} days need executive owner assignment and weekly closure tracking.`,
+    metric:`${fmt(sla.sla_breach_issues)} overdue critical issues`, link:'Xray › Violations'});
+  const rr = vei.remediation_readiness || {};
+  if ((rr.fix_available_issues||0) > 0) acts.push({pri:'P1', effort:'Medium', title:`Patch ${fmt(rr.fix_available_issues)} critical issues with known fixes`,
+    body:`These are the fastest exposure reducers because a fixed version or remediation path is already known.`,
+    metric:`${fmt(rr.fix_available_hits||0)} artifact hits`, link:'Xray › Violations'});
+  const blind = vei.watch_blind_spots || [];
+  if (blind.length) acts.push({pri:'P1', effort:'Low', title:`Assign watches to ${fmt(blind.length)} repositories with violations`,
+    body:`The highest blind spot, ${blind[0].repo}, has ${fmt(blind[0].violation_count)} violations and no watch assignment in the collected Xray mapping.`,
+    metric:`${fmt(blind.reduce((s,r)=>s+(r.critical_count||0),0))} critical findings`, link:'Xray › Watches'});
+  const gateGaps = cei.gate_coverage_gaps || [];
+  if (gateGaps.length) acts.push({pri:'P2', effort:'Low', title:`Connect ${fmt(gateGaps.reduce((s,r)=>s+(r.unconnected||0),0))} supported remotes to Curation`,
+    body:`Supported ecosystems are available for gate enforcement but not fully connected, led by ${gateGaps[0].package_type}.`,
+    metric:`${fmt(gateGaps.length)} ecosystem gap${gateGaps.length===1?'':'s'}`, link:'Curation › Repositories'});
   const unindexed = (p.repos_unindexed != null) ? p.repos_unindexed : (p.repos_total||0) - (p.repos_indexed||0);
   if (unindexed > 0) acts.push({pri:'P1', effort:'Medium', title:`Index ${fmt(unindexed)} unscanned repositories`,
     body:`${pctOf(unindexed, p.repos_total)}% of the estate has no Xray indexing — any violations there are invisible to this report.`,
@@ -922,7 +955,7 @@ function buildBriefing(){
     <div class="sig-item">
       <div class="sig-val">${sig.severity_mix != null ? sig.severity_mix + '<small>%</small>' : '—'}</div>
       <div class="sig-label">Severity mix</div>
-      <div class="sig-sub">Weighted toward critical${sigDelta(sd.severity_mix, false)}</div>
+      <div class="sig-sub">${severityCounts(sev)}${sigDelta(sd.severity_mix, false)}</div>
     </div>
     <div class="sig-sep"></div>
     <div class="sig-item">
@@ -972,6 +1005,7 @@ function panelWrap(id, on, title, html){
 /* ═══ OVERVIEW TAB ═══ */
 function buildOverview(){
   const v = DATA.violations || {}, c = DATA.curation || {}, p = DATA.platform || {}, sev = v.by_severity || {};
+  const vei = v.executive_insights || {}, cei = (c.executive_insights || {});
   const cn = connStats();
   const sig = v.posture_signals || {};
   const sd  = (DATA.comparison || {}).signal_deltas || {};
@@ -998,13 +1032,22 @@ function buildOverview(){
   const sevMixDelta = sd.severity_mix;
   const sevMixSub = sevMixDelta != null
     ? (sevMixDelta > 0 ? `▲${sevMixDelta} vs prior` : sevMixDelta < 0 ? `▼${Math.abs(sevMixDelta)} vs prior` : 'No change vs prior')
-    : 'weighted toward critical';
+    : severityCounts(sev);
   const kpis = `<div class="kpis">
     <div class="kpi k-navy"><div class="n">${sig.severity_mix != null ? sig.severity_mix + '<small>%</small>' : '—'}</div><div class="l">Severity mix</div><div class="d">${sevMixSub}</div></div>
     <div class="kpi k-green"><div class="n">${fmt(c.blocked)}</div><div class="l">Blocked at gate</div><div class="d">${pctOf(c.blocked,c.total)<1?'<1':pctOf(c.blocked,c.total)}% of requests</div></div>
     <div class="kpi k-crit"><div class="n">${fmt(sev.critical)}</div><div class="l">Critical inside</div><div class="d">of ${fmt(v.total)} total</div></div>
     <div class="kpi k-info"><div class="n">${pctOf(p.repos_indexed,p.repos_total)}<small>%</small></div><div class="l">Repos indexed</div><div class="d">${fmt(p.repos_indexed)} / ${fmt(p.repos_total)}</div></div>
     <div class="kpi k-med"><div class="n">${cn.pct}<small>%</small></div><div class="l">Remotes gated</div><div class="d">${fmt(cn.connected)} / ${fmt(cn.total)}</div></div>
+  </div>`;
+
+  const sla = vei.sla_risk_backlog || {}, rr = vei.remediation_readiness || {}, blind = vei.watch_blind_spots || [], gaps = cei.gate_coverage_gaps || [];
+  const gapCount = gaps.reduce((sum, row) => sum + (row.unconnected || 0), 0);
+  const insights = `<div class="kpis compact-4">
+    <div class="kpi k-crit insight-card"><div class="n">${fmt(sla.sla_breach_issues)}</div><div class="l">Critical SLA breach</div><div class="d ${sla.sla_breach_issues?'warn':''}">older than ${fmt(sla.sla_days||30)} days</div></div>
+    <div class="kpi k-green insight-card"><div class="n">${fmt(rr.fix_available_issues)}</div><div class="l">Fixable exposure</div><div class="d good">${fmt(rr.fix_available_hits)} artifact hits</div></div>
+    <div class="kpi k-med insight-card"><div class="n">${fmt(blind.length)}</div><div class="l">Watch blind spots</div><div class="d">repos with violations and no watch</div></div>
+    <div class="kpi k-info insight-card"><div class="n">${fmt(gapCount)}</div><div class="l">Gate coverage gaps</div><div class="d">supported remotes not gated</div></div>
   </div>`;
 
   // top critical exposure — join top_cves with components from violation_details
@@ -1031,7 +1074,7 @@ function buildOverview(){
   </div></div>`;
 
   const obs = (DATA.curation && DATA.curation.observation) || '';
-  return attnBlock + kpis + `<div class="grid-2 wide-l">${topPanel}${covPanel}</div>`;
+  return attnBlock + kpis + insights + `<div class="grid-2 wide-l">${topPanel}${covPanel}</div>`;
 }
 function covRow(label, a, b, color, subOverride){
   const pc = pctOf(a, b);
@@ -1045,6 +1088,7 @@ function covRow(label, a, b, color, subOverride){
 /* ═══ CURATION TAB ═══ */
 function buildCuration(){
   const c = DATA.curation || {}, m = DATA.meta || {}, p = DATA.platform || {};
+  const cei = c.executive_insights || {};
   if (!c.available) return `<div class="empty"><div class="ico">i</div><b>Curation data unavailable</b><p>No curation activity was collected for this window.</p></div>`;
   const rr = c.request_results || {};
   const cn = connStats();
@@ -1092,7 +1136,10 @@ function buildCuration(){
 
   // connection by package type
   const byType = (cn && (DATA.platform.curation_state||{}).by_package_type) || ((DATA.curation.curation_state||{}).by_package_type) || [];
-  const typesSorted = [...byType].sort((a,b)=>(b.remote_total||0)-(a.remote_total||0)).slice(0,8);
+  const supportedTypes = new Set(['docker','maven','npm','pypi','go','nuget','conan','composer','debian','rpm','rubygems']);
+  const isSupportedType = (t) => t && (t.supported === true || (t.supported == null && supportedTypes.has(String(t.package_type||t.type||'').toLowerCase())));
+  const supportedByType = [...byType].filter(isSupportedType);
+  const typesSorted = [...supportedByType].sort((a,b)=>(b.remote_total||0)-(a.remote_total||0)).slice(0,8);
   const typeRows = typesSorted.map(t=>{
     const pc = pctOf(t.connected, t.remote_total);
     const col = pc>=100?'var(--green)':pc>=50?'var(--med)':'var(--crit)';
@@ -1100,29 +1147,51 @@ function buildCuration(){
       <td class="r" style="width:180px"><div class="minibar"><div class="t"><div class="f" style="width:${pc}%;background:${col}"></div></div><span class="num">${fmt(t.connected)}/${fmt(t.remote_total)}</span></div></td>
       <td class="r">${(t.blocked_period||t.blocked||0)>0?`<span class="num">${fmt(t.blocked_period||t.blocked)}</span>`:`<span style="color:var(--muted)">—</span>`}</td></tr>`;
   }).join('');
-  const typePanel = `<div class="panel flush"><div class="ph"><h3>Gate coverage by ecosystem</h3><span class="meta">connected remotes / total</span></div>
+  const typePanel = `<div class="panel flush"><div class="ph"><h3>Gate coverage by supported ecosystem</h3><span class="meta">connected remotes / total</span></div>
     <table class="dt"><thead><tr><th>Package type</th><th class="r">Connected</th><th class="r">Blocked</th></tr></thead><tbody>${typeRows}</tbody></table></div>`;
 
-  // Unconnected ecosystems — separate panel using full byType (not capped at 8)
+  // Unconnected ecosystems — supported Curation ecosystems only
   const uncoveredPanel = (() => {
-    const notConn = [...byType].filter(t => (t.connected||0) < (t.remote_total||0))
+    const source = (cei.gate_coverage_gaps && cei.gate_coverage_gaps.length)
+      ? cei.gate_coverage_gaps.map(g => ({package_type:g.package_type, connected:g.connected, remote_total:g.total, blocked_period:g.known_violations, unconnected:g.unconnected, priority:g.priority}))
+      : [...supportedByType].filter(t => (t.connected||0) < (t.remote_total||0));
+    const notConn = source.filter(t => (t.unconnected != null ? t.unconnected : (t.remote_total||0)-(t.connected||0)) > 0)
       .sort((a,b) => ((b.remote_total||0)-(b.connected||0)) - ((a.remote_total||0)-(a.connected||0)));
     if (!notConn.length) return '';
     const rows = notConn.map(t => {
-      const unconn = (t.remote_total||0) - (t.connected||0);
-      const pc = pctOf(t.connected, t.remote_total);
+      const total = t.remote_total != null ? t.remote_total : (t.total || 0);
+      const unconn = t.unconnected != null ? t.unconnected : total - (t.connected||0);
+      const pc = pctOf(t.connected, total);
       return `<tr>
         <td class="ptcell"><span class="pt">${esc(t.package_type)}</span></td>
         <td class="r"><span style="font-weight:700;color:var(--crit)">${fmt(unconn)} unconnected</span></td>
-        <td class="r" style="width:200px"><div class="minibar"><div class="t"><div class="f" style="width:${pc}%;background:var(--crit)"></div></div><span class="num">${fmt(t.connected)} / ${fmt(t.remote_total)}</span></div></td>
+        <td class="r" style="width:200px"><div class="minibar"><div class="t"><div class="f" style="width:${pc}%;background:var(--crit)"></div></div><span class="num">${fmt(t.connected)} / ${fmt(total)}</span></div></td>
         <td class="r">${(t.blocked_period||t.blocked||0)>0?`<span class="num">${fmt(t.blocked_period||t.blocked)}</span>`:`<span style="color:var(--muted)">—</span>`}</td>
       </tr>`;
     }).join('');
     return `<div class="panel flush">
-      <div class="ph"><h3 style="color:var(--crit)">Ecosystems not through the curation gate</h3><span class="meta">${fmt(notConn.length)} ecosystem${notConn.length===1?'':'s'} with unconnected remotes — downloads bypass policy checks</span></div>
+      <div class="ph"><h3 style="color:var(--crit)">Supported ecosystems not through the curation gate</h3><span class="meta">${fmt(notConn.length)} supported ecosystem${notConn.length===1?'':'s'} with unconnected remotes</span></div>
       <table class="dt"><thead><tr><th>Package type</th><th class="r">Gap</th><th class="r">Connected / Total</th><th class="r">Blocks this period</th></tr></thead><tbody>${rows}</tbody></table>
     </div>`;
   })();
+
+  const enforcement = cei.enforcement_opportunity || {};
+  const malicious = cei.malicious_package_defense || {};
+  const insightPanels = `<div class="grid-3">
+    <div class="panel flush"><div class="ph"><h3>Gate coverage gaps</h3><span class="meta">supported only</span></div><div class="pbody">
+      ${(cei.gate_coverage_gaps||[]).slice(0,5).map(g=>`<div class="sevr"><span class="act-pill pill-${String(g.priority||'P2').toLowerCase()}">${esc(g.priority||'P2')}</span><span class="lbl">${esc(g.package_type)}</span><span class="ct">${fmt(g.unconnected)} open</span></div>`).join('') || '<div class="cov-sub">All supported remotes are connected to Curation.</div>'}
+    </div></div>
+    <div class="panel flush"><div class="ph"><h3>Enforcement opportunity</h3><span class="meta">dry-run policies</span></div><div class="pbody">
+      <div class="sevr"><span class="lbl">Dry-run policies</span><span class="ct">${fmt(enforcement.dry_run_policies)}</span></div>
+      <div class="sevr"><span class="lbl">Would-have-blocked events</span><span class="ct">${fmt(enforcement.would_have_blocked)}</span></div>
+      <div class="cov-sub">Promote validated dry-run policies after false-positive review.</div>
+    </div></div>
+    <div class="panel flush"><div class="ph"><h3>Malicious package defense</h3><span class="meta">pre-download blocks</span></div><div class="pbody">
+      <div class="sevr"><span class="lbl">Malicious blocks</span><span class="ct">${fmt(malicious.malicious_blocks)}</span></div>
+      <div class="sevr"><span class="lbl">Malicious policies</span><span class="ct">${fmt(malicious.malicious_policies)}</span></div>
+      ${(malicious.top_packages||[]).slice(0,3).map(x=>`<div class="cov-sub"><b>${esc(x.package)}</b> · ${fmt(x.blocks)} blocks</div>`).join('')}
+    </div></div>
+  </div>`;
 
   // Audit CTA — full detail lives in the Curation Audit UI, not replicated here
   const auditUrl = ((m.url||'').replace(/\/$/,'')) + (m.curation_audit_ui_path || '/ui/package-curation/audit');
@@ -1149,27 +1218,30 @@ function buildCuration(){
     <div class="pbody"><div style="display:grid;grid-template-columns:repeat(${byRisk.length||4},1fr);gap:12px">${riskChips}</div></div>
   </div>` : '';
 
-  // Block policy catalog grouped by risk type — each group is a <details> accordion
-  const catGroupOrder = ['security','malicious','legal','operational','unknown'];
+  // Block policy catalog grouped by risk type — all executive categories are visible
+  const catGroupOrder = ['security','malicious','legal','operational'];
   const catGroupColors = {security:'var(--high)',malicious:'var(--crit)',legal:'var(--info)',operational:'var(--med)',unknown:'var(--muted)'};
   const catGroupLabel  = {security:'Security',malicious:'Malicious',legal:'Legal',operational:'Operational',unknown:'Other'};
   const catGrouped = {};
-  blockPols.forEach(pol => { const k = (pol.risk_type||'unknown').toLowerCase(); (catGrouped[k]||(catGrouped[k]=[])).push(pol); });
-  const catGroupSections = catGroupOrder.filter(k => catGrouped[k]?.length).map(k => {
-    const pols = catGrouped[k];
+  blockPols.forEach(pol => { const k = catGroupOrder.includes((pol.risk_type||'').toLowerCase()) ? (pol.risk_type||'').toLowerCase() : 'operational'; (catGrouped[k]||(catGrouped[k]=[])).push(pol); });
+  const catGroupSections = catGroupOrder.map(k => {
+    const pols = catGrouped[k] || [];
     const rows = pols.map(pol => `<tr>
       <td class="comp" style="font-weight:600">${esc(pol.name)}</td>
       <td class="comp" style="color:var(--fg-2)">${esc(pol.scope||'')}</td>
       <td class="desc">${esc(truncate(pol.condition||'',100))}</td>
     </tr>`).join('');
-    return `<details style="border-top:1px solid var(--line-2)">
-      <summary style="padding:11px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;user-select:none">
+    return `<div class="cat-section${k==='security'?' open':''}">
+      <button class="cat-btn${k==='security'?' on':''}" type="button">
+        <span class="chev">›</span>
         <span class="tag-pill" style="color:${catGroupColors[k]};min-width:84px;text-align:center">${catGroupLabel[k]}</span>
-        <span style="font-size:13px;font-weight:700;color:var(--navy)">${pols.length} polic${pols.length===1?'y':'ies'}</span>
-        <span style="font-size:11.5px;color:var(--muted);margin-left:auto">${pols.map(p=>esc(truncate(p.name,22))).slice(0,3).join(', ')}${pols.length>3?' …':''}</span>
-      </summary>
-      <table class="dt" style="margin:0"><thead><tr><th>Policy name</th><th>Scope</th><th>Condition</th></tr></thead><tbody>${rows}</tbody></table>
-    </details>`;
+        <span class="cat-title">${fmt(pols.length)} polic${pols.length===1?'y':'ies'}</span>
+        <span class="cat-sub">${pols.length ? pols.map(p=>esc(truncate(p.name,22))).slice(0,3).join(', ') + (pols.length>3?' ...':'') : 'No blocking policies in this category'}</span>
+      </button>
+      <div class="cat-body">
+        <table class="dt" style="margin:0"><thead><tr><th>Policy name</th><th>Scope</th><th>Condition</th></tr></thead><tbody>${rows||`<tr><td colspan="3" class="empty" style="padding:20px">No blocking policies in this category.</td></tr>`}</tbody></table>
+      </div>
+    </div>`;
   }).join('');
   const catPanel = blockPols.length ? `<div class="panel flush" id="polCatPanel">
     <div class="ph"><h3>Block policy catalog</h3><span class="meta">${fmt(blockPols.length)} policies · expand a category to see all</span></div>
@@ -1179,7 +1251,7 @@ function buildCuration(){
   return kpis + obs +
     `<div class="grid-3"><div class="span-2">${polPanel}</div>${reasonPanel}</div>` +
     `<div class="grid-2">${userPanel}${typePanel}</div>` +
-    uncoveredPanel + cta + riskPanel + catPanel +
+    insightPanels + uncoveredPanel + cta + riskPanel + catPanel +
     (() => {
       const g = DATA.governance || {};
       const ce = g.curation_policy_effectiveness || [];
@@ -1198,6 +1270,7 @@ function buildCuration(){
 /* ═══ XRAY TAB ═══ */
 function buildXray(){
   const v = DATA.violations || {}, sev = v.by_severity || {}, byType = v.by_type || {};
+  const ei = v.executive_insights || {};
   const uniqueFindings = (sev.critical||0)+(sev.high||0)+(sev.medium||0)+(sev.low||0);
   const sevDef = [['Critical','critical','var(--crit)'],['High','high','var(--high)'],['Medium','medium','var(--med)'],['Low','low','var(--low)']];
   const distTotal = uniqueFindings || 1;
@@ -1218,6 +1291,36 @@ function buildXray(){
     <div class="dist">${distBar||`<span style="background:var(--line-2);width:100%;color:var(--muted)">No findings</span>`}</div>
     <div class="sevlist">${sevRows}</div></div></div>`;
 
+  const sla = ei.sla_risk_backlog || {};
+  const slaBuckets = sla.buckets || [];
+  const maxSla = Math.max(1, ...slaBuckets.map(x=>x.hits||0));
+  const slaRows = slaBuckets.map(x=>`<div class="cov-row">
+    <div class="cov-rh"><b>${esc(x.label)}</b><span class="v">${fmt(x.issues)} issues · ${fmt(x.hits)} hits</span></div>
+    <div class="cov-track"><div class="cov-fill" style="width:${pctOf(x.hits,maxSla)}%;background:${x.label==='90+ days'?'var(--crit)':x.label==='31-90 days'?'var(--high)':'var(--med)'}"></div></div>
+  </div>`).join('');
+  const slaPanel = `<div class="panel flush"><div class="ph"><h3>SLA risk backlog</h3><span class="meta">${fmt(sla.sla_breach_issues)} beyond ${fmt(sla.sla_days||30)} days</span></div><div class="pbody">${slaRows||'<div class="cov-sub">No critical SLA backlog recorded.</div>'}</div></div>`;
+
+  const rr = ei.remediation_readiness || {};
+  const totalReadiness = (rr.fix_available_issues||0) + (rr.no_fix_issues||0) + (rr.unknown_issues||0);
+  const readinessPanel = `<div class="panel flush"><div class="ph"><h3>Remediation readiness</h3><span class="meta">critical issues</span></div><div class="pbody">
+    ${covRow('Fix available', rr.fix_available_issues, totalReadiness, 'var(--green)', `${fmt(rr.fix_available_hits)} artifact hits`)}
+    ${covRow('No fix recorded', rr.no_fix_issues, totalReadiness, 'var(--med)')}
+    ${covRow('Fix status unknown', rr.unknown_issues, totalReadiness, 'var(--muted)')}
+  </div></div>`;
+
+  const impact = ei.highest_impact_fixes || [];
+  const impactRows = impact.slice(0,6).map(x=>`<tr><td class="comp">${esc(shortComponent(x.component))}</td><td class="r"><span class="num">${fmt(x.critical_issues)}</span></td><td class="r"><span class="num">${fmt(x.hits)}</span></td><td class="r"><span class="num">${esc(x.hit_share_pct!=null?x.hit_share_pct+'%':'')}</span></td></tr>`).join('');
+  const impactPanel = `<div class="panel flush"><div class="ph"><h3>Highest-impact fixes</h3><span class="meta">components with the most critical hits</span></div>
+    <table class="dt"><thead><tr><th>Component</th><th class="r">Critical IDs</th><th class="r">Hits</th><th class="r">Share</th></tr></thead><tbody>${impactRows||`<tr><td colspan="4" class="empty" style="padding:20px">No fix clusters detected.</td></tr>`}</tbody></table></div>`;
+
+  const newCrit = ei.new_critical_introductions || {};
+  const newPanel = `<div class="panel flush"><div class="ph"><h3>New critical introductions</h3><span class="meta">period-over-period</span></div><div class="pbody">
+    <div class="sevr"><span class="lbl">New critical issues</span><span class="ct">${fmt(newCrit.new_issues)}</span></div>
+    <div class="sevr"><span class="lbl">New artifact hits</span><span class="ct">${fmt(newCrit.new_hits)}</span></div>
+    <div class="sevr"><span class="lbl">Existing critical issues</span><span class="ct">${fmt(newCrit.existing_issues)}</span></div>
+    ${newCrit.baseline_available ? '' : '<div class="cov-sub">Baseline becomes available after the next snapshot.</div>'}
+  </div></div>`;
+
   // top watch policies
   const tw = v.top_watch_policies || [];
   const maxW = Math.max(1, ...tw.map(x=>x.hits||0));
@@ -1225,6 +1328,17 @@ function buildXray(){
     <td class="r" style="width:150px"><div class="minibar"><div class="t"><div class="f" style="width:${pctOf(x.hits,maxW)}%;background:var(--navy-600)"></div></div><span class="num">${fmt(x.hits)}</span></div></td></tr>`).join('');
   const watchPanel = `<div class="panel flush"><div class="ph"><h3>Most-triggered watches</h3></div>
     <table class="dt"><thead><tr><th>Watch / policy</th><th>Type</th><th class="r">Hits</th></tr></thead><tbody>${watchRows||`<tr><td colspan="3" class="empty" style="padding:20px">No watch activity.</td></tr>`}</tbody></table></div>`;
+
+  const blind = ei.watch_blind_spots || [], blindMeta = ei.watch_blind_spots_meta || {};
+  const blindRows = blind.slice(0,8).map(x=>`<tr><td class="comp">${esc(x.repo)}</td><td class="r"><span class="num">${fmt(x.violation_count)}</span></td><td class="r"><span class="num">${fmt(x.critical_count)}</span></td><td><span class="sev ${x.risk_level==='critical'?'sev-crit':'sev-med'}">${esc(String(x.risk_level||'elevated').toUpperCase())}</span></td></tr>`).join('');
+  const blindPanel = `<div class="panel flush"><div class="ph"><h3>Watch blind spots</h3><span class="meta">repos with violations but no watch mapping</span></div>
+    ${blindRows ? `<table class="dt"><thead><tr><th>Repository</th><th class="r">Violations</th><th class="r">Critical</th><th>Risk</th></tr></thead><tbody>${blindRows}</tbody></table>` : `<div class="empty"><div class="ico">✓</div><b>No watch blind spots found</b><p>${esc(blindMeta.available === false ? (blindMeta.reason || 'Watch assignment details were not available.') : 'All mapped repositories with violations have watch coverage.')}</p></div>`}
+  </div>`;
+
+  const blast = ei.blast_radius || [];
+  const blastRows = blast.slice(0,8).map(x=>`<tr><td class="idcell">${esc(x.issue)}</td><td class="comp">${esc(shortComponent(x.component))}</td><td class="r"><span class="num">${fmt(x.repos)}</span></td><td class="r"><span class="num">${fmt(x.artifacts)}</span></td><td class="r"><span class="num">${fmt(x.hits)}</span></td></tr>`).join('');
+  const blastPanel = `<div class="panel flush"><div class="ph"><h3>Blast radius</h3><span class="meta">critical issues by repo and artifact spread</span></div>
+    <table class="dt"><thead><tr><th>Issue</th><th>Component</th><th class="r">Repos</th><th class="r">Artifacts</th><th class="r">Hits</th></tr></thead><tbody>${blastRows||`<tr><td colspan="5" class="empty" style="padding:20px">No blast-radius data recorded.</td></tr>`}</tbody></table></div>`;
 
   // Critical issues — sourced from Xray violations API, severity=Critical, enriched with JFrog Research descriptions
   const ci = v.critical_issues || [];
@@ -1242,7 +1356,7 @@ function buildXray(){
 
   const obs = v.observation ? `<div class="note"><b>What this means.</b> ${esc(v.observation)}</div>` : '';
 
-  // Xray policy effectiveness (moved from Governance tab)
+  // Xray policy effectiveness
   const g = DATA.governance || {}, l = DATA.license || {}, o = DATA.operational || {};
   const p2 = DATA.platform || {};
   const xe = g.xray_policy_effectiveness || g.policy_effectiveness || [];
@@ -1252,7 +1366,7 @@ function buildXray(){
   const xePanel = `<div class="panel flush"><div class="ph"><h3>Xray policy effectiveness</h3><span class="meta">violations triggered</span></div>
     <table class="dt"><thead><tr><th>Policy</th><th>Type</th><th class="r">Hits</th></tr></thead><tbody>${xeRows||`<tr><td colspan="3" class="empty" style="padding:20px">No data.</td></tr>`}</tbody></table></div>`;
 
-  // License + operational compliance (moved from Governance tab)
+  // License + operational compliance
   const licBlock = (l.total>0)
     ? `<div class="panel flush"><div class="ph"><h3>License compliance</h3><span class="meta">${fmt(l.total)} violations</span></div><div class="pbody">${(l.licenses||[]).slice(0,8).map(x=>`<div class="sevr"><span class="lbl">${esc(x.license||x.name||'License')}</span><span class="ct">${fmt(x.count||x.hits||0)}</span></div>`).join('')||'<div class="cov-sub">Detail available in Xray.</div>'}</div></div>`
     : `<div class="panel flush"><div class="ph"><h3>License compliance</h3></div><div class="empty"><div class="ico">\u2713</div><b>No license violations</b><p>No license-policy violations were reported in this window.</p></div></div>`;
@@ -1288,87 +1402,10 @@ function buildXray(){
     return '';
   })();
 
-  return kpis + obs + `<div class="grid-2 wide-l">${distPanel}${watchPanel}</div>` + ciPanel + xePanel + `<div class="grid-2">${licBlock}${opBlock}</div>` + repoPanel;
-}
-
-/* ═══ GOVERNANCE & COMPLIANCE TAB ═══ */
-function buildGovernance(){
-  const p = DATA.platform || {}, b = DATA.benefit || {};
-  const cmp = DATA.comparison || {}, tv = DATA.threat_velocity || {};
-
-  // platform inventory KPIs
-  const inv = `<div class="kpis">
-    <div class="kpi k-navy"><div class="n">${fmt(p.repos_total)}</div><div class="l">Repositories</div><div class="d">${fmt(p.repos_indexed)} indexed</div></div>
-    <div class="kpi k-info"><div class="n">${fmt(p.watches_total)}</div><div class="l">Watches</div><div class="d">${fmt(p.watches_active)} active</div></div>
-    <div class="kpi k-green"><div class="n">${fmt(p.policies_total)}</div><div class="l">Xray policies</div><div class="d">${fmt(p.policies_security)} security</div></div>
-    <div class="kpi k-med"><div class="n">${fmt(p.curation_policies_total)}</div><div class="l">Curation policies</div><div class="d">${fmt(p.curation_policies_block)} blocking</div></div>
-    <div class="kpi k-crit"><div class="n">${fmt(p.curation_policies_dry_run)}</div><div class="l">In dry-run</div><div class="d">not enforced</div></div>
-  </div>`;
-
-  // trend / comparison
-  const trendNote = (!cmp.available && !tv.available)
-    ? `<div class="note"><b>Trend comparison.</b> This run sets your baseline — period-over-period deltas and threat-velocity charts become available from the next validated report. ${esc(tv.trend_summary||'')}</div>`
-    : '';
-
-  // benefit
-  const benefitNote = b.observation ? `<div class="note good"><b>Value delivered.</b> ${esc(b.observation)}</div>` : '';
-
-  // ── Scoring / methodology reference ─────────────────────────────────────
-  const bands = [
-    {range:'75 – 100', label:'Critical', color:'var(--crit)', bg:'var(--crit-tint)', note:'Immediate action required. Multiple critical violations or near-zero gate coverage.'},
-    {range:'50 – 74',  label:'Elevated', color:'var(--med)',  bg:'var(--med-tint)',  note:'Significant exposure or coverage gaps. Remediation plan needed within the period.'},
-    {range:'25 – 49',  label:'Moderate', color:'var(--low)',  bg:'var(--low-tint)',  note:'Manageable risk. Enforcement gaps or medium/high findings require prioritization.'},
-    {range:'0 – 24',   label:'Low',      color:'var(--green)',bg:'var(--green-tint)',note:'Strong posture. Continue current controls and maintain coverage.'},
-  ];
-  const sevRows2 = [['CRITICAL','var(--crit)','Immediate threat. Remote code execution, privilege escalation.'],
-    ['HIGH','var(--high)','Significant vulnerability. Patch or mitigate within days.'],
-    ['MEDIUM','var(--med)','Moderate risk. Schedule remediation in current sprint.'],
-    ['LOW','var(--low)','Low impact. Address in backlog.'],
-    ['UNKNOWN','var(--muted)','Severity not yet assessed by JFrog Research.'],
-  ];
-  const curationTypes = [['Malicious','var(--crit)','Package is a known malicious artifact. Blocked unconditionally.'],
-    ['Security','var(--high)','CVE severity exceeds configured threshold (e.g. CVSS ≥ 9.0).'],
-    ['License','var(--info)','Package license conflicts with your legal policy.'],
-    ['Operational','var(--med)','Package is immature, deprecated, or end-of-life.'],
-  ];
-  const bandRows2 = bands.map(b=>`<tr>
-    <td style="font-family:var(--mono);font-size:11px;color:var(--fg-2)">${esc(b.range)}</td>
-    <td><span class="sev" style="background:${b.bg};color:${b.color}">${esc(b.label.toUpperCase())}</span></td>
-    <td style="font-size:12px;color:var(--fg-2)">${esc(b.note)}</td>
-  </tr>`).join('');
-  const sevRows2html = sevRows2.map(s=>`<tr>
-    <td><span class="sev" style="background:var(--line-2);color:${s[1]}">${esc(s[0])}</span></td>
-    <td style="font-size:12px;color:var(--fg-2)">${esc(s[2])}</td>
-  </tr>`).join('');
-  const curRows2 = curationTypes.map(s=>`<tr>
-    <td><span class="sev" style="background:var(--line-2);color:${s[1]}">${esc(s[0].toUpperCase())}</span></td>
-    <td style="font-size:12px;color:var(--fg-2)">${esc(s[2])}</td>
-  </tr>`).join('');
-
-  const methodPanel = `<div class="panel" style="margin-bottom:14px">
-    <div class="ph"><h3>Risk &amp; severity methodology</h3><span class="meta">How to read this report</span></div>
-    <div class="pbody">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px">
-        <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px">Posture signals</div>
-          <div style="font-family:var(--mono);background:var(--canvas);border:1px solid var(--line-2);border-radius:var(--r-m);padding:10px 12px;font-size:11px;line-height:1.8">
-            <div style="color:var(--navy);font-weight:700;margin-bottom:6px">Three independent signals</div>
-            <div><b>Severity mix %</b> — weighted toward critical (4×crit + 2×high + 1×med)</div>
-            <div><b>Violation volume</b> — raw count, no normalisation</div>
-            <div><b>Coverage gap %</b> — repos without Xray indexing</div>
-            <div style="margin-top:6px;border-top:1px solid var(--line-2);padding-top:6px;color:var(--muted)">No composite weighting — operators define their own risk threshold</div>
-          </div>
-        </div>
-        <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px">Risk score bands</div>
-          <table class="dt" style="font-size:12px"><tbody>${bandRows2}</tbody></table></div>
-        <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px">Xray severity levels</div>
-          <table class="dt" style="font-size:12px"><tbody>${sevRows2html}</tbody></table></div>
-        <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px">Curation block categories</div>
-          <table class="dt" style="font-size:12px"><tbody>${curRows2}</tbody></table></div>
-      </div>
-    </div>
-  </div>`;
-
-  return inv + trendNote + benefitNote + methodPanel;
+  return kpis + obs + `<div class="grid-2 wide-l">${slaPanel}${readinessPanel}</div>` +
+    `<div class="grid-2">${impactPanel}${newPanel}</div>` +
+    `<div class="grid-2 wide-l">${distPanel}${watchPanel}</div>` + ciPanel +
+    `<div class="grid-2">${blindPanel}${blastPanel}</div>` + xePanel + `<div class="grid-2">${licBlock}${opBlock}</div>` + repoPanel;
 }
 
 /* ═══ RECOMMENDATIONS TAB ═══ */
@@ -1442,6 +1479,14 @@ window.filterRepos = function(el){
       const panel = document.getElementById(btn.dataset.target);
       if (panel) panel.classList.toggle('expanded');
       btn.classList.toggle('expanded');
+    });
+  });
+  root.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const section = btn.closest('.cat-section');
+      if (!section) return;
+      section.classList.toggle('open');
+      btn.classList.toggle('on');
     });
   });
 })();

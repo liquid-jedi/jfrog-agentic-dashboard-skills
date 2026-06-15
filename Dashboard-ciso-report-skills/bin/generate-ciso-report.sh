@@ -485,6 +485,428 @@ PY
 echo "=== enrich and transform ==="
 CISO_ENRICH_ALLOW_EXISTING_TMP=true "$SKILL_DIR/internal/enrich-ciso-datajson.sh" "$SERVER_ID" /tmp/ciso-data.json /tmp/ciso-data.json
 
+echo "=== derive executive insights ==="
+python3 - <<'PY'
+import json, os, re
+from collections import Counter, defaultdict
+from datetime import datetime, timezone
+from pathlib import Path
+
+def load_json(path, default):
+    try:
+        if os.path.isfile(path) and os.path.getsize(path) > 0:
+            return json.load(open(path))
+    except Exception:
+        return default
+    return default
+
+def as_rows(body, keys):
+    if isinstance(body, list):
+        return body
+    if isinstance(body, dict):
+        for key in keys:
+            val = body.get(key)
+            if isinstance(val, list):
+                return val
+        for key in ("data", "items", "results"):
+            val = body.get(key)
+            if isinstance(val, list):
+                return val
+    return []
+
+def load_violations():
+    rows = []
+    for path in sorted(Path("/tmp").glob("ciso-violations-page-*.json")):
+        rows.extend(as_rows(load_json(str(path), {}), ("violations", "data")))
+    if rows:
+        return rows
+    for path in ("/tmp/ciso-violations.json", "/tmp/ciso-violations-clean.json", "/tmp/ciso-violations-parsed.json"):
+        rows = as_rows(load_json(path, {}), ("violations", "data"))
+        if rows:
+            return rows
+    return []
+
+def parse_time(value):
+    if not value:
+        return None
+    if isinstance(value, (int, float)):
+        try:
+            return datetime.fromtimestamp(value / 1000 if value > 10_000_000_000 else value, tz=timezone.utc)
+        except Exception:
+            return None
+    text = str(value).strip()
+    if not text:
+        return None
+    for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S.%f%z", "%Y-%m-%dT%H:%M:%S%z"):
+        try:
+            return datetime.strptime(text.replace("Z", "+0000"), fmt)
+        except Exception:
+            pass
+    try:
+        return datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except Exception:
+        return None
+
+def walk(obj):
+    if isinstance(obj, dict):
+        yield obj
+        for value in obj.values():
+            yield from walk(value)
+    elif isinstance(obj, list):
+        for value in obj:
+            yield from walk(value)
+
+def first_text(row, keys):
+    for obj in walk(row):
+        for key in keys:
+            val = obj.get(key) if isinstance(obj, dict) else None
+            if isinstance(val, str) and val.strip():
+                return val.strip()
+            if isinstance(val, (int, float)):
+                return str(val)
+    return ""
+
+def values_for_keys(row, keys):
+    vals = []
+    for obj in walk(row):
+        for key, val in obj.items():
+            if key.lower() not in keys:
+                continue
+            if isinstance(val, str) and val.strip():
+                vals.append(val.strip())
+            elif isinstance(val, list):
+                for item in val:
+                    if isinstance(item, str) and item.strip():
+                        vals.append(item.strip())
+                    elif isinstance(item, dict):
+                        vals.extend(values_for_keys(item, keys))
+            elif isinstance(val, dict):
+                vals.extend(values_for_keys(val, keys))
+    return vals
+
+def issue_id(row):
+    return first_text(row, ("cve", "issue_id", "issueId", "xray_id", "xrayId", "id")) or "unknown"
+
+def severity(row):
+    return first_text(row, ("severity", "severity_level", "severityLevel")).lower()
+
+def component(row):
+    comps = values_for_keys(row, {"infected_components", "infectedcomponents", "components", "component", "package_name", "packagename"})
+    for val in comps:
+        if val and val.lower() not in ("unknown", "n/a"):
+            return val
+    return "unknown"
+
+def artifact_id(row):
+    return first_text(row, ("artifact_path", "artifactPath", "artifact", "path", "location", "impacted_artifact", "impactedArtifact", "sha256", "name"))
+
+def repo_from_row(row, repo_names):
+    direct = first_text(row, ("repo", "repo_key", "repoKey", "repository", "repo_name", "repoName"))
+    if direct:
+        return direct.split("/")[0]
+    candidates = []
+    for obj in walk(row):
+        for key, val in obj.items():
+            lk = key.lower()
+            if any(tok in lk for tok in ("repo", "artifact", "path", "location")) and isinstance(val, str):
+                candidates.append(val)
+    if repo_names:
+        for text in candidates:
+            for name in repo_names:
+                if text == name or text.startswith(name + "/") or f"/{name}/" in text:
+                    return name
+    for text in candidates:
+        if "/" in text and not text.startswith(("http://", "https://")):
+            return text.split("/")[0]
+    return "unknown"
+
+def extract_repo_names():
+    names = set()
+    for path in ("/tmp/ciso-repos-all.json", "/tmp/ciso-repos-remote.json"):
+        for row in as_rows(load_json(path, {}), ("data", "repositories")):
+            if not isinstance(row, dict):
+                continue
+            name = row.get("key") or row.get("repoKey") or row.get("name") or row.get("repo_key")
+            if name:
+                names.add(str(name))
+    return names
+
+def extract_watch_mapping(repo_names):
+    watches = as_rows(load_json("/tmp/ciso-watches.json", {}), ("data", "watches"))
+    mapping = defaultdict(list)
+    exposed = False
+    for watch in watches:
+        if not isinstance(watch, dict):
+            continue
+        name = str(watch.get("name") or watch.get("watch_name") or watch.get("watchName") or watch.get("id") or "Unnamed watch")
+        found = set()
+        for obj in walk(watch):
+            if not isinstance(obj, dict):
+                continue
+            for key, val in obj.items():
+                lk = key.lower()
+                if lk not in {"repo", "repos", "repository", "repositories", "repokey", "repo_key", "repo_name", "reponame"}:
+                    continue
+                exposed = True
+                vals = val if isinstance(val, list) else [val]
+                for item in vals:
+                    if isinstance(item, str):
+                        found.add(item)
+                    elif isinstance(item, dict):
+                        nested = item.get("key") or item.get("name") or item.get("repoKey") or item.get("repo_key")
+                        if nested:
+                            found.add(str(nested))
+        if repo_names:
+            found = {r for r in found if r in repo_names}
+        for repo in found:
+            mapping[repo].append(name)
+    return mapping, bool(exposed)
+
+def fix_state(row):
+    fix_keys = {"fix_versions", "fixed_versions", "fixed_version", "fixedversion", "fixedversions", "fix_version", "fixversion"}
+    vals = values_for_keys(row, fix_keys)
+    if vals:
+        return "available", sorted(set(vals))[:5]
+    text = " ".join(str(first_text(row, ("remediation", "recommendation", "summary", "description"))).lower().split())
+    if re.search(r"fixed in|upgrade to|version .* fixes|fix version", text):
+        return "available", []
+    if "no fix" in text or "not fixed" in text:
+        return "none", []
+    return "unknown", []
+
+def prior_snapshot():
+    local_root = os.environ.get("LOCAL_ROOT", "")
+    server_slug = os.environ.get("SERVER_SLUG", "")
+    report_type_slug = os.environ.get("REPORT_TYPE_SLUG", "")
+    report_date = os.environ.get("REPORT_DATE", "")
+    scan_dir = Path(local_root) / server_slug / report_type_slug
+    if not scan_dir.is_dir():
+        return {}
+    candidates = sorted(p for p in scan_dir.glob("*/snapshot.json") if p.parent.name != report_date and not p.parent.name.startswith("rerun-"))
+    return load_json(str(candidates[-1]), {}) if candidates else {}
+
+data = load_json("/tmp/ciso-data.json", {})
+violations = [row for row in load_violations() if isinstance(row, dict)]
+repo_names = extract_repo_names()
+watch_map, watch_assignment_exposed = extract_watch_mapping(repo_names)
+meta = data.get("meta") or {}
+period_end = parse_time(meta.get("period_end") or meta.get("generated")) or datetime.now(timezone.utc)
+prev = prior_snapshot()
+prev_critical_ids = set(((prev.get("violations") or {}).get("critical_ids") or []))
+
+critical_rows = [row for row in violations if severity(row).startswith("crit")]
+issue_stats = defaultdict(lambda: {"hits": 0, "repos": set(), "artifacts": set(), "component": "unknown", "first_seen": None, "description": "", "fix_versions": set(), "fix_statuses": Counter()})
+repo_stats = defaultdict(lambda: {"violations": 0, "critical": 0})
+component_stats = defaultdict(lambda: {"critical_issues": set(), "hits": 0})
+
+for row in violations:
+    repo = repo_from_row(row, repo_names)
+    rid = issue_id(row)
+    art = artifact_id(row)
+    repo_stats[repo]["violations"] += 1
+    if severity(row).startswith("crit"):
+        repo_stats[repo]["critical"] += 1
+        stat = issue_stats[rid]
+        stat["hits"] += 1
+        if repo != "unknown":
+            stat["repos"].add(repo)
+        if art:
+            stat["artifacts"].add(art)
+        comp = component(row)
+        if stat["component"] == "unknown" and comp != "unknown":
+            stat["component"] = comp
+        created = parse_time(first_text(row, ("created", "created_at", "createdAt", "first_seen", "firstSeen", "updated")))
+        if created and (stat["first_seen"] is None or created < stat["first_seen"]):
+            stat["first_seen"] = created
+        stat["description"] = stat["description"] or str(row.get("description") or row.get("summary") or "See Xray console")[:220]
+        fstate, fvers = fix_state(row)
+        stat["fix_statuses"][fstate] += 1
+        stat["fix_versions"].update(fvers)
+        component_stats[comp]["critical_issues"].add(rid)
+        component_stats[comp]["hits"] += 1
+
+critical_issues = []
+sla_breach_issues = 0
+bucket_defs = [("0-7 days", 0, 7), ("8-30 days", 8, 30), ("31-90 days", 31, 90), ("90+ days", 91, None)]
+buckets = {label: {"label": label, "issues": 0, "hits": 0} for label, _, _ in bucket_defs}
+fix_counts = Counter()
+fix_hits = Counter()
+new_issues = new_hits = existing_issues = 0
+
+for rid, stat in issue_stats.items():
+    first = stat["first_seen"]
+    days = max(0, (period_end - first).days) if first else 0
+    if days > 30:
+        sla_breach_issues += 1
+    for label, low, high in bucket_defs:
+        if days >= low and (high is None or days <= high):
+            buckets[label]["issues"] += 1
+            buckets[label]["hits"] += stat["hits"]
+            break
+    if stat["fix_statuses"].get("available"):
+        fstatus = "available"
+    elif stat["fix_statuses"] and not stat["fix_statuses"].get("unknown"):
+        fstatus = "none"
+    else:
+        fstatus = "unknown"
+    fix_counts[fstatus] += 1
+    fix_hits[fstatus] += stat["hits"]
+    is_new = bool(prev_critical_ids) and rid not in prev_critical_ids
+    if is_new:
+        new_issues += 1
+        new_hits += stat["hits"]
+    else:
+        existing_issues += 1
+    critical_issues.append({
+        "id": rid,
+        "description": stat["description"],
+        "component": stat["component"],
+        "hits": stat["hits"],
+        "repo_count": len(stat["repos"]),
+        "artifact_count": len(stat["artifacts"]),
+        "first_seen": first.date().isoformat() if first else "",
+        "days_open": days,
+        "fix_status": fstatus,
+        "fix_available": fstatus == "available",
+        "fix_versions": sorted(stat["fix_versions"])[:5],
+        "exploit_status": "unknown",
+        "affected_environments": [],
+        "playbook_link": None,
+    })
+
+critical_issues.sort(key=lambda row: (-row["hits"], -row["days_open"], row["id"]))
+
+blind_spots = []
+for repo, stat in repo_stats.items():
+    if repo == "unknown" or stat["violations"] <= 0:
+        continue
+    names = watch_map.get(repo, [])
+    if names:
+        continue
+    risk = "critical" if stat["critical"] else "elevated"
+    blind_spots.append({"repo": repo, "violation_count": stat["violations"], "critical_count": stat["critical"], "watch_count": 0, "watch_names": [], "risk_level": risk})
+blind_spots.sort(key=lambda row: (-row["critical_count"], -row["violation_count"], row["repo"]))
+
+total_critical_hits = sum(stat["hits"] for stat in issue_stats.values()) or 1
+highest_impact = []
+for comp, stat in component_stats.items():
+    if comp == "unknown":
+        continue
+    highest_impact.append({
+        "component": comp,
+        "critical_issues": len(stat["critical_issues"]),
+        "hits": stat["hits"],
+        "hit_share_pct": round(stat["hits"] / total_critical_hits * 100, 1),
+    })
+highest_impact.sort(key=lambda row: (-row["hits"], row["component"]))
+
+blast = [{
+    "issue": rid,
+    "repos": len(stat["repos"]),
+    "artifacts": len(stat["artifacts"]),
+    "component": stat["component"],
+    "hits": stat["hits"],
+} for rid, stat in issue_stats.items()]
+blast.sort(key=lambda row: (-row["repos"], -row["artifacts"], -row["hits"]))
+
+v = data.setdefault("violations", {})
+v["critical_issues"] = critical_issues[:50]
+v["executive_insights"] = {
+    "sla_risk_backlog": {"buckets": [buckets[label] for label, _, _ in bucket_defs], "sla_breach_issues": sla_breach_issues, "sla_days": 30},
+    "remediation_readiness": {
+        "fix_available_issues": fix_counts.get("available", 0),
+        "fix_available_hits": fix_hits.get("available", 0),
+        "no_fix_issues": fix_counts.get("none", 0),
+        "unknown_issues": fix_counts.get("unknown", 0),
+    },
+    "highest_impact_fixes": highest_impact[:10],
+    "new_critical_introductions": {"new_issues": new_issues, "new_hits": new_hits, "existing_issues": existing_issues, "baseline_available": bool(prev_critical_ids)},
+    "watch_blind_spots": blind_spots[:25],
+    "watch_blind_spots_meta": {"available": watch_assignment_exposed, "reason": "Watch payload did not expose repository assignments" if not watch_assignment_exposed else ""},
+    "blast_radius": blast[:10],
+}
+
+c = data.setdefault("curation", {})
+p = data.get("platform") or {}
+cur_state = (p.get("curation_state") or c.get("curation_state") or {})
+by_type = cur_state.get("by_package_type") or []
+supported_names = {"docker", "maven", "npm", "pypi", "go", "nuget", "conan", "composer", "debian", "rpm", "rubygems"}
+gate_gaps = []
+type_violations = Counter()
+for repo, stat in repo_stats.items():
+    low = repo.lower()
+    for name in supported_names:
+        if name in low:
+            type_violations[name] += stat["violations"]
+            break
+for row in by_type:
+    if not isinstance(row, dict):
+        continue
+    ptype = str(row.get("package_type") or row.get("type") or "Unknown")
+    supported = row.get("supported")
+    is_supported = supported is True or (supported is None and ptype.lower() in supported_names)
+    if not is_supported:
+        continue
+    total = int(row.get("supported_remote_total") or row.get("remote_total") or row.get("total") or 0)
+    connected = int(row.get("supported_connected") or row.get("connected") or 0)
+    unconnected = max(0, total - connected)
+    if unconnected <= 0:
+        continue
+    known = int(row.get("violations") or row.get("known_violations") or type_violations.get(ptype.lower(), 0))
+    gate_gaps.append({"package_type": ptype, "supported": True, "unconnected": unconnected, "connected": connected, "total": total, "known_violations": known, "priority": "P1" if known or unconnected >= 5 else "P2"})
+gate_gaps.sort(key=lambda row: (row["priority"], -row["known_violations"], -row["unconnected"], row["package_type"]))
+
+policies = as_rows(load_json("/tmp/ciso-curation-policies.json", {}), ("data", "policies"))
+dry_run_names = []
+malicious_policies = 0
+for pol in policies:
+    if not isinstance(pol, dict):
+        continue
+    text = json.dumps(pol).lower()
+    name = str(pol.get("name") or pol.get("policy_name") or pol.get("id") or "Unnamed policy")
+    if "dry" in text and "run" in text:
+        dry_run_names.append(name)
+    if "malicious" in text:
+        malicious_policies += 1
+audit_rows = as_rows(load_json("/tmp/ciso-curation.json", {}), ("data", "items"))
+would_block = 0
+malicious_blocks = 0
+malicious_pkgs = Counter()
+for row in audit_rows:
+    if not isinstance(row, dict):
+        continue
+    text = json.dumps(row).lower()
+    action = str(row.get("action") or row.get("status") or "").lower()
+    if "dry" in text and ("block" in text or "violation" in text):
+        would_block += 1
+    if "malicious" in text and action == "blocked":
+        malicious_blocks += 1
+        pkg = first_text(row, ("package_name", "packageName", "package", "name")) or "unknown"
+        malicious_pkgs[pkg] += 1
+c["executive_insights"] = {
+    "gate_coverage_gaps": gate_gaps[:15],
+    "enforcement_opportunity": {
+        "dry_run_policies": int(p.get("curation_policies_dry_run") or len(set(dry_run_names))),
+        "would_have_blocked": would_block,
+        "top_policies": [{"policy": name, "events": 0} for name in sorted(set(dry_run_names))[:5]],
+    },
+    "malicious_package_defense": {
+        "malicious_blocks": malicious_blocks or int((c.get("by_reason") or {}).get("malicious") or 0),
+        "malicious_policies": malicious_policies,
+        "top_packages": [{"package": pkg, "blocks": count} for pkg, count in malicious_pkgs.most_common(5)],
+    },
+}
+
+json.dump(data, open("/tmp/ciso-data.json", "w"), indent=2)
+print("executive insights:", {
+    "critical_issues": len(critical_issues),
+    "sla_breach": sla_breach_issues,
+    "fix_available": fix_counts.get("available", 0),
+    "watch_blind_spots": len(blind_spots),
+    "gate_gaps": len(gate_gaps),
+})
+PY
+
 echo "=== build recommendations ==="
 python3 - <<'PY'
 import json
@@ -494,8 +916,51 @@ data = json.load(open("/tmp/ciso-data.json"))
 p  = data.get("platform") or {}
 c  = data.get("curation") or {}
 v  = data.get("violations") or {}
+vei = v.get("executive_insights") or {}
+cei = (c.get("executive_insights") or {})
 
 recs = []
+
+sla = vei.get("sla_risk_backlog") or {}
+if (sla.get("sla_breach_issues") or 0) > 0:
+    recs.append({
+        "priority": "P1",
+        "effort": "medium",
+        "score": 96,
+        "text": f"Clear {sla.get('sla_breach_issues')} critical issues beyond the {sla.get('sla_days', 30)}-day SLA",
+        "detail": "Impact: aged critical findings are the highest executive accountability risk. Next step: assign owners to the oldest critical XRAY IDs and track closure weekly."
+    })
+
+rr = vei.get("remediation_readiness") or {}
+if (rr.get("fix_available_issues") or 0) > 0:
+    recs.append({
+        "priority": "P1",
+        "effort": "medium",
+        "score": 94,
+        "text": f"Patch {rr.get('fix_available_issues')} critical issues with known fixes",
+        "detail": f"Impact: these fixes remove {rr.get('fix_available_hits', 0)} artifact hits without waiting for compensating controls. Next step: prioritize components in Highest-Impact Fixes."
+    })
+
+blind = vei.get("watch_blind_spots") or []
+if blind:
+    recs.append({
+        "priority": "P1",
+        "effort": "low",
+        "score": 92,
+        "text": f"Assign watches to {len(blind)} repositories with violations",
+        "detail": f"Impact: the top blind spot ({blind[0].get('repo')}) has {blind[0].get('violation_count')} violations and no watch mapping. Next step: attach the repository to an active Xray watch."
+    })
+
+gate_gaps = cei.get("gate_coverage_gaps") or []
+if gate_gaps:
+    total_unconnected = sum(g.get("unconnected") or 0 for g in gate_gaps)
+    recs.append({
+        "priority": "P2",
+        "effort": "low",
+        "score": 84,
+        "text": f"Connect {total_unconnected} supported remotes to the Curation gate",
+        "detail": f"Impact: supported remotes can bypass policy checks today, led by {gate_gaps[0].get('package_type')}. Next step: connect these repositories in Curation repository settings."
+    })
 
 # ── P1: top critical XRAY IDs (group by shared component/package keyword) ─────
 critical_issues = v.get("critical_issues") or []
