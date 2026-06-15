@@ -862,6 +862,12 @@ function severityCounts(sev){
   sev = sev || {};
   return `C ${fmt(sev.critical)} | H ${fmt(sev.high)} | M ${fmt(sev.medium)} | L ${fmt(sev.low)}`;
 }
+function countDelta(val, label){
+  if (val == null) return `<span class="sig-delta sig-no-prior">No prior period</span>`;
+  if (val === 0) return `<span class="sig-delta sig-no-prior">No change</span>`;
+  const up = val > 0;
+  return `<span class="sig-delta ${up ? 'sig-up-bad' : 'sig-dn-good'}">${up ? '▲' : '▼'}${fmt(Math.abs(val))} ${esc(label||'')}</span>`;
+}
 
 /* ── derive prioritized actions from the data ── */
 function computeActions(){
@@ -951,11 +957,12 @@ function buildBriefing(){
   }
 
   // Posture signals strip (replaces gauge)
+  const criticalDelta = cmp.available && cmp.violations ? cmp.violations.critical_delta : null;
   const signals = `<div class="posture-signals">
     <div class="sig-item">
-      <div class="sig-val">${sig.severity_mix != null ? sig.severity_mix + '<small>%</small>' : '—'}</div>
-      <div class="sig-label">Severity mix</div>
-      <div class="sig-sub">${severityCounts(sev)}${sigDelta(sd.severity_mix, false)}</div>
+      <div class="sig-val">${fmt(sev.critical)}<small>C</small> / ${fmt(sev.high)}<small>H</small></div>
+      <div class="sig-label">Critical / high findings</div>
+      <div class="sig-sub">M ${fmt(sev.medium)} | L ${fmt(sev.low)}${countDelta(criticalDelta, 'critical')}</div>
     </div>
     <div class="sig-sep"></div>
     <div class="sig-item">
@@ -1009,6 +1016,7 @@ function buildOverview(){
   const cn = connStats();
   const sig = v.posture_signals || {};
   const sd  = (DATA.comparison || {}).signal_deltas || {};
+  const cmp = DATA.comparison || {};
 
   // Attention strip — top 3 actions, bleeds full-width
   const allActions = computeActions();
@@ -1028,13 +1036,8 @@ function buildOverview(){
     <div class="act-grid">${topCards}</div>
   </div>`;
 
-  // Severity-mix delta badge
-  const sevMixDelta = sd.severity_mix;
-  const sevMixSub = sevMixDelta != null
-    ? (sevMixDelta > 0 ? `▲${sevMixDelta} vs prior` : sevMixDelta < 0 ? `▼${Math.abs(sevMixDelta)} vs prior` : 'No change vs prior')
-    : severityCounts(sev);
   const kpis = `<div class="kpis">
-    <div class="kpi k-navy"><div class="n">${sig.severity_mix != null ? sig.severity_mix + '<small>%</small>' : '—'}</div><div class="l">Severity mix</div><div class="d">${sevMixSub}</div></div>
+    <div class="kpi k-navy"><div class="n">${fmt(sev.critical)}<small>C</small> / ${fmt(sev.high)}<small>H</small></div><div class="l">Critical / High</div><div class="d">${severityCounts(sev)}</div></div>
     <div class="kpi k-green"><div class="n">${fmt(c.blocked)}</div><div class="l">Blocked at gate</div><div class="d">${pctOf(c.blocked,c.total)<1?'<1':pctOf(c.blocked,c.total)}% of requests</div></div>
     <div class="kpi k-crit"><div class="n">${fmt(sev.critical)}</div><div class="l">Critical inside</div><div class="d">of ${fmt(v.total)} total</div></div>
     <div class="kpi k-info"><div class="n">${pctOf(p.repos_indexed,p.repos_total)}<small>%</small></div><div class="l">Repos indexed</div><div class="d">${fmt(p.repos_indexed)} / ${fmt(p.repos_total)}</div></div>
@@ -1049,6 +1052,24 @@ function buildOverview(){
     <div class="kpi k-med insight-card"><div class="n">${fmt(blind.length)}</div><div class="l">Watch blind spots</div><div class="d">repos with violations and no watch</div></div>
     <div class="kpi k-info insight-card"><div class="n">${fmt(gapCount)}</div><div class="l">Gate coverage gaps</div><div class="d">supported remotes not gated</div></div>
   </div>`;
+
+  const comparisonPanel = (() => {
+    if (!cmp.available) return `<div class="note"><b>Comparison baseline.</b> No prior ${esc((DATA.meta&&DATA.meta.report_type)||'report')} snapshot was found for this server and report type. The next run will compare against this snapshot.</div>`;
+    const cv = cmp.violations || {}, cc = cmp.curation || {};
+    const deltaCell = (val, goodWhenDown) => {
+      if (val == null) return '<span class="num" style="color:var(--muted)">—</span>';
+      const up = val > 0, good = goodWhenDown ? !up : up;
+      const color = val === 0 ? 'var(--muted)' : good ? 'var(--green-700)' : 'var(--crit)';
+      return `<span class="num" style="color:${color}">${val>0?'+':''}${fmt(val)}</span>`;
+    };
+    return `<div class="panel flush"><div class="ph"><h3>Compared with previous report</h3><span class="meta">baseline ${esc(cmp.previous_date||'prior snapshot')}</span></div>
+      <table class="dt"><thead><tr><th>Metric</th><th class="r">Current</th><th class="r">Previous</th><th class="r">Delta</th></tr></thead><tbody>
+        <tr><td>Critical findings</td><td class="r"><span class="num">${fmt(cv.critical)}</span></td><td class="r"><span class="num">${fmt(cv.critical_previous)}</span></td><td class="r">${deltaCell(cv.critical_delta, true)}</td></tr>
+        <tr><td>Total violations</td><td class="r"><span class="num">${fmt(cv.total)}</span></td><td class="r"><span class="num">${fmt(cv.total_previous)}</span></td><td class="r">${deltaCell(cv.total_delta, true)}</td></tr>
+        <tr><td>Blocked at gate</td><td class="r"><span class="num">${fmt(cc.blocked)}</span></td><td class="r"><span class="num">${fmt(cc.blocked_previous)}</span></td><td class="r">${deltaCell(cc.blocked_delta, false)}</td></tr>
+        <tr><td>Requests screened</td><td class="r"><span class="num">${fmt(cc.total)}</span></td><td class="r"><span class="num">${fmt(cc.total_previous)}</span></td><td class="r">${deltaCell(cc.total_delta, false)}</td></tr>
+      </tbody></table></div>`;
+  })();
 
   // top critical exposure — join top_cves with components from violation_details
   const compMap = {};
@@ -1074,7 +1095,7 @@ function buildOverview(){
   </div></div>`;
 
   const obs = (DATA.curation && DATA.curation.observation) || '';
-  return attnBlock + kpis + insights + `<div class="grid-2 wide-l">${topPanel}${covPanel}</div>`;
+  return attnBlock + kpis + insights + comparisonPanel + `<div class="grid-2 wide-l">${topPanel}${covPanel}</div>`;
 }
 function covRow(label, a, b, color, subOverride){
   const pc = pctOf(a, b);
@@ -1434,7 +1455,7 @@ function buildFooter(){
   const m = DATA.meta || {};
   return `<div class="footer">
     <b>${esc((m.report_type||'Weekly'))} Security Report</b> · ${esc(m.host||m.server_id||'')} · ${esc(m.date_from||'')} – ${esc(m.date_to||'')} · generated ${esc(m.generated||'')}.<br>
-    Curation figures from package-gate audit events; Xray figures from the violations API for this window. Posture signals (severity mix, violation volume, coverage gap) are independent measures — no composite weighting applied. Schema ${esc(m.schema_version||'')}.
+    Curation figures from package-gate audit events; Xray figures from the violations API for this window. Posture signals are independent measures — no composite weighting applied. Schema ${esc(m.schema_version||'')}.
   </div>`;
 }
 

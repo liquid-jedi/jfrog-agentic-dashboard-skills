@@ -1099,10 +1099,28 @@ if prior_snap_path:
             'critical_delta': delta((dv.get('by_severity') or {}).get('critical', 0), pv.get('critical', 0)),
         },
     }
-    # Signal deltas — compare posture signals against prior snapshot if stored
-    prev_signals = prev.get('posture_signals', {})
+    # Signal deltas — compare posture signals against prior snapshot if stored.
+    # Older snapshots predate posture_signals, so derive comparable values where possible.
+    def derived_signals_from_data(doc):
+        vv = doc.get('violations') or {}
+        pp = doc.get('platform') or {}
+        sev = vv.get('by_severity') or {}
+        crit = int(sev.get('critical') or vv.get('critical') or 0)
+        high = int(sev.get('high') or vv.get('high') or 0)
+        med = int(sev.get('medium') or vv.get('medium') or 0)
+        low = int(sev.get('low') or vv.get('low') or 0)
+        total = crit + high + med + low
+        repos_total = int(pp.get('repos_total') or 0)
+        repos_indexed = int(pp.get('repos_indexed') or 0)
+        return {
+            'severity_mix': round((crit*4 + high*2 + med*1) / (total*4) * 100, 1) if total else None,
+            'violation_volume': vv.get('total'),
+            'coverage_gap': round((1 - repos_indexed / repos_total) * 100, 1) if repos_total else None,
+        }
+    prev_signals = prev.get('posture_signals') or derived_signals_from_data(prev)
     curr_signals = (dv.get('posture_signals') or
-                    (data.get('violations') or {}).get('posture_signals') or {})
+                    (data.get('violations') or {}).get('posture_signals') or
+                    derived_signals_from_data(data))
     def sig_delta(curr, prev_v):
         if curr is None or prev_v is None: return None
         return round(curr - prev_v, 1)
