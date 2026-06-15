@@ -161,6 +161,7 @@ The agent must not manually delete prior runtime files at the start of a run. Th
 | "for April" / "for March" | monthly | That month |
 | "first week of May" | weekly | May 1 00:00:00Z through May 7 23:59:59Z |
 | "second week of June" | weekly | June 8 00:00:00Z through June 14 23:59:59Z |
+| "fifth week of May" | weekly | May 29 00:00:00Z through May 31 23:59:59Z |
 | Custom dates | custom | As specified |
 
 For historical weekly prompts, set `DATE_FROM` and `DATE_TO` explicitly. If
@@ -169,6 +170,15 @@ output folder represents the week being reported, not the day the report was
 run. Example: a report for `2026-06-08T00:00:00Z` through
 `2026-06-14T23:59:59Z` saves under
 `<LOCAL_ROOT>/<server>/weekly/2026-06-14/`.
+
+Ordinal weeks of a named month are month-local calendar blocks, not rolling
+seven-day windows that cross into the next month. The first week starts on day 1,
+the second on day 8, the third on day 15, the fourth on day 22, and the fifth on
+day 29 when present. Clip the final week to the last day of the named month. For
+example, "fifth week of May 2026" must use `DATE_FROM=2026-05-29T00:00:00Z`,
+`DATE_TO=2026-05-31T23:59:59Z`, and `REPORT_DATE=2026-05-31`; it must not run
+May 29 through June 4. "First week of June 2026" starts fresh at
+`2026-06-01T00:00:00Z` and ends at `2026-06-07T23:59:59Z`.
 
 `all repos` is the default scope for every report type unless the prompt
 explicitly narrows the scope.
