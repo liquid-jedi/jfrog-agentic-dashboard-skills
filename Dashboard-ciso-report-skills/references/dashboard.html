@@ -1121,9 +1121,12 @@ function buildCuration(){
   if (!c.available) return `<div class="empty"><div class="ico">i</div><b>Curation data unavailable</b><p>No curation activity was collected for this window.</p></div>`;
   const rr = c.request_results || {};
   const cn = connStats();
+  const noAuditEvents = Number(c.total || 0) === 0;
+  const periodLabel = [m.date_from, m.date_to].filter(Boolean).join(' to ');
+  const auditEmptyNote = noAuditEvents ? `<div class="note warn"><b>No Curation audit events returned for this period.</b> The Curation audit API reported zero package-gate rows${periodLabel ? ' for ' + esc(periodLabel) : ''}. Configuration coverage is still shown below, including connected remotes, dry-run policies, and policy inventory.</div>` : '';
 
   const kpis = `<div class="kpis">
-    <div class="kpi k-navy"><div class="n">${fmt(c.total)}</div><div class="l">Requests screened</div><div class="d">at the package gate</div></div>
+    <div class="kpi k-navy"><div class="n">${fmt(c.total)}</div><div class="l">${noAuditEvents ? 'Audit events' : 'Requests screened'}</div><div class="d">${noAuditEvents ? 'none returned for this period' : 'at the package gate'}</div></div>
     <div class="kpi k-crit"><div class="n">${fmt(c.blocked)}</div><div class="l">Blocked</div><div class="d">${(c.block_rate!=null?c.block_rate:pctOf(c.blocked,c.total))}% block rate</div></div>
     <div class="kpi k-green"><div class="n">${fmt(c.approved)}</div><div class="l">Approved</div><div class="d">passed policy</div></div>
     <div class="kpi k-med"><div class="n">${fmt(rr.dry_run)}</div><div class="l">Dry-run observed</div><div class="d">not enforced</div></div>
@@ -1225,7 +1228,7 @@ function buildCuration(){
   // Audit CTA — full detail lives in the Curation Audit UI, not replicated here
   const auditUrl = ((m.url||'').replace(/\/$/,'')) + (m.curation_audit_ui_path || '/ui/package-curation/audit');
   const auditCount = (c.audit_events_display_meta&&c.audit_events_display_meta.total_blocked) || c.blocked || 0;
-  const cta = `<div class="audit-cta"><div class="txt"><b>Full blocked-download audit trail</b><span>${fmt(auditCount)} blocked events this window · every request with package, version, policy, requester &amp; timestamp</span></div><a class="btn" href="${esc(auditUrl)}">Open Curation Audit →</a></div>`;
+  const cta = `<div class="audit-cta"><div class="txt"><b>Full blocked-download audit trail</b><span>${noAuditEvents ? 'No blocked-download audit events were returned for this report period' : fmt(auditCount) + ' blocked events this window · every request with package, version, policy, requester & timestamp'}</span></div><a class="btn" href="${esc(auditUrl)}">Open Curation Audit →</a></div>`;
 
   const obs = c.observation ? `<div class="note"><b>What this means.</b> ${esc(c.observation)}</div>` : '';
 
@@ -1277,7 +1280,7 @@ function buildCuration(){
     ${catGroupSections}
   </div>` : '';
 
-  return kpis + obs +
+  return auditEmptyNote + kpis + obs +
     `<div class="grid-3"><div class="span-2">${polPanel}</div>${reasonPanel}</div>` +
     `<div class="grid-2">${userPanel}${typePanel}</div>` +
     insightPanels + uncoveredPanel + cta + riskPanel + catPanel +
