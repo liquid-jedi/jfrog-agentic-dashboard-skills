@@ -866,7 +866,12 @@ function countDelta(val, label){
   if (val == null) return `<span class="sig-delta sig-no-prior">No prior period</span>`;
   if (val === 0) return `<span class="sig-delta sig-no-prior">No change</span>`;
   const up = val > 0;
-  return `<span class="sig-delta ${up ? 'sig-up-bad' : 'sig-dn-good'}">${up ? '▲' : '▼'}${fmt(Math.abs(val))} ${esc(label||'')}</span>`;
+  return `<span class="sig-delta ${up ? 'sig-up-bad' : 'sig-dn-good'}">${fmt(Math.abs(val))} ${up ? 'more' : 'fewer'}${label ? ' ' + esc(label) : ''}</span>`;
+}
+function severityDeltaText(val){
+  if (val == null) return 'No prior period';
+  if (val === 0) return 'No change vs prior';
+  return `${fmt(Math.abs(val))} ${val > 0 ? 'more' : 'fewer'} vs prior`;
 }
 
 /* ── derive prioritized actions from the data ── */
@@ -929,7 +934,7 @@ function buildMast(){
   return `<div class="mast">
     <span class="logo">${LOGO_WHITE}</span>
     <div class="divider"></div>
-    <div class="title"><b>${esc(m.report_type || 'Weekly')} Security Report</b><span>${esc(m.host || m.server_id || '')}</span></div>
+    <div class="title"><b>${esc(m.report_type || 'Weekly')} CISO Report</b><span>Instance: ${esc(m.host || m.server_id || '')}</span></div>
     <div class="spacer"></div>
     <div class="period"><b>${esc(m.date_from || '')} – ${esc(m.date_to || '')}</b><span>${esc(m.report_type || 'Weekly')} · ${esc(m.window_days || 7)}-day window · Generated ${esc(m.generated || '')}</span></div>
   </div>`;
@@ -960,9 +965,11 @@ function buildBriefing(){
   const criticalDelta = cmp.available && cmp.violations ? cmp.violations.critical_delta : null;
   const signals = `<div class="posture-signals">
     <div class="sig-item">
-      <div class="sig-val">${fmt(sev.critical)}<small>C</small> / ${fmt(sev.high)}<small>H</small></div>
-      <div class="sig-label">Critical / high findings</div>
-      <div class="sig-sub">M ${fmt(sev.medium)} | L ${fmt(sev.low)}${countDelta(criticalDelta, 'critical')}</div>
+      <div class="sig-val">${fmt(sev.critical)}</div>
+      <div class="sig-label">Critical</div>
+      <div class="sig-sub">${fmt(sev.critical)} now · ${severityDeltaText(criticalDelta)}</div>
+      <div class="sig-label" style="margin-top:14px">High</div>
+      <div class="sig-sub">${fmt(sev.high)} now</div>
     </div>
     <div class="sig-sep"></div>
     <div class="sig-item">
@@ -1036,8 +1043,9 @@ function buildOverview(){
     <div class="act-grid">${topCards}</div>
   </div>`;
 
+  const criticalDelta = cmp.available && cmp.violations ? cmp.violations.critical_delta : null;
   const kpis = `<div class="kpis">
-    <div class="kpi k-navy"><div class="n">${fmt(sev.critical)}<small>C</small> / ${fmt(sev.high)}<small>H</small></div><div class="l">Critical / High</div><div class="d">${severityCounts(sev)}</div></div>
+    <div class="kpi k-navy"><div class="n">${fmt(sev.critical)}</div><div class="l">Critical</div><div class="d">${fmt(sev.critical)} now · ${severityDeltaText(criticalDelta)}<br><b>High</b><br>${fmt(sev.high)} now</div></div>
     <div class="kpi k-green"><div class="n">${fmt(c.blocked)}</div><div class="l">Blocked at gate</div><div class="d">${pctOf(c.blocked,c.total)<1?'<1':pctOf(c.blocked,c.total)}% of requests</div></div>
     <div class="kpi k-crit"><div class="n">${fmt(sev.critical)}</div><div class="l">Critical inside</div><div class="d">of ${fmt(v.total)} total</div></div>
     <div class="kpi k-info"><div class="n">${pctOf(p.repos_indexed,p.repos_total)}<small>%</small></div><div class="l">Repos indexed</div><div class="d">${fmt(p.repos_indexed)} / ${fmt(p.repos_total)}</div></div>

@@ -48,7 +48,7 @@ Before collecting data:
 
 - Confirm tools: `jf`, `jq`, and `python3` must be on PATH. If missing,
   stop and tell the user to install/configure them using `../jfrog/SKILL.md`.
-- Resolve report period. Default to `weekly`. Weekly window: `DATE_FROM = today − 7 days at 00:00:00 UTC`, `DATE_TO = today at 23:59:59 UTC` (produces `window_days = 7`). All repos unless the prompt narrows scope.
+- Resolve report period. Default to `weekly`. Weekly window: seven calendar days. For current weekly reports, use the last complete seven-day window ending today unless the prompt specifies dates. For historical weeks, resolve `DATE_FROM`, `DATE_TO`, and save under the period end date. All repos unless the prompt narrows scope.
 - Resolve server. If multiple JFrog CLI servers exist and the prompt does
   not name one, you MUST stop and ask the user to choose. Do NOT use the
   JFrog CLI default server. Do NOT guess.
@@ -159,7 +159,16 @@ The agent must not manually delete prior runtime files at the start of a run. Th
 | "weekly" or "CISO report" | weekly | Last 7 days |
 | "monthly" | monthly | Last calendar month |
 | "for April" / "for March" | monthly | That month |
+| "first week of May" | weekly | May 1 00:00:00Z through May 7 23:59:59Z |
+| "second week of June" | weekly | June 8 00:00:00Z through June 14 23:59:59Z |
 | Custom dates | custom | As specified |
+
+For historical weekly prompts, set `DATE_FROM` and `DATE_TO` explicitly. If
+`REPORT_DATE` is not provided, the runner derives it from `DATE_TO`, so the
+output folder represents the week being reported, not the day the report was
+run. Example: a report for `2026-06-08T00:00:00Z` through
+`2026-06-14T23:59:59Z` saves under
+`<LOCAL_ROOT>/<server>/weekly/2026-06-14/`.
 
 `all repos` is the default scope for every report type unless the prompt
 explicitly narrows the scope.

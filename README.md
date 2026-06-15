@@ -174,8 +174,20 @@ Generate a weekly CISO report. Local only.
 ```
 
 ```
+Generate a weekly CISO report for the first week of May 2026 for server solenglatest. Save under ~/ciso-reports.
+```
+
+```
+Generate a weekly CISO report for the second week of June 2026 for server solenglatest. Save under ~/ciso-reports.
+```
+
+```
 Generate a CISO report for 2026-05-01 to 2026-05-31.
 ```
+
+Historical weekly reports save under the week being reported, not the day they
+were generated. For example, the second week of June 2026 saves to
+`~/ciso-reports/<server>/weekly/2026-06-14/`.
 
 ### Output folder layout
 
@@ -265,7 +277,7 @@ The `examples/` folder contains static HTML reports generated from real report p
 ## What's new
 
 **v2.6.0 (June 2026)**
-- **Independent posture signals** — severity mix, violation volume, and coverage gap are shown separately; no composite risk weighting is applied
+- **Independent posture signals** — critical/high finding movement, violation volume, and coverage gap are shown separately; no composite risk weighting is applied
 - **Executive insight panels** — SLA risk backlog, remediation readiness, highest-impact fixes, new critical introductions, watch blind spots, blast radius, gate coverage gaps, enforcement opportunity, and malicious package defense
 - **4-tab dashboard** — Overview, Curation, Xray, Recommendations; policy and coverage evidence is folded into the operational tabs where it drives action
 - **Data-driven recommendations** — P1/P2/P3 generated from live data after enrichment, including executive insight fields where available

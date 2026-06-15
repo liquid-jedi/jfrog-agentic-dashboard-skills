@@ -18,7 +18,14 @@ SERVER_ID="${1:?server-id required}"
 LOCAL_ROOT="${2:?local root required}"
 REPORT_TYPE="${3:-${REPORT_TYPE:-weekly}}"
 REPORT_TYPE_LOWER="$(printf '%s' "$REPORT_TYPE" | tr '[:upper:]' '[:lower:]')"
-REPORT_DATE="${REPORT_DATE:-$(date +%Y-%m-%d)}"
+REPORT_DATE_EXPLICIT="${REPORT_DATE+x}"
+if [[ -n "${REPORT_DATE:-}" ]]; then
+    REPORT_DATE="$REPORT_DATE"
+elif [[ -n "${DATE_TO:-}" ]]; then
+    REPORT_DATE="$(printf '%s' "$DATE_TO" | sed -E 's/T.*$//')"
+else
+    REPORT_DATE="$(date +%Y-%m-%d)"
+fi
 SAVE_DATA_JSON="${SAVE_DATA_JSON:-${CISO_SAVE_DATA_JSON:-true}}"
 SAVE_DATA_JSON="$(printf '%s' "$SAVE_DATA_JSON" | tr '[:upper:]' '[:lower:]')"
 case "$SAVE_DATA_JSON" in
@@ -55,30 +62,44 @@ if [[ ! -f "$TEMPLATE_PATH" ]]; then
   exit 1
 fi
 
-if [[ -z "${DATE_TO:-}" ]]; then
-  DATE_TO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-fi
 if [[ -z "${DATE_FROM:-}" ]]; then
   case "$REPORT_TYPE_LOWER" in
     weekly)
-      if date -u -v-7d +%Y-%m-%dT%H:%M:%SZ >/dev/null 2>&1; then
-        DATE_FROM="$(date -u -v-7d +%Y-%m-%dT%H:%M:%SZ)"
-      else
-        DATE_FROM="$(date -u -d "7 days ago" +%Y-%m-%dT%H:%M:%SZ)"
-      fi
+            if [[ -z "${DATE_TO:-}" ]]; then
+                DATE_TO="$(date -u +%Y-%m-%dT23:59:59Z)"
+            fi
+            DATE_FROM="$(python3 - "$DATE_TO" 6 <<'PY'
+import sys
+from datetime import datetime, timedelta, timezone
+value = sys.argv[1].replace('Z', '+00:00')
+days = int(sys.argv[2])
+dt = datetime.fromisoformat(value).astimezone(timezone.utc) - timedelta(days=days)
+print(dt.strftime('%Y-%m-%dT00:00:00Z'))
+PY
+)"
       ;;
     monthly)
-      if date -u -v-30d +%Y-%m-%dT%H:%M:%SZ >/dev/null 2>&1; then
-        DATE_FROM="$(date -u -v-30d +%Y-%m-%dT%H:%M:%SZ)"
-      else
-        DATE_FROM="$(date -u -d "30 days ago" +%Y-%m-%dT%H:%M:%SZ)"
-      fi
+            if [[ -z "${DATE_TO:-}" ]]; then
+                DATE_TO="$(date -u +%Y-%m-%dT23:59:59Z)"
+            fi
+            DATE_FROM="$(python3 - "$DATE_TO" 29 <<'PY'
+import sys
+from datetime import datetime, timedelta, timezone
+value = sys.argv[1].replace('Z', '+00:00')
+days = int(sys.argv[2])
+dt = datetime.fromisoformat(value).astimezone(timezone.utc) - timedelta(days=days)
+print(dt.strftime('%Y-%m-%dT00:00:00Z'))
+PY
+)"
       ;;
     *)
       echo "ERROR: DATE_FROM is required for custom reports" >&2
       exit 1
       ;;
   esac
+fi
+if [[ -z "${DATE_TO:-}" ]]; then
+    DATE_TO="$(date -u +%Y-%m-%dT23:59:59Z)"
 fi
 
 export SERVER_ID REPORT_TYPE REPORT_TYPE_LOWER REPORT_DATE DATE_FROM DATE_TO
