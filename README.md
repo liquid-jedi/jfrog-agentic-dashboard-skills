@@ -189,6 +189,29 @@ Historical weekly reports save under the week being reported, not the day they
 were generated. For example, the second week of June 2026 saves to
 `~/ciso-reports/<server>/weekly/2026-06-14/`.
 
+### Historical weekly date rules
+
+When you ask for an ordinal week of a month, the report uses calendar blocks
+starting on day 1 of that month. Weeks do not roll over from the prior month.
+
+| Prompt | Date window | `REPORT_DATE` / folder date |
+|-|-|-|
+| First week of May 2026 | May 1 - May 7 | `2026-05-07` |
+| Second week of May 2026 | May 8 - May 14 | `2026-05-14` |
+| Third week of May 2026 | May 15 - May 21 | `2026-05-21` |
+| Fourth week of May 2026 | May 22 - May 28 | `2026-05-28` |
+| Fifth week of May 2026 | May 29 - May 31 | `2026-05-31` |
+| First week of June 2026 | June 1 - June 7 | `2026-06-07` |
+
+For partial final weeks, `DATE_TO` is the last day of the month at
+`23:59:59Z`. For example, the fifth week of May 2026 uses:
+
+```bash
+DATE_FROM=2026-05-29T00:00:00Z
+DATE_TO=2026-05-31T23:59:59Z
+REPORT_DATE=2026-05-31
+```
+
 ### Output folder layout
 
 Both local and Artifactory storage follow the same `<server-id>/<report-type>/<date>/` path convention so you can compare or browse either location with the same mental model.
