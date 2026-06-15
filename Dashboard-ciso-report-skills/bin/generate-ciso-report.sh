@@ -621,24 +621,51 @@ def component(row):
 def artifact_id(row):
     return first_text(row, ("artifact_path", "artifactPath", "artifact", "path", "location", "impacted_artifact", "impactedArtifact", "sha256", "name"))
 
+def clean_repo_name(value):
+    text = str(value or "").strip().strip("/")
+    if not text or text.lower() in ("unknown", "n/a", "none", "null", "default"):
+        return ""
+    return text
+
+def repo_from_text(text, repo_names):
+    text = str(text or "").strip()
+    if not text or text.startswith(("http://", "https://")):
+        return ""
+    parts = [p for p in text.strip("/").split("/") if p]
+    if repo_names:
+        for part in parts:
+            if part in repo_names:
+                return part
+        for name in repo_names:
+            if text == name or text.startswith(name + "/") or f"/{name}/" in text or text.startswith("default/" + name + "/"):
+                return name
+    if parts:
+        return clean_repo_name(parts[0])
+    return ""
+
 def repo_from_row(row, repo_names):
     direct = first_text(row, ("repo", "repo_key", "repoKey", "repository", "repo_name", "repoName"))
     if direct:
-        return direct.split("/")[0]
+        repo = repo_from_text(direct, repo_names)
+        if repo:
+            return repo
     candidates = []
     for obj in walk(row):
         for key, val in obj.items():
             lk = key.lower()
             if any(tok in lk for tok in ("repo", "artifact", "path", "location")) and isinstance(val, str):
                 candidates.append(val)
+            elif any(tok in lk for tok in ("artifact", "path", "location")) and isinstance(val, list):
+                candidates.extend(item for item in val if isinstance(item, str))
     if repo_names:
         for text in candidates:
-            for name in repo_names:
-                if text == name or text.startswith(name + "/") or f"/{name}/" in text:
-                    return name
+            repo = repo_from_text(text, repo_names)
+            if repo:
+                return repo
     for text in candidates:
-        if "/" in text and not text.startswith(("http://", "https://")):
-            return text.split("/")[0]
+        repo = repo_from_text(text, repo_names)
+        if repo:
+            return repo
     return "unknown"
 
 def extract_repo_names():
@@ -799,7 +826,7 @@ critical_issues.sort(key=lambda row: (-row["hits"], -row["days_open"], row["id"]
 
 blind_spots = []
 for repo, stat in repo_stats.items():
-    if repo == "unknown" or stat["violations"] <= 0:
+    if not clean_repo_name(repo) or repo == "unknown" or stat["violations"] <= 0:
         continue
     names = watch_map.get(repo, [])
     if names:
@@ -964,12 +991,13 @@ if (rr.get("fix_available_issues") or 0) > 0:
 
 blind = vei.get("watch_blind_spots") or []
 if blind:
+    top_blind_repo = blind[0].get('repo') or 'repository not exposed by Xray payload'
     recs.append({
         "priority": "P1",
         "effort": "low",
         "score": 92,
         "text": f"Assign watches to {len(blind)} repositories with violations",
-        "detail": f"Impact: the top blind spot ({blind[0].get('repo')}) has {blind[0].get('violation_count')} violations and no watch mapping. Next step: attach the repository to an active Xray watch."
+        "detail": f"Impact: the top blind spot ({top_blind_repo}) has {blind[0].get('violation_count')} violations and no watch mapping. Next step: attach the repository to an active Xray watch."
     })
 
 gate_gaps = cei.get("gate_coverage_gaps") or []

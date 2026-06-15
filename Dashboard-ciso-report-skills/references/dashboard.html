@@ -889,8 +889,9 @@ function computeActions(){
     body:`These are the fastest exposure reducers because a fixed version or remediation path is already known.`,
     metric:`${fmt(rr.fix_available_hits||0)} artifact hits`, link:'Xray › Violations'});
   const blind = vei.watch_blind_spots || [];
+  const topBlindRepo = blind.length ? (blind[0].repo || blind[0].repository || 'repository not exposed') : '';
   if (blind.length) acts.push({pri:'P1', effort:'Low', title:`Assign watches to ${fmt(blind.length)} repositories with violations`,
-    body:`The highest blind spot, ${blind[0].repo}, has ${fmt(blind[0].violation_count)} violations and no watch assignment in the collected Xray mapping.`,
+    body:`The highest blind spot, ${topBlindRepo}, has ${fmt(blind[0].violation_count)} violations and no watch assignment in the collected Xray mapping.`,
     metric:`${fmt(blind.reduce((s,r)=>s+(r.critical_count||0),0))} critical findings`, link:'Xray › Watches'});
   const gateGaps = cei.gate_coverage_gaps || [];
   if (gateGaps.length) acts.push({pri:'P2', effort:'Low', title:`Connect ${fmt(gateGaps.reduce((s,r)=>s+(r.unconnected||0),0))} supported remotes to Curation`,
@@ -1362,7 +1363,10 @@ function buildXray(){
     <table class="dt"><thead><tr><th>Watch / policy</th><th>Type</th><th class="r">Hits</th></tr></thead><tbody>${watchRows||`<tr><td colspan="3" class="empty" style="padding:20px">No watch activity.</td></tr>`}</tbody></table></div>`;
 
   const blind = ei.watch_blind_spots || [], blindMeta = ei.watch_blind_spots_meta || {};
-  const blindRows = blind.slice(0,8).map(x=>`<tr><td class="comp">${esc(x.repo)}</td><td class="r"><span class="num">${fmt(x.violation_count)}</span></td><td class="r"><span class="num">${fmt(x.critical_count)}</span></td><td><span class="sev ${x.risk_level==='critical'?'sev-crit':'sev-med'}">${esc(String(x.risk_level||'elevated').toUpperCase())}</span></td></tr>`).join('');
+  const blindRows = blind.slice(0,8).map(x=>{
+    const repo = x.repo || x.repository || 'Repository not exposed by Xray payload';
+    return `<tr><td class="comp">${esc(repo)}</td><td class="r"><span class="num">${fmt(x.violation_count)}</span></td><td class="r"><span class="num">${fmt(x.critical_count)}</span></td><td><span class="sev ${x.risk_level==='critical'?'sev-crit':'sev-med'}">${esc(String(x.risk_level||'elevated').toUpperCase())}</span></td></tr>`;
+  }).join('');
   const blindPanel = `<div class="panel flush"><div class="ph"><h3>Watch blind spots</h3><span class="meta">repos with violations but no watch mapping</span></div>
     ${blindRows ? `<table class="dt"><thead><tr><th>Repository</th><th class="r">Violations</th><th class="r">Critical</th><th>Risk</th></tr></thead><tbody>${blindRows}</tbody></table>` : `<div class="empty"><div class="ico">✓</div><b>No watch blind spots found</b><p>${esc(blindMeta.available === false ? (blindMeta.reason || 'Watch assignment details were not available.') : 'All mapped repositories with violations have watch coverage.')}</p></div>`}
   </div>`;
