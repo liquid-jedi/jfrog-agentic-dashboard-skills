@@ -227,13 +227,39 @@ field. Neither changes the other's job.
       "sort": "string — malicious_then_package_count_then_newest",
       "total_blocked": "number"
     },
+    "executive_insights": {
+      "gate_coverage_gaps": [
+        {
+          "package_type": "string — supported Curation ecosystem only",
+          "supported": "boolean — always true for rendered gaps",
+          "unconnected": "number — supported remotes not connected to Curation",
+          "connected": "number",
+          "total": "number",
+          "known_violations": "number — best-effort Xray violations mapped to this ecosystem",
+          "priority": "string — P1 | P2"
+        }
+      ],
+      "enforcement_opportunity": {
+        "dry_run_policies": "number",
+        "would_have_blocked": "number — best-effort dry-run audit events that would have blocked",
+        "top_policies": [{ "policy": "string", "events": "number" }]
+      },
+      "malicious_package_defense": {
+        "malicious_blocks": "number",
+        "malicious_policies": "number",
+        "top_packages": [{ "package": "string", "blocks": "number" }]
+      }
+    },
     "observation": "string — agent-generated insight about curation data"
   },
 
   "violations": {
     "total": "number",
-    "risk_score": "number — normalized weighted risk score (0-100)",
-    "risk_score_previous": "number — previous period weighted score",
+    "posture_signals": {
+      "severity_mix": "number — 0-100 severity-weighted mix, not a composite risk score",
+      "violation_volume": "number — raw Xray violation count",
+      "coverage_gap": "number — percentage of repositories without Xray indexing"
+    },
     "by_type": {
       "security": "number",
       "operational": "number",
@@ -255,9 +281,15 @@ field. Neither changes the other's job.
       {
         "id": "string — XRAY-NNNNNN",
         "description": "string",
+        "component": "string — best-effort affected component/package",
         "hits": "number",
+        "repo_count": "number — distinct repositories in raw violation rows",
+        "artifact_count": "number — distinct artifacts in raw violation rows",
         "first_seen": "string — YYYY-MM-DD",
         "days_open": "number",
+        "fix_status": "string — available | none | unknown",
+        "fix_available": "boolean",
+        "fix_versions": ["string"],
         "exploit_status": "string — active | poc | none | unknown",
         "affected_environments": ["string — prod | build | dev | transitive"],
         "playbook_link": "string — optional URL to response runbook"
@@ -278,6 +310,40 @@ field. Neither changes the other's job.
     "top_watch_policies": [
       { "policy": "string", "type": "string", "hits": "number" }
     ],
+    "executive_insights": {
+      "sla_risk_backlog": {
+        "buckets": [
+          { "label": "string — 0-7 days | 8-30 days | 31-90 days | 90+ days", "issues": "number", "hits": "number" }
+        ],
+        "sla_breach_issues": "number — critical issues older than sla_days",
+        "sla_days": "number — default 30"
+      },
+      "remediation_readiness": {
+        "fix_available_issues": "number",
+        "fix_available_hits": "number",
+        "no_fix_issues": "number",
+        "unknown_issues": "number"
+      },
+      "highest_impact_fixes": [
+        { "component": "string", "critical_issues": "number", "hits": "number", "hit_share_pct": "number" }
+      ],
+      "new_critical_introductions": {
+        "new_issues": "number",
+        "new_hits": "number",
+        "existing_issues": "number",
+        "baseline_available": "boolean"
+      },
+      "watch_blind_spots": [
+        { "repo": "string", "violation_count": "number", "critical_count": "number", "watch_count": "number", "watch_names": ["string"], "risk_level": "string" }
+      ],
+      "watch_blind_spots_meta": {
+        "available": "boolean — false when the Xray watch payload lacks repo assignments",
+        "reason": "string"
+      },
+      "blast_radius": [
+        { "issue": "string", "repos": "number", "artifacts": "number", "component": "string", "hits": "number" }
+      ]
+    },
     "observation": "string — agent-generated key finding"
   },
 
@@ -335,14 +401,8 @@ field. Neither changes the other's job.
         "delta_pct": "number"
       }
     ],
-    "repo_watch_coverage": [
-      {
-        "repo": "string",
-        "indexed": "boolean",
-        "watch_count": "number",
-        "risk_level": "string — critical | high | medium | low"
-      }
-    ]
+    "xray_policy_effectiveness": "array — same shape as policy_effectiveness, rendered on the Xray tab",
+    "curation_policy_effectiveness": "array — same shape as policy_effectiveness, rendered on the Curation tab"
   },
 
   "threat_velocity": {
