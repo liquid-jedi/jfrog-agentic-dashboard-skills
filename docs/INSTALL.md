@@ -28,12 +28,12 @@ jf config add --interactive
 
 ### Current skill versions in this repository
 
-- `jfrog-ciso-report` — `2.3.0`
+- `jfrog-ciso-report` — `3.0.0`
 - `jfrog-dashboard-blueprint` — `2.1.1`
 
 Previous release:
 
-- `jfrog-ciso-report` — `2.2.0`
+- `jfrog-ciso-report` — `2.3.0`
 - `jfrog-dashboard-blueprint` — `2.1.0`
 
 ### Install the base `jfrog` skill
@@ -101,7 +101,7 @@ Install the CISO report package from the published repository:
 mkdir -p ~/ciso-reporting
 cd ~/ciso-reporting
 apm init -y --target claude,codex,cursor
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v2.3.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v3.0.0
 ```
 
 Optional: install the persona scaffolder package:
@@ -119,7 +119,7 @@ claude
 
 For Codex or Cursor, open/use the `~/ciso-reporting` folder as the active project/workspace.
 
-Do not use `#v2.2.0` for APM installs because that release predates APM packaging.
+Use `#v2.3.0` when you need the older repository release. Do not use `#v2.2.0` for APM installs because that release predates APM packaging.
 
 ### Option 2: Generic Skills install
 
