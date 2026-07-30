@@ -5,6 +5,7 @@ agent-enabled IDE or CLI.
 
 - `.boost/filters.toml` reduces noisy CISO report and JFrog CLI output.
 - `.cursor/` contains the Cursor guardrail hook configuration and script.
+- `.claude/` contains the Claude Code guardrail hook configuration and script.
 - `.codex/` contains the Codex hook configuration and script.
 - `.agents/` contains the Antigravity hook configuration and script.
 

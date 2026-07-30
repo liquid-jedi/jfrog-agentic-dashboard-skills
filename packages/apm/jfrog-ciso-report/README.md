@@ -70,6 +70,7 @@ token values from `CISO_TOTAL_TOKENS`, detailed token env vars,
 transcript path. If no source is available, token usage is marked unavailable.
 
 This APM also includes optional Boost filters and guardrail hook examples under
-`extras/agent-support/` for Cursor, Codex, and Antigravity. Boost reduces noisy
-terminal output; the guardrails block destructive JFrog commands during report
-generation. Copy only the files for the agent runtime the customer uses.
+`extras/agent-support/` for Cursor, Claude Code, Codex, and Antigravity. Boost
+reduces noisy terminal output; the guardrails block destructive JFrog commands
+during report generation. Copy only the files for the agent runtime the customer
+uses.
