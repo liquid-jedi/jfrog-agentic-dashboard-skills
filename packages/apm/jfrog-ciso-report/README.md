@@ -2,18 +2,18 @@
 
 This APM package ships the `jfrog-ciso-report` skill as a standalone installable package.
 
-The skill generates a branded CISO Security and Curation HTML dashboard from a JFrog Platform instance. It includes the deterministic report runner, dashboard template, schema, collection mapping, and validation helpers.
+The skill generates a branded CISO Security and Curation HTML dashboard from a JFrog Platform instance. It includes the deterministic report runner, dashboard template, executive and full PDF templates, schema, collection mapping, and validation helpers.
 
 ## Install
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v3.0.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.0.0
 ```
 
-To install the older repository release instead:
+To install the previous repository release instead:
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v2.3.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v3.0.0
 ```
 
 For local testing from this repository:
@@ -23,8 +23,53 @@ cd packages/apm/jfrog-ciso-report
 apm pack --dry-run --verbose
 ```
 
+## Offline Package
+
+For customers running with limited internet access, package the entire APM
+directory as a zip and transfer that archive:
+
+```bash
+cd packages/apm
+zip -r jfrog-ciso-report-v4.0.0.zip jfrog-ciso-report
+```
+
+On the customer side, unzip and install or validate from the local directory:
+
+```bash
+unzip jfrog-ciso-report-v4.0.0.zip
+cd jfrog-ciso-report
+apm pack --dry-run --verbose
+```
+
 ## Runtime Requirements
 
 - JFrog CLI configured with a server ID.
 - `python3`, `jq`, and shell access available to the agent runtime.
 - Network access to the target JFrog Platform APIs.
+- `node` plus Puppeteer or a Chrome/Chromium-compatible browser for PDF generation.
+
+## PDF Export Modes
+
+`CISO_PDF_MODE` controls the generated PDF artifact:
+
+| Mode | Output |
+|-|-|
+| unset or `executive` | `executive-report.pdf` is a concise CISO-shareable PDF |
+| `full` | `full-report.pdf` is the detailed internal PDF |
+| `both` | `executive-report.pdf` and `full-report.pdf` |
+
+The runner also writes `curation-user-package-activity.csv` next to
+`report.html` for the full active-user/package export. The dashboard embeds only
+the top active users so large customer runs stay lightweight.
+
+## Token Metadata, Boost, And Guardrails
+
+`run-meta.json` includes best-effort agent and token metadata. The runner reads
+token values from `CISO_TOTAL_TOKENS`, detailed token env vars,
+`CISO_TOKEN_USAGE_PATH`, `/tmp/ciso-token-usage.json`, or a supplied Claude
+transcript path. If no source is available, token usage is marked unavailable.
+
+This APM also includes optional Boost filters and guardrail hook examples under
+`extras/agent-support/` for Cursor, Codex, and Antigravity. Boost reduces noisy
+terminal output; the guardrails block destructive JFrog commands during report
+generation. Copy only the files for the agent runtime the customer uses.

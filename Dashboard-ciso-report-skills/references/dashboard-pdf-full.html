@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CISO Security Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #FAFAF6;
+  --paper-2: #F3F2EA;
+  --ink: #14161A;
+  --ink-2: #2A2E36;
+  --muted: #5C6572;
+  --muted-2: #8A8F98;
+  --rule: #DDDCD3;
+  --rule-soft: #E9E7DD;
+
+  --green: #40BE46;
+  --green-tint: #E7F5E8;
+  --green-dark: #1a6d21;
+  --red: #C81E1E;
+  --red-tint: #FBE8E8;
+  --red-dark: #7a1212;
+  --amber: #C97A0F;
+  --amber-tint: #F8ECDA;
+  --amber-dark: #7a4a0a;
+  --blue: #2563EB;
+  --blue-tint: #E8EFFC;
+  --navy: #1B2A4A;
+
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: #fff;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+.page { max-width: 960px; margin: 0 auto; padding: 48px 56px 64px; }
+
+/* ─── HERO ─── */
+.hero { padding-bottom: 32px; border-bottom: 1px solid var(--rule); margin-bottom: 40px; }
+.brand-lockup { display: flex; align-items: center; gap: 14px; margin-bottom: 30px; }
+.brand-logo { width: 62px; height: 60px; object-fit: contain; }
+.brand-name {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted);
+}
+.eyebrow {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 16px;
+}
+h1 {
+  font-family: var(--display); font-weight: 500; font-size: 44px;
+  line-height: 1.05; letter-spacing: -.02em; margin: 0 0 16px; color: var(--ink);
+}
+h1 em { font-style: italic; color: var(--ink-2); font-weight: 400; }
+.lede { font-size: 15px; line-height: 1.6; color: var(--ink-2); max-width: 68ch; margin: 0 0 24px; }
+.hero-meta {
+  display: flex; flex-wrap: wrap; gap: 20px;
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  padding-top: 16px; border-top: 1px solid var(--rule-soft);
+}
+.hero-meta span strong { color: var(--ink); font-weight: 500; }
+
+/* ─── SECTION HEADINGS ─── */
+h2 {
+  font-family: var(--display); font-weight: 500; font-size: 26px;
+  letter-spacing: -.01em; margin: 48px 0 16px; color: var(--ink);
+  page-break-after: avoid;
+}
+h2 .lbl {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted); display: block;
+  margin-bottom: 6px; font-weight: 400;
+}
+h3 { font-family: var(--display); font-weight: 500; font-size: 16px; margin: 20px 0 8px; }
+
+/* ─── POSTURE STRIP ─── */
+.posture {
+  background: var(--paper-2); border: 1px solid var(--rule); border-radius: 6px;
+  padding: 24px 28px; margin-bottom: 32px;
+  page-break-inside: avoid;
+}
+.posture-title {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 18px;
+}
+.posture-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.posture-stat {}
+.posture-val {
+  font-family: var(--display); font-size: 36px; font-weight: 500;
+  line-height: 1; letter-spacing: -.02em; color: var(--ink); margin-bottom: 4px;
+}
+.posture-val small { font-family: var(--mono); font-size: 13px; color: var(--muted); font-weight: 400; margin-left: 4px; }
+.posture-label { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.posture-label b { color: var(--ink-2); font-weight: 500; }
+.posture-sub {
+  display: flex; gap: 20px; margin-top: 20px; padding-top: 16px;
+  border-top: 1px solid var(--rule);
+}
+.posture-sub .ps-item { font-size: 12px; color: var(--muted); }
+.posture-sub .ps-item strong { font-family: var(--display); font-size: 20px; color: var(--ink); font-weight: 500; display: block; }
+
+/* ─── TREND CALLOUT ─── */
+.trend {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 18px; border-left: 3px solid var(--rule);
+  margin-bottom: 24px; font-size: 13px; color: var(--ink-2);
+}
+.trend.up-bad { border-left-color: var(--red); }
+.trend.dn-good { border-left-color: var(--green); }
+.trend strong { color: var(--ink); }
+
+/* ─── DEVELOPER TABLE ─── */
+.dev-section { margin-bottom: 32px; page-break-inside: avoid; }
+.dev-header {
+  display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px;
+}
+.dev-count {
+  font-family: var(--display); font-size: 42px; font-weight: 500;
+  line-height: 1; letter-spacing: -.02em; color: var(--ink);
+}
+.dev-label { font-size: 14px; color: var(--muted); }
+
+/* ─── TABLES ─── */
+table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 12px 0; page-break-inside: avoid; }
+.long-table { page-break-inside: auto; }
+.long-table tr { page-break-inside: avoid; page-break-after: auto; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+th {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted); font-weight: 500;
+  background: var(--paper-2); border-bottom: 1px solid var(--rule);
+}
+th.r, td.r { text-align: right; }
+td.mono { font-family: var(--mono); font-size: 11px; color: var(--ink-2); }
+.num { font-family: var(--mono); font-weight: 500; color: var(--ink); }
+
+/* ─── SEVERITY PILLS ─── */
+.sev {
+  display: inline-block; font-family: var(--mono); font-size: 10px;
+  font-weight: 500; letter-spacing: .04em; padding: 2px 7px; border-radius: 3px;
+}
+.sev-critical { background: var(--red-tint); color: var(--red-dark); }
+.sev-high { background: #FEF2F2; color: #991B1B; }
+.sev-medium { background: var(--amber-tint); color: var(--amber-dark); }
+.sev-low { background: #FEFCE8; color: #713F12; }
+.sev-unknown { background: var(--paper-2); color: var(--muted); }
+
+/* ─── HORIZONTAL BARS ─── */
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.bar-label { width: 160px; font-size: 12px; font-weight: 500; color: var(--ink-2); flex-shrink: 0; }
+.bar-track { flex: 1; height: 8px; background: var(--rule-soft); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; }
+.bar-val { font-family: var(--mono); font-size: 11px; color: var(--muted); width: 70px; text-align: right; flex-shrink: 0; }
+.bar-alert { font-size: 11px; color: var(--red); font-weight: 500; width: 160px; flex-shrink: 0; }
+
+/* ─── STACKED BAR ─── */
+.sbar { display: flex; height: 20px; border-radius: 4px; overflow: hidden; margin: 8px 0; }
+.sbar span {
+  height: 100%; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 10px; font-weight: 600; min-width: 2px;
+}
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 8px 0; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+.swatch { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.legend-item .l-label { color: var(--muted); }
+.legend-item .l-val { font-family: var(--mono); font-weight: 500; color: var(--ink); }
+
+/* ─── ACTIONS ─── */
+.action {
+  display: grid; grid-template-columns: 32px 1fr; gap: 14px;
+  padding: 16px 0; border-top: 1px solid var(--rule-soft);
+  page-break-inside: avoid;
+}
+.action:first-child { border-top: none; }
+.action-idx {
+  font-family: var(--display); font-size: 22px; font-weight: 500;
+  color: var(--muted-2); line-height: 1.2;
+}
+.action.p1 .action-idx { color: var(--red); }
+.action-title { font-family: var(--display); font-weight: 500; font-size: 14px; color: var(--ink); margin-bottom: 3px; }
+.action-body { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.action-tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.action-tag {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .04em;
+  padding: 2px 7px; border-radius: 3px; background: var(--paper-2);
+  border: 1px solid var(--rule); color: var(--muted);
+}
+.action-tag.pri { background: var(--red-tint); border-color: transparent; color: var(--red-dark); }
+.action-tag.pri-p2 { background: var(--amber-tint); border-color: transparent; color: var(--amber-dark); }
+.action-tag.pri-p3 { background: var(--blue-tint); border-color: transparent; color: var(--blue); }
+
+/* ─── PANELS (side by side) ─── */
+.panel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+.panel {
+  background: var(--paper-2); border: 1px solid var(--rule); border-radius: 6px;
+  padding: 18px 20px; page-break-inside: avoid;
+}
+.panel-title {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 12px; font-weight: 500;
+}
+.metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 12px 0 24px; }
+.metric-card { border: 1px solid var(--rule); border-radius: 5px; padding: 14px; page-break-inside: avoid; }
+.metric-card strong { display: block; font-family: var(--display); font-size: 24px; font-weight: 500; }
+.metric-card span { color: var(--muted); font-size: 11px; }
+.page-break { break-before: page; page-break-before: always; }
+.subtle { color: var(--muted); font-size: 11px; }
+
+/* ─── FOOTER ─── */
+footer {
+  margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--rule);
+  font-family: var(--mono); font-size: 10.5px; color: var(--muted);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+
+/* ─── PRINT ─── */
+@media print {
+  @page { size: A4; margin: 14mm 12mm 16mm 12mm; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+  body { font-size: 11pt; background: #fff; }
+  .page { padding: 0; max-width: none; }
+  .posture, .panel, .action, table { page-break-inside: avoid; }
+  h2 { page-break-after: avoid; }
+  .no-print { display: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="page" id="report"></div>
+<script>
+const DATA = __CISO_DATA__;
+
+/* ═══ CISO Report — PDF / Editorial Template ═══ */
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmt=n=>{
+  if(n==null||n==='')return'\u2014';
+  const value=Number(n);
+  return Number.isFinite(value)?value.toLocaleString('en-US'):esc(n);
+};
+const pctOf=(a,b)=>b?Math.round((a/b)*100):0;
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1).toLowerCase():'';
+const shortComp=c=>{if(!c)return'\u2014';const p=c.split(':');return p.length>1?p[p.length-1]:c};
+const sevClass=s=>'sev-'+(s||'unknown').toLowerCase();
+
+function connStats(){
+  const cs=(DATA.platform&&DATA.platform.curation_state)||(DATA.curation&&DATA.curation.curation_state)||{};
+  if(Number(cs.supported_remote_total)>0)return{total:cs.supported_remote_total,connected:cs.supported_connected||0,notConnected:cs.supported_not_connected||0,pct:Math.round(cs.supported_connected_pct||pctOf(cs.supported_connected,cs.supported_remote_total))};
+  return{total:cs.remote_total||0,connected:cs.connected||0,notConnected:cs.not_connected||0,pct:Math.round(cs.connected_pct||pctOf(cs.connected,cs.remote_total))};
+}
+
+function computeActions(){
+  const p=DATA.platform||{},v=DATA.violations||{},sev=v.by_severity||{};
+  const vei=v.executive_insights||{},cei=(DATA.curation&&DATA.curation.executive_insights)||{};
+  const cn=connStats(),acts=[];
+  const sla=vei.sla_risk_backlog||{};
+  if((sla.sla_breach_issues||0)>0)acts.push({pri:'P1',effort:'Medium',title:`Clear ${fmt(sla.sla_breach_issues)} critical SLA breaches`,body:`Critical violations older than ${fmt(sla.sla_days||30)} days. Assign owners and track weekly.`,metric:`${fmt(sla.sla_breach_issues)} overdue`});
+  const rr=vei.remediation_readiness||{};
+  if((rr.fix_available_issues||0)>0)acts.push({pri:'P1',effort:'Medium',title:`Patch ${fmt(rr.fix_available_issues)} critical issues with available fixes`,body:`Fixed versions already exist. These are the fastest exposure reducers.`,metric:`${fmt(rr.fix_available_hits||0)} artifact hits`});
+  const blind=vei.watch_blind_spots||[];
+  if(blind.length)acts.push({pri:'P1',effort:'Low',title:`Create Xray watches for ${fmt(blind.length)} repositories with violations`,body:`${blind[0].repo||blind[0].repository||'Top repo'} has ${fmt(blind[0].violation_count)} violations with no watch assigned.`,metric:`${fmt(blind.reduce((s,r)=>s+(r.critical_count||0),0))} critical in unwatched repos`});
+  const unindexed=(p.repos_unindexed!=null)?p.repos_unindexed:(p.repos_total||0)-(p.repos_indexed||0);
+  if(unindexed>0)acts.push({pri:'P1',effort:'Medium',title:`Index ${fmt(unindexed)} repositories in Xray`,body:`${pctOf(unindexed,p.repos_total)}% of repos have no Xray indexing. Violations there are invisible.`,metric:`${fmt(p.repos_indexed)}/${fmt(p.repos_total)} indexed`});
+  if((sev.critical||0)>0)acts.push({pri:'P1',effort:'High',title:`Remediate ${fmt(sev.critical)} critical violations`,body:`Assign remediation owners to the highest-hit XRAY issue IDs.`,metric:`${fmt(sev.critical)} critical, ${fmt(sev.high||0)} high`});
+  const dry=p.curation_policies_dry_run||0;
+  if(dry>0)acts.push({pri:'P2',effort:'Low',title:`Promote ${dry} Curation policies from Dry Run to Block`,body:`Dry Run policies detect but never block downloads. Promoting closes the gap immediately.`,metric:`${fmt(p.curation_policies_block||0)} blocking, ${dry} Dry Run`});
+  if(cn.notConnected>0)acts.push({pri:'P2',effort:'Low',title:`Connect ${cn.notConnected} supported remotes to Curation`,body:`These remote repositories serve packages without curation screening.`,metric:`${cn.connected}/${cn.total} connected`});
+  const idle=(p.watches_total||0)-(p.watches_active||0);
+  if(idle>0)acts.push({pri:'P3',effort:'Low',title:`Review ${idle} inactive Xray watches`,body:`${idle} of ${p.watches_total} watches are not active.`,metric:`${p.watches_active}/${p.watches_total} active`});
+  (DATA.recommendations||[]).forEach(r=>{if(r.title||r.text)acts.push({pri:r.priority||'P3',effort:cap(r.effort||''),title:r.title||r.text,body:r.detail||'',metric:'',owner:r.owner,dueDate:r.due_date,score:r.score})});
+  acts.sort((a,b)=>({P1:0,P2:1,P3:2}[a.pri]??9)-({P1:0,P2:1,P3:2}[b.pri]??9));
+  return acts;
+}
+
+/* ─── BUILD ─── */
+(function(){
+  const m=DATA.meta||{},v=DATA.violations||{},c=DATA.curation||{},p=DATA.platform||{};
+  const sev=v.by_severity||{},cn=connStats(),cmp=DATA.comparison||{};
+  const acts=computeActions();
+
+  /* HERO */
+  const hero=`<section class="hero">
+    <div class="brand-lockup">
+      <img class="brand-logo" src="data:image/png;base64,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" alt="JFrog">
+      <div class="brand-name">JFrog Platform · Executive Security</div>
+    </div>
+    <div class="eyebrow">Security report \u00B7 ${esc(m.host||m.server_id||'')}</div>
+    <h1>${esc(m.report_type||'Weekly')} Security<br><em>& Compliance Report</em></h1>
+    <p class="lede">
+      Platform security posture for the ${esc(m.window_days||7)}-day window ending ${esc(m.date_to||'')}.
+      Covers Curation supply chain gate activity, Xray vulnerability analysis,
+      and prioritized remediation actions.
+    </p>
+    <div class="hero-meta">
+      <span><strong>Period</strong> \u00B7 ${esc(m.date_from||'')} \u2013 ${esc(m.date_to||'')}</span>
+      <span><strong>Instance</strong> \u00B7 ${esc(m.host||'')}</span>
+      <span><strong>Generated</strong> \u00B7 ${esc(m.generated||'')}</span>
+      <span><strong>Schema</strong> \u00B7 ${esc(m.schema_version||'')}</span>
+    </div>
+  </section>`;
+
+  /* POSTURE STRIP */
+  const critDelta=cmp.available&&cmp.violations?cmp.violations.critical_delta:null;
+  const critSub=critDelta==null?'No prior period':critDelta===0?'Unchanged vs prior':`${fmt(Math.abs(critDelta))} ${critDelta>0?'more':'fewer'} vs prior`;
+  const posture=`<div class="posture">
+    <div class="posture-title">Security posture at a glance</div>
+    <div class="posture-grid">
+      <div class="posture-stat"><div class="posture-val" style="color:var(--red)">${fmt(sev.critical)}</div><div class="posture-label">Critical violations<br>${esc(critSub)}</div></div>
+      <div class="posture-stat"><div class="posture-val" style="color:var(--green-dark)">${fmt(c.blocked||0)}</div><div class="posture-label">Packages blocked<br>of <b>${fmt(c.total||0)}</b> screened</div></div>
+      <div class="posture-stat"><div class="posture-val">${fmt(v.total)}</div><div class="posture-label">Total violations<br><b>${fmt(sev.high)}</b> high, <b>${fmt(sev.medium)}</b> medium</div></div>
+      <div class="posture-stat"><div class="posture-val">${pctOf(p.repos_indexed,p.repos_total)}<small>%</small></div><div class="posture-label">Xray indexed<br><b>${fmt(p.repos_indexed)}</b> of <b>${fmt(p.repos_total)}</b> repos</div></div>
+    </div>
+    <div class="posture-sub">
+      <div class="ps-item"><strong>${fmt(c.unique_users||0)}</strong>Active developers</div>
+      <div class="ps-item"><strong>${cn.pct}%</strong>Curation coverage</div>
+      <div class="ps-item"><strong>${fmt(p.watches_active)}</strong>Active watches</div>
+      <div class="ps-item"><strong>${fmt(p.curation_policies_block||0)}</strong>Enforcing policies</div>
+    </div>
+  </div>`;
+
+  /* TREND */
+  let trendCls='',trendText='';
+  if(!cmp.available){trendText='<strong>Baseline established.</strong> Next report will compare against this snapshot.';}
+  else if(critDelta>0){trendCls='up-bad';trendText=`<strong>Critical violations increased</strong> from ${fmt(cmp.violations.critical_previous)} to ${fmt(cmp.violations.critical)} (+${fmt(critDelta)}) since the prior period.`;}
+  else if(critDelta<0){trendCls='dn-good';trendText=`<strong>Critical violations decreased</strong> from ${fmt(cmp.violations.critical_previous)} to ${fmt(cmp.violations.critical)} (${fmt(critDelta)}) since the prior period.`;}
+  else{trendText=`<strong>${fmt(sev.critical)} critical violations</strong> this period, ${fmt(v.total)} total. ${fmt(c.blocked||0)} packages blocked at the Curation gate.`;}
+  const trend=`<div class="trend ${trendCls}">${trendText}</div>`;
+
+  /* COMPARISON TABLE */
+  let compTable='';
+  if(cmp.available){
+    const cv=cmp.violations||{},cc=cmp.curation||{};
+    const dc=(val,goodDown)=>{
+      if(val==null)return'\u2014';
+      const color=val===0?'var(--muted)':((goodDown&&val<0)||(!goodDown&&val>0))?'var(--green-dark)':'var(--red)';
+      return`<span class="num" style="color:${color}">${val>0?'+':''}${fmt(val)}</span>`;
+    };
+    compTable=`<table><thead><tr><th>Metric</th><th class="r">Current</th><th class="r">Previous</th><th class="r">Change</th></tr></thead><tbody>
+      <tr><td>Critical violations</td><td class="r num">${fmt(cv.critical)}</td><td class="r num">${fmt(cv.critical_previous)}</td><td class="r">${dc(cv.critical_delta,true)}</td></tr>
+      <tr><td>Total violations</td><td class="r num">${fmt(cv.total)}</td><td class="r num">${fmt(cv.total_previous)}</td><td class="r">${dc(cv.total_delta,true)}</td></tr>
+      <tr><td>Packages blocked</td><td class="r num">${fmt(cc.blocked)}</td><td class="r num">${fmt(cc.blocked_previous)}</td><td class="r">${dc(cc.blocked_delta,false)}</td></tr>
+      <tr><td>Packages screened</td><td class="r num">${fmt(cc.total)}</td><td class="r num">${fmt(cc.total_previous)}</td><td class="r">${dc(cc.total_delta,false)}</td></tr>
+    </tbody></table>`;
+  }
+
+  /* DEVELOPER ACTIVITY */
+  const users=c.top_users||[];
+  const maxEv=Math.max(1,...users.map(u=>u.events||0));
+  const userRows=users.slice(0,15).map(u=>{
+    const barW=pctOf(u.events,maxEv);
+    const blockPct=pctOf(u.blocked,u.events);
+    return`<tr><td class="mono">${esc(u.user||'')}</td><td class="r num">${fmt(u.events)}</td><td class="r num">${fmt(u.approved)}</td><td class="r num" style="${u.blocked>0?'color:var(--red)':''}">${fmt(u.blocked)}</td><td class="r num">${blockPct>0?blockPct+'%':'\u2014'}</td></tr>`;
+  }).join('');
+  const devSection=`<div class="dev-section">
+    <div class="dev-header"><div class="dev-count">${fmt(c.unique_users||0)}</div><div class="dev-label">active developers using the Curation gate<br><span style="font-size:12px;color:var(--muted-2)">${fmt(c.total||0)} package requests screened this period</span></div></div>
+    <table><thead><tr><th>Developer</th><th class="r">Requests</th><th class="r">Approved</th><th class="r">Blocked</th><th class="r">Block rate</th></tr></thead><tbody>${userRows}</tbody></table>
+    ${users.length>15?`<div style="font-size:11px;color:var(--muted);margin-top:4px">and ${users.length-15} additional developers</div>`:''}
+  </div>`;
+
+  /* COVERAGE */
+  function covBar(label,a,b,color,alert){
+    const pc=pctOf(a,b);const gap=(Number(b)||0)-(Number(a)||0);
+    return`<div class="bar-row"><span class="bar-label">${esc(label)}</span><div class="bar-track"><div class="bar-fill" style="width:${pc}%;background:${color}"></div></div><span class="bar-val">${fmt(a)} / ${fmt(b)}</span><span class="bar-alert">${alert&&gap>0?esc(alert):''}</span></div>`;
+  }
+  const blockP=p.curation_policies_block||0,dryP=p.curation_policies_dry_run||0;
+  const covSection=`<div style="margin-bottom:24px">
+    ${covBar('Xray indexed repos',p.repos_indexed,p.repos_total,'var(--blue)',p.repos_unindexed?fmt(p.repos_unindexed)+' repos unscanned':'')}
+    ${covBar('Curation remotes',cn.connected,cn.total,'var(--green)',cn.notConnected?fmt(cn.notConnected)+' ungated':'')}
+    ${covBar('Policies enforcing',blockP,blockP+dryP,'var(--amber)',dryP?fmt(dryP)+' in Dry Run':'')}
+    ${covBar('Active watches',p.watches_active,p.watches_total,'var(--navy)','')}
+  </div>`;
+
+  /* CURATION SECTION */
+  const rr_c=c.request_results||{};
+  const cleanPackages=c.clean_packages!=null?c.clean_packages:(rr_c.clean_packages!=null?rr_c.clean_packages:c.approved||0);
+  const withoutInspection=rr_c.without_inspection!=null?rr_c.without_inspection:(c.without_inspection||0);
+  const apPct=pctOf(cleanPackages,c.total),blPct=pctOf(c.blocked,c.total);
+  const dryCount=rr_c.dry_run||0;
+  const curationBar=`<div class="sbar">
+    <span style="width:${apPct}%;background:var(--green)">Clean ${fmt(cleanPackages)}</span>
+    <span style="width:${Math.max(blPct,3)}%;background:var(--red)">Blocked ${fmt(c.blocked)}</span>
+    ${dryCount?`<span style="width:${Math.max(pctOf(dryCount,c.total),3)}%;background:var(--amber)">Dry Run ${fmt(dryCount)}</span>`:''}
+  </div>`;
+
+  const br=c.by_reason||{};
+  const totalB=c.blocked||1;
+  const blockReasons=[['Malicious',br.malicious||0,'var(--red)'],['Security',br.security||0,'#DC2626'],['License',br.license||0,'var(--blue)'],['Operational',br.operational||0,'var(--amber)']].filter(r=>r[1]>0);
+  const reasonLegend=blockReasons.map(r=>`<div class="legend-item"><span class="swatch" style="background:${r[2]}"></span><span class="l-val">${fmt(r[1])}</span><span class="l-label">${r[0]} (${pctOf(r[1],totalB)}%)</span></div>`).join('');
+
+  const byPkg=(p.curation_state&&p.curation_state.by_package_type)||(c.curation_state&&c.curation_state.by_package_type)||[];
+  const ecoRows=byPkg.filter(e=>e.remote_total>0).sort((a,b)=>b.remote_total-a.remote_total).slice(0,8).map(e=>{
+    const pc=pctOf(e.connected,e.remote_total);
+    return`<div class="bar-row"><span class="bar-label" style="width:100px;font-size:11px">${esc(e.package_type)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2,pc)}%;background:${pc>=100?'var(--green)':pc>0?'var(--amber)':'var(--red)'}"></div></div><span class="bar-val" style="width:50px">${e.connected}/${e.remote_total}</span></div>`;
+  }).join('');
+
+  const waivers=c.waiver_requests||{};
+  const topBlockedRows=(c.top_blocked||[]).slice(0,15).map(r=>`<tr>
+    <td class="mono">${esc(r.package)}</td><td>${esc(r.ecosystem||'unknown')}</td>
+    <td>${r.malicious?'<span class="sev sev-critical">MALICIOUS</span>':'Policy violation'}</td>
+    <td class="r num">${fmt(r.count)}</td></tr>`).join('');
+  const policyRows=(((c.policies_enforced||{}).by_policy)||[]).slice(0,20).map(r=>`<tr>
+    <td class="mono">${esc(r.name)}</td><td>${esc(r.scope_label||r.scope||'\u2014')}</td>
+    <td class="r num">${fmt(r.blocked_hits)}</td><td class="r num">${fmt(r.clean_hits)}</td>
+    <td class="r num">${fmt(r.blocked_pct)}%</td><td class="r num">${fmt(r.clean_pct)}%</td></tr>`).join('');
+  const pi=c.policy_inventory||{};
+  const dryRunRows=(pi.dry_run_policies||[]).map(r=>`<tr><td class="mono">${esc(r.name)}</td><td>${esc(r.scope||'\u2014')}</td><td class="r num">${r.days_in_dry_run==null?'\u2014':fmt(r.days_in_dry_run)}</td></tr>`).join('');
+  const passThroughRows=(p.pass_through_repos||[]).slice(0,25).map(r=>`<tr><td class="mono">${esc(r.repo)}</td><td>${esc(r.package_type||'unknown')}</td><td>${r.supported?'Not enabled':'Unsupported ecosystem'}</td></tr>`).join('');
+  const baseline=pi.baseline_policy_posture||{},cache=pi.cached_package_enforcement||{},benefit=DATA.benefit||{};
+
+  /* XRAY SECTION */
+  const sevBar=`<div class="sbar">
+    ${sev.critical?`<span style="width:${pctOf(sev.critical,v.total)}%;background:var(--red)">${sev.critical}</span>`:''}
+    ${sev.high?`<span style="width:${pctOf(sev.high,v.total)}%;background:#EF4444">${sev.high}</span>`:''}
+    ${sev.medium?`<span style="width:${pctOf(sev.medium,v.total)}%;background:var(--amber)">${sev.medium}</span>`:''}
+    ${sev.low?`<span style="width:${pctOf(sev.low,v.total)}%;background:#FACC15;color:#78350F">${sev.low}</span>`:''}
+  </div>`;
+  const sevLegend=[['Critical',sev.critical||0,'var(--red)'],['High',sev.high||0,'#EF4444'],['Medium',sev.medium||0,'var(--amber)'],['Low',sev.low||0,'#FACC15']].map(r=>`<div class="legend-item"><span class="swatch" style="background:${r[2]}"></span><span class="l-val">${fmt(r[1])}</span><span class="l-label">${r[0]}</span></div>`).join('');
+
+  const byType=v.by_type||{};const typeTotal=v.total||1;
+  const typeBar=`<div class="sbar">
+    ${byType.security?`<span style="width:${pctOf(byType.security,typeTotal)}%;background:var(--red)">${byType.security}</span>`:''}
+    ${byType.operational?`<span style="width:${pctOf(byType.operational,typeTotal)}%;background:var(--amber)">${byType.operational}</span>`:''}
+    ${byType.license?`<span style="width:${pctOf(byType.license,typeTotal)}%;background:var(--blue)">${byType.license}</span>`:''}
+  </div>`;
+  const typeLegend=[['Security',byType.security||0,'var(--red)'],['Operational',byType.operational||0,'var(--amber)'],['License',byType.license||0,'var(--blue)']].map(r=>`<div class="legend-item"><span class="swatch" style="background:${r[2]}"></span><span class="l-val">${fmt(r[1])}</span><span class="l-label">${r[0]}</span></div>`).join('');
+
+  // Top CVEs table
+  const compMap={};(v.violation_details||[]).forEach(d=>{if(d.issue_id&&!compMap[d.issue_id])compMap[d.issue_id]=d.component});
+  const topRows=(v.top_cves||[]).slice(0,8).map(r=>`<tr><td class="mono">${esc(r.id)}</td><td class="mono" style="font-size:11px;color:var(--muted)">${esc(compMap[r.id]?shortComp(compMap[r.id]):'\u2014')}</td><td><span class="sev ${sevClass(r.severity)}">${esc(String(r.severity||'').toUpperCase())}</span></td><td class="r num">${fmt(r.hits)}</td></tr>`).join('');
+
+  // Violation details table
+  const details=v.violation_details||[];
+  const detailRows=details.slice(0,20).map(d=>`<tr><td class="mono">${esc(d.issue_id||d.cve)}</td><td class="mono" style="font-size:11px;color:var(--muted)">${esc(shortComp(d.component))}</td><td><span class="sev ${sevClass(d.severity)}">${esc(String(d.severity||'').toUpperCase())}</span></td><td class="r num">${fmt(d.impacted_artifacts||d.hits||'\u2014')}</td></tr>`).join('');
+
+  // Xray insights
+  const vei=v.executive_insights||{};
+  const sla=vei.sla_risk_backlog||{},rem=vei.remediation_readiness||{},blind=vei.watch_blind_spots||[];
+  const criticalRows=(v.critical_issues||[]).map(r=>`<tr>
+    <td class="mono">${esc(r.id)}</td><td class="mono">${esc(shortComp(r.component))}</td>
+    <td>${esc(r.fix_status||'unknown')}</td><td>${esc(r.exploit_status||'unknown')}</td>
+    <td>${esc((r.affected_environments||[]).join(', ')||'\u2014')}</td>
+    <td class="r num">${fmt(r.hits)}</td><td class="r num">${fmt(r.days_open)}</td></tr>`).join('');
+  const topRepoRows=(v.top_repos||[]).slice(0,20).map(r=>`<tr>
+    <td class="mono">${esc(r.repo)}</td><td>${esc(r.business_service||'\u2014')}</td>
+    <td>${esc(r.criticality||'unknown')}</td><td>${esc(r.environment||'\u2014')}</td>
+    <td class="r num">${fmt(r.critical)}</td><td class="r num">${fmt(r.count)}</td></tr>`).join('');
+  const watchCoverage=(DATA.governance&&DATA.governance.repo_watch_coverage)||[];
+  const watchRows=watchCoverage.slice(0,20).map(r=>`<tr>
+    <td class="mono">${esc(r.repo)}</td><td class="r num">${fmt(r.watch_count)}</td>
+    <td class="r num">${fmt(r.critical_count)}</td><td>${esc(r.risk_level||'covered')}</td></tr>`).join('');
+  const velocity=DATA.threat_velocity||{};
+  const velocityRows=(velocity.periods||[]).map(r=>`<tr><td class="mono">${esc(r.label)}</td>
+    <td class="r num">${fmt(r.critical)}</td><td class="r num">${fmt(r.violations)}</td>
+    <td class="r num">${fmt(r.blocked)}</td></tr>`).join('');
+
+  /* ACTIONS */
+  const actionItems=acts.map((a,i)=>`<div class="action ${(a.pri||'p3').toLowerCase()}">
+    <div class="action-idx">${String(i+1).padStart(2,'0')}</div>
+    <div><div class="action-title">${esc(a.title)}</div><div class="action-body">${esc(a.body)}</div>
+    <div class="action-tags"><span class="action-tag pri${a.pri==='P2'?'-p2':a.pri==='P3'?'-p3':''}">${esc(a.pri)}</span><span class="action-tag">Effort: ${esc(a.effort)}</span>${a.owner?`<span class="action-tag">Owner: ${esc(a.owner)}</span>`:''}${a.dueDate?`<span class="action-tag">Due: ${esc(a.dueDate)}</span>`:''}${a.score!=null?`<span class="action-tag">Score: ${fmt(a.score)}</span>`:''}${a.metric?`<span class="action-tag">${esc(a.metric)}</span>`:''}</div>
+    </div>
+  </div>`).join('');
+
+  /* FOOTER */
+  const footer=`<footer>
+    <span>${esc(m.report_type||'Weekly')} Security Report \u00B7 ${esc(m.host||'')} \u00B7 Generated ${esc(m.generated||'')}</span>
+    <span>Data: JFrog Xray + Curation APIs \u00B7 Schema ${esc(m.schema_version||'')}</span>
+  </footer>`;
+
+  /* ═══ ASSEMBLE ═══ */
+  document.getElementById('report').innerHTML = [
+    hero,
+    posture,
+    trend,
+    compTable ? `<h2><span class="lbl">Period comparison</span>Change from prior report</h2>${compTable}` : '',
+
+    `<h2><span class="lbl">01 \u00B7 Curation</span>Supply chain gate</h2>`,
+    `<h3>Package screening</h3>`,
+    curationBar,
+    `<div class="legend">${reasonLegend||'<span class="legend-item" style="color:var(--muted)">No blocks recorded</span>'}</div>`,
+    `<div class="metric-grid">
+      <div class="metric-card"><strong>${fmt(cleanPackages)}</strong><span>Clean packages allowed after policy evaluation</span></div>
+      <div class="metric-card"><strong style="color:var(--red)">${fmt(withoutInspection)}</strong><span>Requests without inspection</span></div>
+      <div class="metric-card"><strong>${waivers.available?fmt(waivers.pending):'\u2014'}</strong><span>Pending waiver requests</span></div>
+      <div class="metric-card"><strong>${benefit.upgrade_rate_computed?fmt(benefit.upgrade_rate)+'%':'\u2014'}</strong><span>Upgrade-after-block rate</span></div>
+    </div>`,
+    devSection,
+    `<div class="panel-row">
+      <div class="panel"><div class="panel-title">Ecosystem coverage</div>${ecoRows}</div>
+      <div class="panel"><div class="panel-title">Policy summary</div>
+        <div style="font-size:12px;color:var(--ink-2);line-height:1.7">
+          <b>${fmt((c.policies_enforced||{}).total_registered||p.curation_policies_total||0)}</b> Curation policies registered<br>
+          <b>${fmt(p.curation_policies_block||0)}</b> enforcing (Block action)<br>
+          <b>${fmt(p.curation_policies_dry_run||0)}</b> Dry Run (observe only)<br>
+          <b>${fmt(cn.connected)}</b> of <b>${fmt(cn.total)}</b> supported remotes connected
+        </div>
+      </div>
+    </div>`,
+    topBlockedRows ? `<h3>Top blocked packages</h3><table class="long-table"><thead><tr><th>Package</th><th>Ecosystem</th><th>Reason</th><th class="r">Blocks</th></tr></thead><tbody>${topBlockedRows}</tbody></table>` : '',
+    policyRows ? `<h3>Protection by policy</h3><table class="long-table"><thead><tr><th>Policy</th><th>Scope</th><th class="r">Blocked</th><th class="r">Clean</th><th class="r">Block %</th><th class="r">Clean %</th></tr></thead><tbody>${policyRows}</tbody></table>` : '',
+    `<div class="panel-row">
+      <div class="panel"><div class="panel-title">Recommended baseline</div>
+        <b>Block malicious org-wide:</b> ${baseline.block_malicious_org_wide?'Applied':'Missing'}<br>
+        <span class="subtle">${esc((baseline.matching_policies||[]).join(', ')||'No matching policy discovered')}</span>
+      </div>
+      <div class="panel"><div class="panel-title">Cached-package enforcement</div>
+        <b>${fmt(cache.policies_enforcing_cache)} / ${fmt(cache.blocking_policies_total)}</b> blocking policies cover cached packages<br>
+        <span class="subtle">Global setting: ${cache.global_enabled==null?'not exposed':cache.global_enabled?'enabled':'disabled'}</span>
+      </div>
+    </div>`,
+    dryRunRows ? `<h3>Policies still in Dry Run</h3><table class="long-table"><thead><tr><th>Policy</th><th>Scope</th><th class="r">Days in Dry Run</th></tr></thead><tbody>${dryRunRows}</tbody></table>` : '',
+    passThroughRows ? `<h3>Remote repositories outside the Curation gate</h3><table class="long-table"><thead><tr><th>Repository</th><th>Package type</th><th>Coverage</th></tr></thead><tbody>${passThroughRows}</tbody></table>` : '',
+
+    `<h2 class="page-break"><span class="lbl">02 \u00B7 Xray</span>Vulnerability posture</h2>`,
+    `<div class="posture" style="margin-bottom:24px">
+      <div class="posture-title">Remediation readiness</div>
+      <div class="posture-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="posture-stat"><div class="posture-val" style="color:var(--red)">${fmt(sla.sla_breach_issues||0)}</div><div class="posture-label">SLA breaches<br>Critical violations over ${fmt(sla.sla_days||30)} days</div></div>
+        <div class="posture-stat"><div class="posture-val" style="color:var(--green-dark)">${fmt(rem.fix_available_issues||0)}</div><div class="posture-label">Fixable issues<br>Patch or upgrade available</div></div>
+        <div class="posture-stat"><div class="posture-val" style="color:var(--amber)">${fmt(blind.length)}</div><div class="posture-label">Watch blind spots<br>Repos with violations, no watch</div></div>
+      </div>
+    </div>`,
+    `<div class="panel-row">
+      <div class="panel"><div class="panel-title">By severity</div>${sevBar}${sevLegend}</div>
+      <div class="panel"><div class="panel-title">By policy type</div>${typeBar}${typeLegend}</div>
+    </div>`,
+
+    `<h3>Platform configuration</h3>`,
+    `<div style="font-size:12px;color:var(--ink-2);margin-bottom:20px;line-height:1.7">
+      <b>${fmt(p.watches_active)}</b> of <b>${fmt(p.watches_total)}</b> Xray watches active \u00B7
+      <b>${fmt(p.policies_total)}</b> Xray policies (<b>${fmt(p.policies_security)}</b> security, <b>${fmt(p.policies_license)}</b> license, <b>${fmt(p.policies_operational)}</b> operational risk)
+    </div>`,
+    covSection,
+
+    `<h3>Top exposure</h3>`,
+    topRows ? `<table><thead><tr><th>Issue</th><th>Component</th><th>Severity</th><th class="r">Artifact hits</th></tr></thead><tbody>${topRows}</tbody></table>` : '<div style="font-size:12px;color:var(--muted)">No critical findings this period.</div>',
+
+    details.length ? `<h3>All findings (top ${Math.min(details.length,20)})</h3><table><thead><tr><th>Issue</th><th>Component</th><th>Severity</th><th class="r">Artifacts</th></tr></thead><tbody>${detailRows}</tbody></table>` : '',
+    criticalRows ? `<h3>Critical issue work queue</h3><table class="long-table"><thead><tr><th>Issue</th><th>Component</th><th>Fix</th><th>Exploit</th><th>Environment</th><th class="r">Hits</th><th class="r">Days</th></tr></thead><tbody>${criticalRows}</tbody></table>` : '',
+    topRepoRows ? `<h3>Repositories with the most exposure</h3><table class="long-table"><thead><tr><th>Repository</th><th>Service</th><th>Criticality</th><th>Environment</th><th class="r">Critical</th><th class="r">Total</th></tr></thead><tbody>${topRepoRows}</tbody></table>` : '',
+    watchRows ? `<h3>Watch-to-repository coverage</h3><table class="long-table"><thead><tr><th>Repository</th><th class="r">Watches</th><th class="r">Critical</th><th>Risk</th></tr></thead><tbody>${watchRows}</tbody></table>` : '',
+    `<div class="panel-row">
+      <div class="panel"><div class="panel-title">License compliance</div><b>${fmt(byType.license||0)}</b> license violations</div>
+      <div class="panel"><div class="panel-title">Operational risk</div><b>${fmt(byType.operational||0)}</b> operational violations</div>
+    </div>`,
+
+    `<h2 class="page-break"><span class="lbl">03 \u00B7 Action plan</span>Prioritized remediation</h2>`,
+    actionItems,
+    `<h2><span class="lbl">04 \u00B7 Trend</span>Threat velocity</h2>`,
+    velocity.available && velocityRows
+      ? `<table><thead><tr><th>Period</th><th class="r">Critical</th><th class="r">Violations</th><th class="r">Gate blocks</th></tr></thead><tbody>${velocityRows}</tbody></table><p class="subtle">${esc(velocity.trend_summary||'')}</p>`
+      : `<div class="trend"><strong>Baseline required.</strong> Threat velocity will be available after two validated report runs.</div>`,
+
+    footer
+  ].join('\n');
+
+  document.title=`CISO Security Report \u2014 ${m.host||''} \u2014 ${m.generated||''}`;
+})();
+</script></body></html>

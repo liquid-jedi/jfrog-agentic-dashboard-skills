@@ -1,0 +1,39 @@
+schema_version = 1
+
+[filters.ciso-report-runner]
+description = "Keep CISO report runner milestones and failures"
+match_command = "generate-ciso-report\\.sh\\b"
+strip_ansi = true
+keep_lines_matching = [
+  "^(Running CISO report|Existing report found|=== |track: |base data:|report written:|print HTML written:)",
+  "^(executive pdf:|full pdf:|snapshot:|run-meta:|Final .* path:)",
+  "(verification passed|PDF generated:|Size:)",
+  "^(ERROR|WARN|FAIL|Traceback|Exception|RuntimeError)",
+  "(/tmp/ciso-|/ciso-reports/|executive-report\\.pdf|full-report\\.pdf|report\\.html)",
+]
+max_lines = 160
+on_empty = "ciso report runner: completed"
+
+[filters.jfrog-ciso-xray]
+description = "Summarize JFrog Xray/Curation curl output used by the CISO skill"
+match_command = "jf\\s+xr\\s+curl\\b.*(/api/v1/violations|/api/v1/curation|/api/v2/(watches|policies)|/api/v1/binMgr/default/repos)"
+strip_ansi = true
+keep_lines_matching = [
+  "^(ERROR|WARN|FAIL|HTTP|curl:|jfrog:)",
+  "\"(total|total_violations|total_count|severity|policy|watch|indexed_repos|http_status)\"",
+]
+truncate_lines_at = 220
+max_lines = 120
+on_empty = "jfrog xray/curation query: ok"
+
+[filters.jfrog-ciso-artifactory]
+description = "Summarize JFrog Artifactory repository metadata output used by the CISO skill"
+match_command = "jf\\s+rt\\s+curl\\b.*(/api/repositories|/api/v1/system/version)"
+strip_ansi = true
+keep_lines_matching = [
+  "^(ERROR|WARN|FAIL|HTTP|curl:|jfrog:)",
+  "\"(key|type|packageType|version|addons)\"",
+]
+truncate_lines_at = 220
+max_lines = 120
+on_empty = "jfrog artifactory metadata query: ok"
