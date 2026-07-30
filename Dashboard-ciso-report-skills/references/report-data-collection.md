@@ -101,7 +101,7 @@ def get_page(start: str, end: str, offset: int):
       "/api/v1/curation/audit/packages"
       f"?order_by=id&direction=desc&num_of_rows={limit}"
       f"&created_at_start={start}&created_at_end={end}"
-      f"&include_total=true&offset={offset}"
+      f"&include_total=true&dry_run=false&offset={offset}"
     )
     p = subprocess.run(
       ["jf","xr","curl","-s","-w","%{http_code}","--server-id",server,"-XGET",path],
@@ -190,7 +190,7 @@ server = os.environ["SERVER_ID"].strip()
 date_from = os.environ["DATE_FROM"].strip()
 date_to = os.environ["DATE_TO"].strip()
 limit = int(os.environ.get("CISO_VIOLATIONS_LIMIT", "500"))
-concurrency = max(1, min(int(os.environ.get("CISO_VIOLATIONS_CONCURRENCY", "3")), 6))
+concurrency = max(1, min(int(os.environ.get("CISO_VIOLATIONS_CONCURRENCY", "4")), 8))
 
 def fetch(offset: int):
   body = json.dumps({
@@ -533,6 +533,7 @@ connected = 0
 supported_remote_total = 0
 supported_connected = 0
 by_pkg = {}
+pass_through_repos = []
 
 def fetch_curated(key):
   cfg = jf_rt(f"/api/repositories/{key}")
@@ -553,10 +554,17 @@ with ThreadPoolExecutor(max_workers=workers) as ex:
     if curated:
       connected += 1
       slot["connected"] += 1
-    if normalize_pkg_type(pkg) in supported_norm:
+    supported = normalize_pkg_type(pkg) in supported_norm
+    if supported:
       supported_remote_total += 1
       if curated:
         supported_connected += 1
+    if not curated:
+      pass_through_repos.append({
+        "repo": key,
+        "package_type": norm,
+        "supported": supported,
+      })
 
 package_types_in_scope = [
   v for v in by_pkg.values()
@@ -589,6 +597,7 @@ plat = {
   "repos_unindexed": repos_unindexed,
   "repo_types": repo_types,
   "indexed_repo_names": sorted(indexed_names),
+  "pass_through_repos": sorted(pass_through_repos, key=lambda row: (not row["supported"], row["package_type"], row["repo"])),
   "curation_state": curation_state,
 }
 json.dump(plat, open("/tmp/ciso-platform.json", "w"), indent=2)
@@ -832,7 +841,9 @@ jq --argjson available "$CURATION_AVAILABLE" '{
 - `curation_repos_count`: unique `.curated_repository_name` values from `.data[]`
 - `unique_users` / `top_users`: derive from **all** paginated audit rows in the
   window (not blocked-only). Identity = `username` if set, else `user_mail`;
-  skip rows with neither. `top_users` = top 10 by `events` (tie-break on `user`).
+  skip rows with neither. `top_users` = top 20 by `events` (tie-break on `user`);
+  the full user/package activity is written as `curation-user-package-activity.csv`
+  next to the report instead of being embedded in the HTML.
   There is no separate curation-users API — use
   `GET /xray/api/v1/curation/audit/packages` (`jf xr curl`) per
   `../jfrog/references/xray-entities.md` § Curation audit events.
@@ -851,7 +862,9 @@ jq --argjson available "$CURATION_AVAILABLE" '{
 After `/tmp/ciso-curation.json` is merged, build:
 
 - blocked-only `audit_events` + top-50 `audit_events_display` (sort **C+D**)
-- **`unique_users`** and **`top_users`** (from all audit rows — required for dashboard)
+- `clean_packages` from approved outcomes, with `without_inspection` kept separate
+- `top_blocked`, block-then-upgrade rate, and the full aggregated user/package export
+- **`unique_users`** and **top-20 `top_users`** (from all audit rows — required for dashboard)
 - **`policies_enforced`** (from `/tmp/ciso-curation-policies.json` + audit policy hits; dry-run excluded)
 
 **Prerequisite:** `/tmp/ciso-data.json` must already exist (initial jq merge from Phase 2). Do not run this transform before the base `curation` object is written.
@@ -860,6 +873,7 @@ After `/tmp/ciso-curation.json` is merged, build:
 python3 - <<'PY'
 import json, re, sys, os, subprocess
 from collections import Counter, defaultdict
+from datetime import datetime, timezone
 
 CAP = 50
 MAL = re.compile(r"malicious", re.I)
@@ -930,13 +944,75 @@ def build_request_results(events):
   blocked = int(ctr.get("blocked", 0))
   approved = int(ctr.get("approved", 0))
   dry_run = audit_meta_total(dry_run=True)
-  inspected = blocked + approved + dry_run
-  without_inspection = max(0, int((data.get("curation") or {}).get("total", 0) or 0) - inspected)
+  # The main audit stream is non-dry-run. Its approved rows are the packages
+  # that Curation inspected and allowed ("clean packages"). The UI "Passed"
+  # remainder was not policy-inspected and must never be counted as clean.
+  non_dry_total = int((data.get("curation") or {}).get("total", 0) or len(events))
+  without_inspection = max(0, non_dry_total - blocked - approved)
   return {
     "blocked": blocked,
     "approved": approved,
+    "clean_packages": approved,
     "dry_run": dry_run,
     "without_inspection": without_inspection,
+  }
+
+def build_top_blocked(events):
+  grouped = {}
+  for ev in events:
+    if (ev.get("action") or ev.get("status") or "").lower() != "blocked":
+      continue
+    package = (ev.get("package_name") or ev.get("package") or "unknown").strip()
+    ecosystem = normalize_pkg_type(ev.get("package_type"))
+    key = (package, ecosystem)
+    row = grouped.setdefault(key, {
+      "package": package,
+      "ecosystem": ecosystem,
+      "count": 0,
+      "malicious": False,
+    })
+    row["count"] += 1
+    row["malicious"] = row["malicious"] or is_malicious(ev)
+  return sorted(
+    grouped.values(),
+    key=lambda row: (not row["malicious"], -row["count"], row["package"], row["ecosystem"]),
+  )[:25]
+
+def version_key(value):
+  parts = re.findall(r"\d+|[A-Za-z]+", str(value or ""))
+  return tuple((0, int(part)) if part.isdigit() else (1, part.lower()) for part in parts)
+
+def build_upgrade_rate(events):
+  blocked = defaultdict(list)
+  approved = defaultdict(list)
+  for ev in events:
+    action = (ev.get("action") or ev.get("status") or "").lower()
+    if action not in ("blocked", "approved"):
+      continue
+    package = (ev.get("package_name") or ev.get("package") or "").strip()
+    ecosystem = normalize_pkg_type(ev.get("package_type"))
+    version = str(ev.get("package_version") or ev.get("version") or "").strip()
+    timestamp = str(ev.get("created_at") or "")
+    if not package or not version:
+      continue
+    target = blocked if action == "blocked" else approved
+    target[(package, ecosystem)].append((timestamp, version))
+  upgraded = 0
+  for key, blocked_events in blocked.items():
+    approved_events = approved.get(key) or []
+    matched = any(
+      approved_ts > blocked_ts and version_key(approved_version) > version_key(blocked_version)
+      for blocked_ts, blocked_version in blocked_events
+      for approved_ts, approved_version in approved_events
+    )
+    if matched:
+      upgraded += 1
+  total = len(blocked)
+  return {
+    "upgrade_rate": round((upgraded / total) * 100, 1) if total else 0,
+    "upgrade_rate_computed": bool(total),
+    "upgraded_packages": upgraded,
+    "unique_blocked_packages": total,
   }
 
 def build_curation_state(events):
@@ -1032,20 +1108,32 @@ def build_package_types_insights(events, state):
     total = len([k for k, v in by_pkg.items() if (v.get("remote_total") or 0) > 0])
   return {"total": total, "top_by_blocked": top_by_blocked}
 
+def policy_risk_type(policy):
+  condition = policy.get("condition") or {}
+  blob = " ".join([
+    str(policy.get("name") or ""),
+    str(condition.get("name") or ""),
+    str(condition.get("risk_type") or ""),
+  ]).lower()
+  if "malicious" in blob:
+    return "malicious"
+  rt = str(condition.get("risk_type") or "unknown").lower()
+  if rt in ("vulnerability", "cve"):
+    return "security"
+  return rt
+
 def build_policy_inventory(registry):
   enabled = [p for p in registry if isinstance(p, dict) and p.get("enabled", True) is not False]
   block = [p for p in enabled if not is_dry_run_policy(p)]
   dry = [p for p in enabled if is_dry_run_policy(p)]
   risk = Counter()
   for p in enabled:
-    rt = ((p.get("condition") or {}).get("risk_type") or "unknown").lower()
-    if "malicious" in (p.get("name") or "").lower() or "malicious" in ((p.get("condition") or {}).get("name") or "").lower():
-      risk["malicious"] += 1
+    rt = policy_risk_type(p)
     risk[rt] += 1
   block_by_risk = Counter()
   block_list = []
   for p in block:
-    rt = ((p.get("condition") or {}).get("risk_type") or "unknown").lower()
+    rt = policy_risk_type(p)
     block_by_risk[rt] += 1
     block_list.append({
       "name": p.get("name"),
@@ -1053,6 +1141,31 @@ def build_policy_inventory(registry):
       "scope": scope_label(p.get("scope")),
       "condition": (p.get("condition") or {}).get("name") or "—",
     })
+  def policy_age_days(policy):
+    value = policy.get("updated_at") or policy.get("created_at") or ""
+    if not value:
+      return None
+    try:
+      stamp = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+      if stamp.tzinfo is None:
+        stamp = stamp.replace(tzinfo=timezone.utc)
+      return max(0, (datetime.now(timezone.utc) - stamp).days)
+    except Exception:
+      return None
+  dry_run_policies = [
+    {
+      "name": p.get("name") or f"policy-{p.get('id', '?')}",
+      "scope": scope_label(p.get("scope")),
+      "days_in_dry_run": policy_age_days(p),
+    }
+    for p in dry
+  ]
+  malicious_org_wide = [
+    p for p in block
+    if "malicious" in json.dumps(p).lower()
+    and (p.get("scope") or "") in ("all_repos", "global")
+  ]
+  cache_enforced = [p for p in block if p.get("block_from_cache") is True]
   return {
     "block_active": len(block),
     "dry_run_active": len(dry),
@@ -1060,6 +1173,20 @@ def build_policy_inventory(registry):
     "by_risk_type": [{"type": k, "count": v} for k, v in risk.most_common()],
     "block_by_risk_type": [{"type": k, "count": v} for k, v in block_by_risk.most_common()],
     "block_policies": block_list[:20],
+    "dry_run_policies": dry_run_policies,
+    "baseline_policy_posture": {
+      "block_malicious_org_wide": bool(malicious_org_wide),
+      "matching_policies": [p.get("name") or f"policy-{p.get('id', '?')}" for p in malicious_org_wide],
+    },
+    "cached_package_enforcement": {
+      "global_enabled": None,
+      "policies_enforcing_cache": len(cache_enforced),
+      "blocking_policies_total": len(block),
+      "policies_missing_cache_enforcement": [
+        p.get("name") or f"policy-{p.get('id', '?')}"
+        for p in block if p.get("block_from_cache") is not True
+      ],
+    },
   }
 
 def is_dry_run_policy(p):
@@ -1077,6 +1204,7 @@ def build_policies_enforced(events, registry):
 
   audit_hits = Counter()
   blocked_hits = Counter()
+  clean_hits = Counter()
   for ev in events:
     action = (ev.get("action") or ev.get("status") or "").lower()
     for pol in ev.get("policies") or []:
@@ -1094,6 +1222,8 @@ def build_policies_enforced(events, registry):
       audit_hits[name] += 1
       if action == "blocked":
         blocked_hits[name] += 1
+      elif action == "approved":
+        clean_hits[name] += 1
 
   by_scope = defaultdict(lambda: {"count": 0, "enforcing": 0})
   for p in enabled:
@@ -1107,6 +1237,7 @@ def build_policies_enforced(events, registry):
   for p in enforcing_reg:
     name = (p.get("name") or "").strip() or f"policy-{p.get('id', '?')}"
     seen.add(name)
+    decided = int(blocked_hits.get(name, 0)) + int(clean_hits.get(name, 0))
     by_policy.append({
       "name": name,
       "scope": p.get("scope") or "unknown",
@@ -1115,10 +1246,14 @@ def build_policies_enforced(events, registry):
       "enabled": bool(p.get("enabled", True)),
       "audit_hits": int(audit_hits.get(name, 0)),
       "blocked_hits": int(blocked_hits.get(name, 0)),
+      "clean_hits": int(clean_hits.get(name, 0)),
+      "blocked_pct": round(int(blocked_hits.get(name, 0)) / decided * 100, 1) if decided else 0,
+      "clean_pct": round(int(clean_hits.get(name, 0)) / decided * 100, 1) if decided else 0,
     })
   for name, hits in audit_hits.items():
     if name in seen:
       continue
+    decided = int(blocked_hits.get(name, 0)) + int(clean_hits.get(name, 0))
     by_policy.append({
       "name": name,
       "scope": "audit_only",
@@ -1127,6 +1262,9 @@ def build_policies_enforced(events, registry):
       "enabled": True,
       "audit_hits": int(hits),
       "blocked_hits": int(blocked_hits.get(name, 0)),
+      "clean_hits": int(clean_hits.get(name, 0)),
+      "blocked_pct": round(int(blocked_hits.get(name, 0)) / decided * 100, 1) if decided else 0,
+      "clean_pct": round(int(clean_hits.get(name, 0)) / decided * 100, 1) if decided else 0,
     })
 
   by_policy.sort(key=lambda x: (-x["audit_hits"], -x["blocked_hits"], x["name"]))
@@ -1228,13 +1366,47 @@ for ev in cur.get("data") or []:
     uid = user_id(ev)
     if not uid:
         continue
-    st = user_stats.setdefault(uid, {"user": uid, "events": 0, "blocked": 0, "approved": 0, "passed": 0})
+    st = user_stats.setdefault(uid, {
+        "user": uid,
+        "events": 0,
+        "blocked": 0,
+        "approved": 0,
+        "passed": 0,
+        "_packages": Counter(),
+    })
     st["events"] += 1
     action = (ev.get("action") or ev.get("status") or "").lower()
     if action in ("blocked", "approved", "passed"):
         st[action] += 1
+    package = (ev.get("package_name") or ev.get("package") or "unknown").strip()
+    ecosystem = normalize_pkg_type(ev.get("package_type"))
+    st["_packages"][(package, ecosystem)] += 1
 
-top_users = sorted(user_stats.values(), key=lambda x: (-x["events"], x["user"]))[:10]
+attributed_events = sum(st["events"] for st in user_stats.values())
+user_package_activity = [
+    {
+        "user": st["user"],
+        "user_events": st["events"],
+        "user_events_pct": round(st["events"] / attributed_events * 100, 1) if attributed_events else 0,
+        "user_blocked": st["blocked"],
+        "user_approved": st["approved"],
+        "package": package,
+        "ecosystem": ecosystem,
+        "requests": count,
+    }
+    for st in user_stats.values()
+    for (package, ecosystem), count in st["_packages"].items()
+]
+user_package_activity.sort(key=lambda row: (-row["requests"], row["user"], row["package"], row["ecosystem"]))
+top_users = []
+for st in sorted(user_stats.values(), key=lambda x: (-x["events"], x["user"]))[:25]:
+    packages = [
+        {"package": package, "ecosystem": ecosystem, "requests": count}
+        for (package, ecosystem), count in st.pop("_packages").most_common(25)
+    ]
+    st["events_pct"] = round(st["events"] / attributed_events * 100, 1) if attributed_events else 0
+    st["packages"] = packages
+    top_users.append(st)
 
 curation = data.setdefault("curation", {})
 curation["audit_events"] = rows
@@ -1249,10 +1421,21 @@ events = cur.get("data") or []
 
 curation["unique_users"] = len(user_stats)
 curation["top_users"] = top_users
+curation["user_package_activity"] = user_package_activity
 curation["request_results"] = build_request_results(events)
+curation["blocked"] = curation["request_results"]["blocked"]
+curation["approved"] = curation["request_results"]["approved"]
+curation["clean_packages"] = curation["request_results"]["clean_packages"]
+decided = curation["blocked"] + curation["clean_packages"]
+curation["clean_rate"] = round(curation["clean_packages"] / decided * 100, 1) if decided else 0
 curation["without_inspection"] = curation["request_results"]["without_inspection"]
+curation["top_blocked"] = build_top_blocked(events)
 curation["policies_enforced"] = build_policies_enforced(events, registry)
 curation["policy_inventory"] = build_policy_inventory(registry)
+if os.path.isfile("/tmp/ciso-curation-waivers.json"):
+  curation["waiver_requests"] = json.load(open("/tmp/ciso-curation-waivers.json"))
+else:
+  curation["waiver_requests"] = {"available": False, "pending": 0, "approved": 0, "rejected": 0}
 curation["curation_state"] = build_curation_state(events)
 state = curation["curation_state"]
 curation["policy_violations_by_type"] = build_policy_violations_by_type(events)
@@ -1320,6 +1503,9 @@ plat["curation_enabled"] = bool(
 )
 if not int(plat.get("curation_repos_count") or 0) and int(state.get("remote_total") or 0) > 0:
   plat["curation_repos_count"] = int(state.get("remote_total") or 0)
+
+benefit = data.setdefault("benefit", {})
+benefit.update(build_upgrade_rate(events))
 
 # curation.total must be full audit volume, not blocked-only.
 if os.path.isfile("/tmp/ciso-curation-diagnostics.json"):
@@ -1435,7 +1621,7 @@ server = os.environ["SERVER_ID"].strip()
 date_from = os.environ["DATE_FROM"].strip()
 date_to = os.environ["DATE_TO"].strip()
 limit = int(os.environ.get("CISO_VIOLATIONS_LIMIT", "500"))
-concurrency = max(1, min(int(os.environ.get("CISO_VIOLATIONS_CONCURRENCY", "3")), 6))
+concurrency = max(1, min(int(os.environ.get("CISO_VIOLATIONS_CONCURRENCY", "4")), 8))
 
 def fetch(offset: int):
   body = json.dumps({
@@ -1913,7 +2099,7 @@ can tune explanations and thresholds without changing template code:
   },
   "curation_actions": {
     "blocked": "Denied by policy.",
-    "approved": "Explicit override approval.",
+    "approved": "Allowed after Curation policy evaluation (clean package).",
     "dry_run": "Evaluated in alert-only mode (passed with alert).",
     "without_inspection": "Download reached the client without policy inspection — may be vulnerable or malicious."
   },

@@ -26,7 +26,13 @@ field. Neither changes the other's job.
     "date_from": "string — display format (e.g., Apr 1, 2026)",
     "date_to": "string — display format",
     "report_type": "string — Weekly | Monthly | Custom",
-    "window_days": "number"
+    "window_days": "number",
+    "export_files": {
+      "curation_user_package_activity_csv": "string — relative CSV path next to report.html"
+    },
+    "export_counts": {
+      "curation_user_package_activity_rows": "number"
+    }
   },
 
   "methodology": {
@@ -79,18 +85,37 @@ field. Neither changes the other's job.
     "curation_policies_repo": "number",
     "curation_policies_user": "number",
     "curated_types": ["string — package types with curation events"],
-    "uncurated_types": ["string — package types without curation"]
+    "uncurated_types": ["string — package types without curation"],
+    "pass_through_repos": [
+      {
+        "repo": "string — remote repository key not connected to Curation",
+        "package_type": "string",
+        "supported": "boolean — whether the package type is supported by Curation"
+      }
+    ],
+    "repo_criticality": [
+      {
+        "repo": "string",
+        "business_service": "string — optional application/service name",
+        "criticality": "string — critical | high | medium | low | unknown",
+        "environment": "string — e.g. production | build | development",
+        "owner": "string — optional business or engineering owner"
+      }
+    ]
   },
 
   "curation": {
     "available": "boolean — false if API returned 404/403",
     "total": "number — total audit events",
     "blocked": "number",
-    "approved": "number — explicitly approved/override outcomes",
+    "approved": "number — packages allowed by Curation after policy evaluation",
+    "clean_packages": "number — alias of approved; inspected packages allowed by Curation",
+    "clean_rate": "number — clean_packages / (blocked + clean_packages) * 100",
     "passed": "number — legacy; prefer request_results.without_inspection",
     "request_results": {
       "blocked": "number",
-      "approved": "number",
+      "approved": "number — packages allowed after Curation policy evaluation",
+      "clean_packages": "number — alias of approved",
       "dry_run": "number — alert-only evaluations (dry_run=true stream)",
       "without_inspection": "number — downloads not policy-inspected (Curation UI Passed)"
     },
@@ -101,7 +126,26 @@ field. Neither changes the other's job.
       "total_registered": "number",
       "by_risk_type": [{ "type": "string", "count": "number" }],
       "block_by_risk_type": [{ "type": "string", "count": "number" }],
-      "block_policies": [{ "name": "string", "risk_type": "string", "scope": "string", "condition": "string" }]
+      "block_policies": [{ "name": "string", "risk_type": "string", "scope": "string", "condition": "string" }],
+      "dry_run_policies": [
+        { "name": "string", "scope": "string", "days_in_dry_run": "number|null" }
+      ],
+      "baseline_policy_posture": {
+        "block_malicious_org_wide": "boolean",
+        "matching_policies": ["string"]
+      },
+      "cached_package_enforcement": {
+        "global_enabled": "boolean|null — null when the platform API does not expose the global setting",
+        "policies_enforcing_cache": "number",
+        "blocking_policies_total": "number",
+        "policies_missing_cache_enforcement": ["string"]
+      }
+    },
+    "waiver_requests": {
+      "available": "boolean",
+      "pending": "number",
+      "approved": "number",
+      "rejected": "number"
     },
     "curation_state": {
       "remote_total": "number",
@@ -190,7 +234,10 @@ field. Neither changes the other's job.
           "action": "string — block | dry_run | …",
           "enabled": "boolean",
           "audit_hits": "number — non-dry-run policy evaluations in period",
-          "blocked_hits": "number — blocked outcomes tied to policy"
+          "blocked_hits": "number — blocked outcomes tied to policy",
+          "clean_hits": "number — approved outcomes tied to policy",
+          "blocked_pct": "number — blocked_hits / (blocked_hits + clean_hits) * 100",
+          "clean_pct": "number — clean_hits / (blocked_hits + clean_hits) * 100"
         }
       ]
     },
@@ -202,9 +249,29 @@ field. Neither changes the other's job.
       {
         "user": "string — username or user_mail",
         "events": "number — total audit events for this user",
+        "events_pct": "number — percentage of all attributed user events",
         "blocked": "number",
         "approved": "number",
-        "passed": "number"
+        "passed": "number",
+        "packages": [
+          {
+            "package": "string",
+            "ecosystem": "string",
+            "requests": "number"
+          }
+        ]
+      }
+    ],
+    "user_package_activity": [
+      {
+        "user": "string",
+        "user_events": "number",
+        "user_events_pct": "number",
+        "user_blocked": "number",
+        "user_approved": "number",
+        "package": "string",
+        "ecosystem": "string",
+        "requests": "number — full aggregated user/package export data"
       }
     ],
     "audit_events": [
@@ -255,6 +322,8 @@ field. Neither changes the other's job.
 
   "violations": {
     "total": "number",
+    "unique_issue_count": "number — distinct Xray issue/CVE IDs",
+    "unique_critical_issue_count": "number — distinct critical Xray issue/CVE IDs",
     "posture_signals": {
       "severity_mix": "number — 0-100 severity-weighted mix, not a composite risk score",
       "violation_volume": "number — raw Xray violation count",
@@ -296,7 +365,15 @@ field. Neither changes the other's job.
       }
     ],
     "top_repos": [
-      { "repo": "string", "count": "number" }
+      {
+        "repo": "string",
+        "count": "number",
+        "critical": "number",
+        "business_service": "string — optional",
+        "criticality": "string — from optional repo mapping",
+        "environment": "string — optional",
+        "owner": "string — optional"
+      }
     ],
     "top_cves": [
       {
@@ -383,6 +460,7 @@ field. Neither changes the other's job.
     "compare_line": "string — Curation stopped N at the gate. Xray found M inside.",
     "cves_prevented": "number",
     "upgrade_rate": "number — percentage",
+    "upgrade_rate_computed": "boolean — true only when derived from block-then-approved events",
     "xray_coverage": "number — percentage of repos indexed",
     "roi_estimate": {
       "cost_avoided_usd": "number",
@@ -402,7 +480,22 @@ field. Neither changes the other's job.
       }
     ],
     "xray_policy_effectiveness": "array — same shape as policy_effectiveness, rendered on the Xray tab",
-    "curation_policy_effectiveness": "array — same shape as policy_effectiveness, rendered on the Curation tab"
+    "curation_policy_effectiveness": "array — same shape as policy_effectiveness, rendered on the Curation tab",
+    "repo_watch_coverage": [
+      {
+        "repo": "string",
+        "indexed": "boolean",
+        "watch_count": "number",
+        "watch_names": ["string"],
+        "violation_count": "number",
+        "critical_count": "number",
+        "risk_level": "string — critical | high | covered",
+        "business_service": "string — optional",
+        "criticality": "string — optional",
+        "environment": "string — optional",
+        "owner": "string — optional"
+      }
+    ]
   },
 
   "threat_velocity": {

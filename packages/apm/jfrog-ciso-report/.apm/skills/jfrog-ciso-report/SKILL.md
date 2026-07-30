@@ -10,7 +10,7 @@ description: >-
 metadata:
   role: workflow
   author: Avinash Giri
-  version: 3.0.0
+  version: 4.0.0
 ---
 
 # JFrog CISO Report Generator
@@ -46,7 +46,10 @@ When two constraints conflict, the lower-numbered constraint takes priority.
 
 Before collecting data:
 
-- Confirm tools: `jf`, `jq`, and `python3` must be on PATH. If missing,
+- Confirm tools: `jf`, `jq`, `python3`, and `node` must be on PATH. PDF
+  generation also requires Puppeteer or a Chrome/Chromium-compatible browser
+  (the runner detects Google Chrome, Chromium, and Microsoft Edge, or uses
+  `CISO_CHROME_BIN`). If missing,
   stop and tell the user to install/configure them using `../jfrog/SKILL.md`.
 - Resolve report period. Default to `weekly`. Weekly window: seven calendar days. For current weekly reports, use the last complete seven-day window ending today unless the prompt specifies dates. For historical weeks, resolve `DATE_FROM`, `DATE_TO`, and save under the period end date. All repos unless the prompt narrows scope.
 - Resolve server. If multiple JFrog CLI servers exist and the prompt does
@@ -95,8 +98,9 @@ Every run must satisfy all contract points below:
   must terminate the run.
 5. Source immutability: normal dashboard generation must not edit this skill,
   repository scripts, references, dashboard templates, or any source-controlled
-  file. Only report artifacts (`report.html`, `data.json`, `snapshot.json`,
-  `run-meta.json`) and transient `/tmp/ciso-*` files may be created or changed.
+  file. Only report artifacts (`report.html`, `executive-report.pdf`, optional
+  `full-report.pdf`, `data.json`, `snapshot.json`, `run-meta.json`) and
+  transient `/tmp/ciso-*` files may be created or changed.
   If a runner or validation bug appears, stop and report it; patch source only
   when the user explicitly asks to improve or fix the skill implementation.
 6. End-of-run cleanup: transient runtime payloads in `/tmp` must be removed
@@ -158,11 +162,16 @@ The agent must not manually delete prior runtime files at the start of a run. Th
 |-------------|------|--------|
 | "weekly" or "CISO report" | weekly | Last 7 days |
 | "monthly" | monthly | Last calendar month |
+| "this month" / "current month" | custom | Month-to-date: first day of current month 00:00:00Z through today 23:59:59Z |
 | "for April" / "for March" | monthly | That month |
 | "first week of May" | weekly | May 1 00:00:00Z through May 7 23:59:59Z |
 | "second week of June" | weekly | June 8 00:00:00Z through June 14 23:59:59Z |
 | "fifth week of May" | weekly | May 29 00:00:00Z through May 31 23:59:59Z |
 | Custom dates | custom | As specified |
+
+For "this month" or "current month" prompts, set `REPORT_TYPE=custom`,
+`DATE_FROM` to the first day of the current month, and `DATE_TO` to today's
+23:59:59Z. Do not set `DATE_TO` to the last future day of the month.
 
 For historical weekly prompts, set `DATE_FROM` and `DATE_TO` explicitly. If
 `REPORT_DATE` is not provided, the runner derives it from `DATE_TO`, so the
@@ -236,9 +245,16 @@ Resolve token usage capture mode for run metadata:
 
 | Condition | Action |
 |-----------|--------|
-| `CISO_TOTAL_TOKENS` env var is set | Use that as `token_usage.total_tokens`. |
-| `/tmp/ciso-token-usage.json` exists with `total_tokens` | Use that value. |
-| Neither exists | Set `token_usage.total_tokens` to `null` and `token_usage.status` to `unavailable`. |
+| `CISO_AGENT_NAME` env var is set | Use it as `agent.name`. |
+| Claude/Cursor/Codex environment markers are present | Record best-effort `agent.name` / `agent.detected`. |
+| `CISO_TOTAL_TOKENS`, `CISO_INPUT_TOKENS`, `CISO_OUTPUT_TOKENS`, `CISO_CACHE_READ_TOKENS`, `CISO_CACHE_CREATION_TOKENS`, or `CISO_TOTAL_COST_USD` are set | Use these values for `token_usage`. |
+| `CISO_TOKEN_USAGE_PATH` or `/tmp/ciso-token-usage.json` exists | Read token usage JSON from that file. |
+| `CISO_CLAUDE_TRANSCRIPT_PATH` or `CLAUDE_TRANSCRIPT_PATH` points to a Claude Code JSONL transcript | Best-effort aggregate assistant message `usage` records. |
+| No source is available | Set `token_usage.total_tokens` to `null` and `token_usage.status` to `unavailable`; ask the user to run `/usage` in Claude Code if they want manual capture. |
+
+Token capture is best effort. Billing systems remain authoritative. Boost token
+savings are terminal-output savings, not the same thing as total model/session
+tokens.
 
 This step is also mandatory. Do not silently choose an output location.
 On first run, bootstrap a stable local root instead of falling back to `$PWD`.
@@ -283,6 +299,8 @@ Local structure must always be:
   └── <report-type-lowercase>/
     └── <report-date>/
       ├── report.html
+      ├── executive-report.pdf (when CISO_PDF_MODE is executive or both)
+      ├── full-report.pdf (when CISO_PDF_MODE is full or both)
       ├── data.json (optional; controlled by SAVE_DATA_JSON)
       ├── snapshot.json
       └── run-meta.json
@@ -294,9 +312,10 @@ Where:
 - `<report-date>` is `YYYY-MM-DD`
 
 Local artifact hygiene is mandatory. The output directory for a run must
-contain only report artifacts (`report.html`, optional `data.json`,
-`snapshot.json`, `run-meta.json`). Do NOT persist agent memory files,
-transcripts, prompts, or debug dumps in this directory.
+contain only report artifacts (`report.html`, optional `executive-report.pdf`,
+optional `full-report.pdf`, optional `data.json`, `snapshot.json`, `run-meta.json`). Do
+NOT persist agent memory files, transcripts, prompts, or debug dumps in this
+directory.
 
 Repo existence check, only when Artifactory storage was explicitly requested:
 
@@ -396,8 +415,17 @@ The runner must:
 - Collect live platform metadata, curation audit events, curation policies, and Xray violations.
 - Build `/tmp/ciso-data.json`, run platform merge, run `curation-audit-transform`, and populate governance.
 - Fail before render if platform, curation, violation, governance, or diagnostics fields are incoherent.
-- Render only by injecting JSON into `references/dashboard.html`.
-- Write `report.html`, `data.json`, `snapshot.json`, and `run-meta.json`.
+- Render HTML by injecting JSON into `references/dashboard.html`.
+- Render PDF by injecting the same JSON into `references/dashboard-pdf.html`
+  and running `bin/generate-ciso-pdf.js`. `CISO_PDF_MODE` controls the PDF
+  export:
+  - unset or `executive`: write CISO-shareable `executive-report.pdf` from
+    `dashboard-pdf.html`.
+  - `full`: write detailed internal `full-report.pdf` from
+    `dashboard-pdf-full.html`.
+  - `both`: write `executive-report.pdf` and `full-report.pdf`.
+- Write `report.html`, optional `executive-report.pdf`, optional `full-report.pdf`, `data.json`,
+  `snapshot.json`, and `run-meta.json`.
 - Run the skill-private collection proof helper as a final live proof.
 
 Do **not** manually stitch `report-data-collection.md` snippets for normal report generation. That document is the API/schema mapping reference and debugging guide. Manual snippet execution is allowed only while developing the skill itself.
@@ -426,7 +454,11 @@ Gate implementations (Platform backfill, Gates 1–5, and the collection proof s
 ./scripts/repair-ciso-report.sh "$SERVER_ID" /path/to/<server>/<weekly|monthly|custom>/<date>
 ```
 
-This helper clears stale `/tmp/ciso-*` files, recollects live curation + violation + platform data, enriches `data.json`, regenerates `report.html`, rewrites `snapshot.json` / `run-meta.json`, and runs the skill-private proof helper. Do not call `internal/enrich-ciso-datajson.sh` directly; it is a private implementation detail used by the runner.
+This helper clears stale `/tmp/ciso-*` files, recollects live curation +
+violation + platform data, enriches `data.json`, regenerates `report.html` and
+PDF exports, rewrites `snapshot.json` / `run-meta.json`, and runs the
+skill-private proof helper. Do not call `internal/enrich-ciso-datajson.sh`
+directly; it is a private implementation detail used by the runner.
 
 **Every schema field MUST be present.** Use 0, [], "", null, or false for
 unavailable data. The dashboard handles missing data gracefully.
@@ -455,8 +487,14 @@ and include at least one concrete identifier (CVE/XRAY/package/repo/policy).
 
 Populate beta fields when available:
 - `meta.schema_version`
-- `curation.approved` and `curation.passed` as separate values
-- `violations.risk_score` and `violations.risk_score_previous`
+- `curation.clean_packages` = policy-inspected `approved` outcomes; never use
+  `passed`/`without_inspection` as clean
+- `curation.request_results.without_inspection`, `top_blocked`,
+  `user_package_activity`, waiver counts, policy baseline/cache posture, and
+  pass-through repositories
+- `benefit.upgrade_rate` from a blocked package later approved at a higher version
+- `violations.posture_signals` (independent signals; no composite score),
+  `unique_issue_count`, and `top_repos`
 - `violations.critical_issues[*].first_seen`, `days_open`, `exploit_status`,
   `affected_environments`, `playbook_link`
 - `benefit.roi_estimate`
@@ -466,6 +504,12 @@ Populate beta fields when available:
 - `curation.request_results`, `policy_inventory`, `curation_state`, `policy_violations_by_type`, `blocking_events_per_policy`, `package_types`
 - `meta.curation_uninspected_label` = `Passed without inspection`
 - `violations.top_cves`, `violations.top_watch_policies`
+
+Optional business context: if the user supplies a JSON mapping file, set
+`CISO_REPO_CRITICALITY_JSON` to its path. The file may be an array or an object
+with `repositories`/`repo_criticality`; each row uses `repo`,
+`business_service`, `criticality`, `environment`, and `owner`. Never infer
+business criticality from repository names.
 
 **`threat_velocity.trend_summary` (required when `threat_velocity.available`):** Write 2–4 sentences as the reporting agent, not a stub. Include explicit **from → to** for **blocked**, **violations**, and **critical** using the last two `periods` entries. Add brief interpretation (e.g., gate pressure vs in-repo backlog) and one actionable recommendation grounded in the numbers. Example pattern: “Critical findings moved from 340 to 312 (−8%); curation blocks rose from 198 to 213 (+8%), suggesting stronger gate enforcement while in-repo critical backlog is easing — prioritize remediation on top XRAY IDs and extend dry-run policies to block mode for npm remotes.”
 
@@ -515,9 +559,12 @@ print('Snapshot written to /tmp/ciso-snapshot.json')
 
 ## Step 7: Render and verify artifacts
 
-For normal skill execution, `bin/generate-ciso-report.sh` performs render,
-artifact writes, and output verification. Do not run this section separately
-after the runner succeeds.
+For normal skill execution, `bin/generate-ciso-report.sh` renders the
+interactive HTML and an editorial A4 PDF, writes artifacts, and verifies them.
+By default, `executive-report.pdf` is the concise CISO-shareable export. Set
+`CISO_PDF_MODE=full` for detailed `full-report.pdf`, or `CISO_PDF_MODE=both` to
+emit both PDF exports. Do not run this section separately after the runner
+succeeds.
 
 The render implementation (slug exports, `LOCAL_DIR` construction, Python template injection, `run-meta.json` write, and artifact hygiene) lives in `bin/generate-ciso-report.sh`. Refer to that script directly when debugging a render failure.
 
@@ -530,10 +577,11 @@ grep -c "buildMast" "$OUTPUT_PATH"
 # Must print: 1 or more
 wc -l "$OUTPUT_PATH"
 # Must be > 1000 lines
+python3 -c "from pathlib import Path; p=Path('$PDF_OUTPUT_PATH'); assert p.read_bytes()[:5] == b'%PDF-' and p.stat().st_size > 10000"
 ```
 
-If verification fails, print the error and stop. The only valid report path
-is template injection with `__CISO_DATA__`.
+If verification fails, print the error and stop. Both artifacts must come from
+template injection with `__CISO_DATA__`; do not build either report ad hoc.
 
 ## Step 8: Upload to Artifactory
 
@@ -544,6 +592,7 @@ FOLDER="${SERVER_ID}/${REPORT_TYPE}/${REPORT_DATE}"
 # Save snapshot for future comparison
 jf rt upload /tmp/ciso-snapshot.json "${REPORT_REPO}/${FOLDER}/snapshot.json" --flat --server-id "$SERVER_ID"
 jf rt upload "$OUTPUT_PATH" "${REPORT_REPO}/${FOLDER}/report.html" --flat --server-id "$SERVER_ID"
+jf rt upload "$PDF_OUTPUT_PATH" "${REPORT_REPO}/${FOLDER}/executive-report.pdf" --flat --server-id "$SERVER_ID"
 
 # Update manifest
 # Update manifest (python3 avoids shell substitution, which IDE agents reject)
@@ -551,9 +600,9 @@ python3 -c "
 import json, os, sys
 p = '/tmp/ciso-manifest.json'
 m = json.load(open(p)) if os.path.exists(p) else {'runs': []}
-m['runs'].append({'date': sys.argv[1], 'type': sys.argv[2], 'snapshot_path': sys.argv[3], 'report_path': sys.argv[4]})
+m['runs'].append({'date': sys.argv[1], 'type': sys.argv[2], 'snapshot_path': sys.argv[3], 'report_path': sys.argv[4], 'pdf_path': sys.argv[5]})
 json.dump(m, open('/tmp/manifest-updated.json', 'w'), indent=2)
-" "$REPORT_DATE" "$REPORT_TYPE" "${FOLDER}/snapshot.json" "${FOLDER}/report.html"
+" "$REPORT_DATE" "$REPORT_TYPE" "${FOLDER}/snapshot.json" "${FOLDER}/report.html" "${FOLDER}/executive-report.pdf"
 jf rt upload /tmp/manifest-updated.json "${REPORT_REPO}/${SERVER_ID}/manifest.json" --flat --server-id "$SERVER_ID"
 ```
 
@@ -573,6 +622,8 @@ same cleanup command before exiting so failed runs do not leak stale data.
 Tell the user:
 ```
 Report saved: /<local-root>/<server-id>/weekly/<REPORT_DATE>/report.html
+Executive PDF saved: /<local-root>/<server-id>/weekly/<REPORT_DATE>/executive-report.pdf (when CISO_PDF_MODE is executive or both)
+Full PDF saved: /<local-root>/<server-id>/weekly/<REPORT_DATE>/full-report.pdf (when CISO_PDF_MODE is full or both)
 Data saved: /<local-root>/<server-id>/weekly/<REPORT_DATE>/data.json (only when SAVE_DATA_JSON is on)
 Snapshot saved: /<local-root>/<server-id>/weekly/<REPORT_DATE>/snapshot.json
 Run metadata: /<local-root>/<server-id>/weekly/<REPORT_DATE>/run-meta.json (includes token_usage.total_tokens when available)

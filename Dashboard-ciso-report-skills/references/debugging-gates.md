@@ -203,12 +203,14 @@ c = d.get('curation', {}) or {}
 v = d.get('violations', {}) or {}
 
 blocked = int(c.get('blocked', 0) or 0)
-approved = int(c.get('approved', 0) or 0)
-passed = int(c.get('passed', 0) or 0)
+clean = int(c.get('clean_packages', c.get('approved', 0)) or 0)
+without_inspection = int((c.get('request_results') or {}).get('without_inspection', c.get('without_inspection', 0)) or 0)
 cur_total = int(c.get('total', 0) or 0)
-sum_actions = blocked + approved + passed
+sum_actions = blocked + clean + without_inspection
 if cur_total < sum_actions:
-  print(f'ERROR: curation.total={cur_total} is less than blocked+approved+passed={sum_actions}'); sys.exit(1)
+  print(f'ERROR: curation.total={cur_total} is less than blocked+clean+without_inspection={sum_actions}'); sys.exit(1)
+if clean != int(c.get('approved', 0) or 0):
+  print('ERROR: clean_packages must equal approved policy outcomes'); sys.exit(1)
 
 sev = v.get('by_severity', {}) or {}
 sev_sum = sum(int(sev.get(k, 0) or 0) for k in ('critical', 'high', 'medium', 'low'))
@@ -257,6 +259,8 @@ if int(c.get('blocked', 0) or 0) > 0:
     print('ERROR: policy_inventory missing'); sys.exit(1)
   if not c.get('blocking_events_per_policy'):
     print('ERROR: blocking_events_per_policy missing'); sys.exit(1)
+  if not c.get('top_blocked'):
+    print('ERROR: top_blocked missing'); sys.exit(1)
   if int(c.get('unique_users', 0) or 0) == 0 and (c.get('top_users') or []):
     print('ERROR: unique_users=0 but top_users populated'); sys.exit(1)
 
@@ -267,6 +271,11 @@ if bad:
 cs = p.get('curation_state') or c.get('curation_state') or {}
 if int(cs.get('supported_remote_total', 0) or 0) > 0 and int(cs.get('supported_connected', 0) or 0) == 0:
   print('ERROR: supported_connected=0 while remotes exist — platform merge likely skipped'); sys.exit(1)
+if int((d.get('violations') or {}).get('total', 0) or 0) > 0:
+  if int((d.get('violations') or {}).get('unique_issue_count', 0) or 0) <= 0:
+    print('ERROR: unique_issue_count missing'); sys.exit(1)
+  if 'top_repos' not in (d.get('violations') or {}):
+    print('ERROR: top_repos field missing'); sys.exit(1)
 
 print('Gate 5 passed: platform + curation enrichment present')
 "

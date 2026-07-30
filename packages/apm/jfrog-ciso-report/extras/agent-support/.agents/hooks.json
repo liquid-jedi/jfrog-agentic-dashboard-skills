@@ -1,0 +1,16 @@
+{
+  "ciso-report-guardrail": {
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .agents/hooks/ciso-report-guardrail-antigravity.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

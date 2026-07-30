@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": "bash .cursor/hooks/ciso-report-guardrail.sh",
+        "matcher": "Shell",
+        "failClosed": true
+      }
+    ]
+  }
+}

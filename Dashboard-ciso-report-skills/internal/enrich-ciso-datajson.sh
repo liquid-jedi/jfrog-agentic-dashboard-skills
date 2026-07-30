@@ -146,7 +146,7 @@ for path in sorted(glob.glob("/tmp/ciso-violations-page-*.json")):
     body = json.load(open(path))
     violations.extend(body.get("violations") or [])
 if not violations:
-    for path in ("/tmp/ciso-violations-clean.json", "/tmp/ciso-violations-parsed.json"):
+    for path in ("/tmp/ciso-violations.json", "/tmp/ciso-violations-clean.json", "/tmp/ciso-violations-parsed.json"):
         if os.path.isfile(path) and os.path.getsize(path) > 2:
             body = json.load(open(path))
             violations = body if isinstance(body, list) else (body.get("violations") or [])

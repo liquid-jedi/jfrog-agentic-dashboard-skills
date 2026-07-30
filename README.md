@@ -24,9 +24,15 @@ flowchart LR
   subgraph output [Deterministic output]
     direction TB
     TPL[dashboard.html template]
+    PTPL[dashboard-pdf.html executive template]
+    FPTPL[dashboard-pdf-full.html full template]
     HTML[report.html]
+    PDF[executive-report.pdf]
+    FPDF[full-report.pdf]
   end
   COL --> ENR --> INS --> REC --> CMP --> TPL --> HTML
+  CMP --> PTPL --> PDF
+  CMP --> FPTPL --> FPDF
 ```
 
 The agent **never generates HTML from scratch** — it produces structured JSON, which is injected into the versioned template. Presentation is always consistent; only the data changes.
@@ -225,8 +231,11 @@ Both local and Artifactory storage follow the same `<server-id>/<report-type>/<d
 | | Local (`~/ciso-reports/`) | Artifactory (`ciso-reports-local/`) |
 |-|--------------------------|-------------------------------------|
 | **report.html** | ✅ Generated every run | ✅ Uploaded on request |
+| **executive-report.pdf** | ✅ Generated when `CISO_PDF_MODE` is unset, `executive`, or `both` | ✅ Uploaded on request |
+| **full-report.pdf** | ✅ Generated when `CISO_PDF_MODE=full` or `both` | ✅ Uploaded only when requested |
 | **snapshot.json** | ✅ Compact KPI snapshot for trend comparison | ✅ Uploaded — used for prior-period comparison |
 | **data.json** | ✅ Full enriched payload (debug/audit) | ❌ Not uploaded |
+| **curation-user-package-activity.csv** | ✅ Full active-user/package export | ❌ Not uploaded |
 | **run-meta.json** | ✅ Run timestamp, env, skill version | ❌ Not uploaded |
 | **manifest.json** | ❌ | ✅ Server-level index of all runs |
 | **rerun-HHMMSS/** | ✅ Same-day reruns land here | ❌ |
@@ -238,23 +247,68 @@ LOCAL (~/ciso-reports/)               ARTIFACTORY (ciso-reports-local/)
 ├── weekly/                           ├── manifest.json   ← index of all runs
 │   └── 2026-06-14/                   ├── weekly/
 │       ├── report.html               │   └── 2026-06-14/
-│       ├── data.json                 │       ├── report.html
+│       ├── executive-report.pdf      │       ├── report.html
+│       ├── full-report.pdf           │       ├── executive-report.pdf
+│       ├── data.json                 │       ├── full-report.pdf
+│       ├── curation-user-package-activity.csv
 │       ├── snapshot.json             │       └── snapshot.json
 │       ├── run-meta.json             └── monthly/
 │       └── rerun-153012/                 └── 2026-06-01/
 │           ├── report.html                   ├── report.html
-│           ├── data.json                     └── snapshot.json
+│           ├── executive-report.pdf          ├── executive-report.pdf
+│           ├── full-report.pdf               └── snapshot.json
+│           ├── data.json
+│           ├── curation-user-package-activity.csv
 │           ├── snapshot.json
 │           └── run-meta.json
 └── monthly/
     └── 2026-06-01/
         ├── report.html
+        ├── executive-report.pdf
+        ├── full-report.pdf
         ├── data.json
+        ├── curation-user-package-activity.csv
         ├── snapshot.json
         └── run-meta.json
 ```
 
 Same-day reruns land in `rerun-HHMMSS/` locally — prior runs are never overwritten. Artifactory uploads always use the canonical date path (no rerun dirs).
+
+### PDF export modes
+
+The runner always writes `report.html`. PDF export is controlled by `CISO_PDF_MODE`:
+
+| Mode | Output |
+|-|-|
+| unset or `executive` | `executive-report.pdf` is a concise CISO-shareable PDF |
+| `full` | `full-report.pdf` is the detailed internal PDF |
+| `both` | `executive-report.pdf` and `full-report.pdf` |
+
+### Agent efficiency and guardrails
+
+This repository includes project-level Boost filters in `.boost/filters.toml`
+for the CISO report runner and JFrog CLI output. Boost reduces terminal-output
+noise and estimates saved tokens; it does not replace security controls or
+report validation.
+
+Project-level guardrails are provided for Cursor, Claude Code, Codex, and
+Antigravity:
+
+- Cursor: `.cursor/hooks.json` -> `.cursor/hooks/ciso-report-guardrail.sh`
+- Claude Code: `.claude/settings.json` -> `.claude/hooks/ciso-report-guardrail-claude.sh`
+- Codex: `.codex/config.toml` + `.codex/hooks.json` -> `.codex/hooks/ciso-report-guardrail-codex.sh`
+- Antigravity: `.agents/hooks.json` -> `.agents/hooks/ciso-report-guardrail-antigravity.sh`
+
+The guardrail is separate from Boost: it blocks destructive JFrog curl methods,
+prompts or denies report publication unless explicitly enabled, and keeps
+cleanup scoped to report artifacts and `/tmp/ciso-*`. Codex requires hook
+support to be enabled/trusted by the CLI before project hooks run.
+
+`run-meta.json` records best-effort agent and token metadata. The runner reads
+`CISO_TOTAL_TOKENS`, detailed token env vars, `CISO_TOKEN_USAGE_PATH`,
+`/tmp/ciso-token-usage.json`, or a Claude transcript path when supplied. If no
+source is available, token usage is marked `unavailable` and Claude users can
+run `/usage` for a manual session total.
 
 ### Hands-free mode
 

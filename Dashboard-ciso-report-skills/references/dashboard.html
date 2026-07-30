@@ -561,11 +561,57 @@
 html{background:#e9edf2}
 body{font-family:'Open Sans',system-ui,sans-serif;color:var(--ink);line-height:1.5;
   -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
-.report{max-width:1180px;margin:0 auto;background:var(--canvas);min-height:100vh;
-  box-shadow:0 0 60px rgba(31,47,74,.08)}
+.report{max-width:none;margin:0;background:var(--canvas);min-height:100vh}
 .mono{font-family:var(--mono)}
 a{color:var(--green-600);text-decoration:none}
 a:hover{text-decoration:underline}
+
+/* ════════════════ SUPPLIED CISO DASHBOARD SHELL ════════════════ */
+.dashboard-shell{min-height:100vh;background:var(--canvas)}
+.dashboard-sidebar{position:fixed;inset:0 auto 0 0;width:260px;background:var(--navy);color:#fff;
+  padding:22px 18px 18px;overflow-y:auto;z-index:40}
+.side-brand{display:flex;align-items:center;gap:11px;padding:0 4px 18px;border-bottom:1px solid rgba(255,255,255,.12)}
+.side-brand img,.side-brand svg{width:42px;height:42px;object-fit:contain;flex-shrink:0;border-radius:8px}
+.side-brand img{mix-blend-mode:screen;background:transparent}
+.side-brand b{font-size:15px;letter-spacing:.01em}
+.side-brand span{display:block;font-size:10px;color:#99a0b8;text-transform:uppercase;letter-spacing:.08em}
+.side-export{width:100%;margin:14px 0 18px;padding:9px 12px;border:1px solid rgba(255,255,255,.22);
+  border-radius:var(--r-m);background:transparent;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.side-export:hover{background:rgba(255,255,255,.08)}
+.pdf-card{margin:12px 0 18px;padding:6px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(255,255,255,.045)}
+.pdf-card .pdf-title{display:none}
+.pdf-card .pdf-link{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:8px 11px;margin:0 0 6px;
+  border-radius:999px;background:rgba(255,255,255,.92);color:var(--navy);font-size:11.5px;font-weight:800;text-decoration:none;box-shadow:0 1px 8px rgba(0,0,0,.08)}
+.pdf-card .pdf-link:last-of-type{margin-bottom:0}
+.pdf-card .pdf-link span{font-family:var(--mono);font-size:8.5px;font-weight:800;color:var(--green-700);text-transform:uppercase;letter-spacing:.06em}
+.pdf-card .pdf-link.full span{color:var(--navy-600)}
+.pdf-card .pdf-print{width:100%;margin-top:6px;padding:7px 10px;border:1px solid rgba(255,255,255,.12);border-radius:999px;
+  background:rgba(255,255,255,.06);color:#d7deea;font-family:inherit;font-size:10.5px;font-weight:800;cursor:pointer}
+.pdf-card .pdf-print:hover{background:rgba(255,255,255,.08)}
+.side-label{font-size:10px;font-weight:700;color:#6f7f99;text-transform:uppercase;letter-spacing:.09em;margin:4px 4px 9px}
+.side-nav{list-style:none;margin:0 0 18px;padding:0 0 0 4px}
+.side-nav li{position:relative;padding:0 0 12px 24px}
+.side-nav li::before{content:"";position:absolute;left:6px;top:14px;bottom:-2px;width:1px;background:#415980}
+.side-nav li:last-child::before{display:none}
+.side-nav a{display:flex;align-items:center;color:#99a0b8;font-size:12px;font-weight:600;text-decoration:none}
+.side-nav a::before{content:"";position:absolute;left:0;width:13px;height:13px;border-radius:50%;
+  background:var(--navy);border:2px solid #415980;transition:.15s}
+.side-nav a.active,.side-nav a:hover{color:#fff}.side-nav a.active::before{background:var(--green);border-color:var(--green)}
+.side-glance{border-top:1px solid rgba(255,255,255,.12);padding:15px 4px 0}
+.glance-row{display:flex;justify-content:space-between;gap:12px;font-size:11px;color:#99a0b8;padding:4px 0}
+.glance-row b{color:#fff;font-family:var(--mono)}
+.dashboard-main{margin-left:260px;min-width:0}
+.dashboard-topbar{position:sticky;top:0;z-index:30;height:58px;background:#fff;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;padding:0 28px;box-shadow:0 1px 8px rgba(31,47,74,.04)}
+.dashboard-topbar .host{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--navy)}
+.dashboard-topbar .period{font-size:11px;color:var(--muted);background:var(--canvas);border:1px solid var(--line);border-radius:999px;padding:5px 10px}
+.dashboard-content{padding:24px 28px 8px;max-width:1440px;margin:0 auto}
+.page-title{font-size:22px;font-weight:700;color:var(--navy);margin:0 0 18px}
+.section-block{scroll-margin-top:74px;margin-bottom:22px}
+.section-title{display:flex;align-items:center;justify-content:space-between;margin:0 0 10px}
+.section-title h2{font-size:15px;font-weight:700;color:var(--navy)}
+.section-title span{font-size:10px;font-weight:700;color:var(--green-700);text-transform:uppercase;letter-spacing:.07em}
+.section-overview{padding:22px 24px 8px}
 
 /* ════════════════ MASTHEAD ════════════════ */
 .mast{background:var(--navy);padding:18px 32px;display:flex;align-items:center;gap:16px}
@@ -579,6 +625,11 @@ a:hover{text-decoration:underline}
 .mast .period{text-align:right;color:#fff}
 .mast .period b{font-size:13px;font-weight:700;display:block}
 .mast .period span{font-size:11.5px;color:rgba(255,255,255,.6)}
+.mast-pdf{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.mast-pdf a{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.12);
+  color:#fff;text-decoration:none;font-size:11px;font-weight:800;border:1px solid rgba(255,255,255,.18)}
+.mast-pdf a:hover{background:rgba(255,255,255,.2)}
+.mast-pdf a span{font-family:var(--mono);font-size:9px;color:#b9f4bd;text-transform:uppercase;letter-spacing:.06em}
 
 /* ════════════════ BRIEFING (Direction A) ════════════════ */
 .brief{background:var(--surface);border-bottom:1px solid var(--line)}
@@ -643,15 +694,15 @@ a:hover{text-decoration:underline}
 
 /* ════════════════ SHARED PANEL / CARD CHROME ════════════════ */
 .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
-.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:14px 16px;position:relative}
-.kpi::before{content:"";position:absolute;left:0;top:13px;bottom:13px;width:3px;border-radius:0 3px 3px 0}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:16px 18px;position:relative;display:flex;flex-direction:column;min-height:114px}
+.kpi::before{display:none}
 .kpi.k-navy::before{background:var(--navy-600)} .kpi.k-green::before{background:var(--green)}
 .kpi.k-crit::before{background:var(--crit)} .kpi.k-med::before{background:var(--med)}
 .kpi.k-info::before{background:var(--info)}
-.kpi .n{font-size:26px;font-weight:800;color:var(--navy);line-height:1;padding-left:9px;letter-spacing:-.01em}
+.kpi .n{font-size:26px;font-weight:800;color:var(--navy);line-height:1;letter-spacing:-.01em}
 .kpi .n small{font-size:14px;font-weight:700;color:var(--muted)}
-.kpi .l{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-top:7px;padding-left:9px}
-.kpi .d{font-size:11.5px;color:var(--fg-2);margin-top:3px;padding-left:9px}
+.kpi .l{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-top:7px}
+.kpi .d{font-size:11.5px;color:var(--fg-2);margin-top:3px}
 .kpis.compact-4{grid-template-columns:repeat(4,1fr)}
 .insight-card .d b{color:var(--navy)}
 .insight-card .d.warn{color:var(--crit)}
@@ -725,8 +776,8 @@ table.dt{width:100%;border-collapse:collapse;font-size:12.5px}
 .cov-sub{font-size:11px;color:var(--muted);margin-top:5px}
 
 /* severity distribution */
-.dist{display:flex;height:30px;border-radius:var(--r-m);overflow:hidden;margin-bottom:12px}
-.dist span{height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700}
+.dist{display:flex;gap:3px;height:34px;border-radius:var(--r-m);overflow:hidden;margin-bottom:12px;background:var(--line-2);padding:3px}
+.dist span{height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}
 .sevlist{display:flex;flex-direction:column;gap:9px}
 .sevr{display:flex;align-items:center;gap:9px;font-size:12.5px}
 .sevr .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
@@ -741,6 +792,11 @@ table.dt{width:100%;border-collapse:collapse;font-size:12.5px}
 /* package type chip with count */
 .ptcell{display:flex;align-items:center;gap:8px}
 .ptcell .pt{font-weight:600;color:var(--navy)}
+.pt-ico{width:24px;height:24px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:10px;font-weight:800;color:var(--navy);background:var(--canvas);border:1px solid var(--line)}
+.pt-docker{background:#eaf2fe;color:#1d4ed8}.pt-maven{background:#fdf2e3;color:#a16207}
+.pt-npm{background:#fbeaea;color:#b91c1c}.pt-pypi{background:#eaf6ee;color:#2d8442}
+.pt-go{background:#e8f7fb;color:#087990}
 
 /* empty states */
 .empty{text-align:center;padding:30px 20px;color:var(--muted)}
@@ -750,11 +806,11 @@ table.dt{width:100%;border-collapse:collapse;font-size:12.5px}
 .empty p{font-size:12px;line-height:1.5;max-width:340px;margin:0 auto}
 
 /* recommendation cards */
-.rec-list{display:flex;flex-direction:column;gap:12px}
-.rec-card{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--muted);
-  border-radius:var(--r-l);padding:16px 18px;display:flex;gap:16px;align-items:flex-start}
-.rec-card.p1{border-left-color:var(--crit)} .rec-card.p2{border-left-color:var(--med)} .rec-card.p3{border-left-color:var(--info)}
-.rec-rank{flex-shrink:0;width:30px;height:30px;border-radius:var(--r-m);background:var(--navy);color:#fff;
+.rec-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.rec-card{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--muted);
+  border-radius:var(--r-l);padding:16px 18px;display:flex;gap:14px;align-items:flex-start;box-shadow:var(--raised)}
+.rec-card.p1{border-top-color:var(--crit)} .rec-card.p2{border-top-color:var(--med)} .rec-card.p3{border-top-color:var(--info)}
+.rec-rank{flex-shrink:0;width:30px;height:30px;border-radius:999px;background:var(--navy);color:#fff;
   display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;font-family:var(--mono)}
 .rec-main{flex:1}
 .rec-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
@@ -775,9 +831,25 @@ table.dt{width:100%;border-collapse:collapse;font-size:12.5px}
 .footer{padding:18px 32px 26px;font-size:11px;color:var(--muted);line-height:1.6;border-top:1px solid var(--line)}
 .footer b{color:var(--fg-2)}
 
+/* threat velocity */
+.velocity-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px}
+.vel-card{border:1px solid var(--line-2);border-radius:var(--r-l);padding:13px 14px;background:var(--canvas)}
+.vel-card .vh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.vel-card .vh b{font-size:12px;color:var(--navy)}
+.vel-card .vh span{font-family:var(--mono);font-size:11px;font-weight:800}
+.vel-card.good .vh span{color:var(--green-700)}.vel-card.bad .vh span{color:var(--crit)}.vel-card.flat .vh span{color:var(--muted)}
+.spark{height:58px;display:flex;align-items:flex-end;gap:5px}
+.spark i{flex:1;min-width:5px;border-radius:4px 4px 0 0;background:var(--navy-600);opacity:.85}
+.vel-card.bad .spark i{background:var(--crit)}.vel-card.good .spark i{background:var(--green)}
+.velocity-note{padding:0 16px 16px}
+
 @media(max-width:920px){
+  .dashboard-sidebar{position:static;width:auto;max-height:none}.dashboard-main{margin-left:0}
+  .side-nav{display:grid;grid-template-columns:repeat(2,1fr);gap:4px}.side-nav li::before{display:none}
+  .side-glance{display:grid;grid-template-columns:repeat(2,1fr);gap:0 16px}
+  .dashboard-topbar{position:static}.dashboard-content{padding:18px 16px 8px}
   .brief-hero{grid-template-columns:1fr}.gauge-cell{border-right:none;border-bottom:1px solid var(--line)}
-  .kpis,.kpis.compact-4{grid-template-columns:repeat(2,1fr)}.act-grid{grid-template-columns:1fr}
+  .kpis,.kpis.compact-4{grid-template-columns:repeat(2,1fr)}.act-grid,.rec-list,.velocity-summary{grid-template-columns:1fr}
   .grid-2,.grid-2.wide-l,.grid-3{grid-template-columns:1fr}.span-2{grid-column:auto}
   .tabbar{overflow-x:auto}
 }
@@ -787,6 +859,9 @@ table.dt{width:100%;border-collapse:collapse;font-size:12.5px}
   @page{margin:14mm}
   html,body{background:#fff}
   .report{box-shadow:none;max-width:none}
+  .dashboard-sidebar,.dashboard-topbar{display:none!important}
+  .dashboard-main{margin-left:0}.dashboard-content{padding:0;max-width:none}
+  .section-block{break-before:page}.section-block:first-of-type{break-before:auto}
   .tabbar{display:none}
   .tabpanel{display:block!important;padding:0;break-before:page}
   .tabpanel:first-of-type{break-before:auto}
@@ -814,12 +889,22 @@ const LOGO_WHITE = `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" 
 <path d="M28.753 41.1137L25.6882 41.9508C25.9547 42.7094 26.1679 44.0696 26.1679 45.9007V54.8991H29.6058V45.3775C30.2454 44.6189 30.9383 44.2527 31.6845 44.2527C32.0576 44.2527 32.3508 44.3312 32.6706 44.5143L33.6034 41.4014C33.0703 41.166 32.8305 41.1137 32.3241 41.1137C31.951 41.1137 31.498 41.1922 31.2048 41.323C30.5652 41.6369 29.7657 42.3431 29.2593 43.0232C29.2593 42.2647 29.0728 41.663 28.753 41.1137ZM16.9202 36.6668H16.5471V54.873H20.1182V46.8162H24.6222V43.808H20.1182V39.6227H25.7415L25.9547 38.027C22.5701 37.7916 19.5053 37.2684 16.9202 36.6668ZM8.5786 57.3057L10.2309 59.1891C11.8299 58.5613 13.8287 57.1487 14.3617 54.8991C14.5483 54.1667 14.6016 53.6958 14.6016 51.3154V36.6929H11.0038V51.7078C11.0038 53.6697 10.9238 54.4021 10.6573 55.0822C10.3109 55.8408 9.48471 56.7302 8.5786 57.3057ZM41.0122 48.0718C41.0122 51.2631 40.3726 52.6233 38.9068 52.6233C38.2405 52.6233 37.4943 52.2571 37.1745 51.5247C36.908 50.8446 36.7481 49.6936 36.7481 48.1241C36.7481 46.79 36.8814 45.8483 37.0946 45.1159C37.3611 44.2788 38.0273 43.7557 38.8535 43.7557C39.4664 43.7557 39.9995 44.0173 40.3193 44.462C40.799 45.0898 41.0122 46.2669 41.0122 48.0718ZM43.1176 53.3035C44.2369 51.9956 44.7432 50.3999 44.7432 48.098C44.7432 45.9268 44.2902 44.4358 43.2508 43.1802C42.1315 41.82 40.6924 41.166 38.8268 41.166C35.309 41.166 32.9637 43.9649 32.9637 48.2026C32.9637 52.4402 35.2823 55.1607 38.8268 55.1607C40.8256 55.1869 42.1315 54.4544 43.1176 53.3035ZM52.8716 45.7699C52.8716 46.9993 52.1254 47.6794 50.7929 47.6794C49.5936 47.6794 48.7941 47.1301 48.7941 45.7699C48.7941 44.5143 49.5403 43.7818 50.8195 43.7818C52.0988 43.7818 52.8716 44.5143 52.8716 45.7699ZM58.9213 42.8925L57.5088 40.669C56.7093 41.4014 55.7499 41.82 54.8171 41.82C54.3907 41.82 54.1508 41.7677 53.2181 41.5322C52.2853 41.2706 51.619 41.1922 50.8728 41.1922C47.5415 41.1922 45.3828 42.9709 45.3828 45.7437C45.3828 47.7317 46.289 48.9873 48.1811 49.4844C47.4083 49.6675 46.5821 50.0598 46.209 50.5045C45.9425 50.8184 45.8093 51.237 45.8093 51.734C45.8093 52.1525 45.9159 52.5187 46.0758 52.8326C46.2623 53.1204 46.5022 53.3558 46.822 53.4866C47.4349 53.722 48.421 53.879 49.9401 53.9051C50.7396 53.9051 51.2193 53.9313 51.3792 53.9313C52.312 53.9836 52.7917 54.1405 53.1648 54.3236C53.5112 54.5329 53.7777 55.0038 53.7777 55.5269C53.7777 56.0501 53.4579 56.5733 52.9516 56.8872C52.4985 57.2011 51.7523 57.3318 50.7929 57.3318C49.2205 57.3318 48.341 56.7564 48.341 55.6839C48.341 55.213 48.3943 55.1084 48.5009 54.8207H45.3562C45.2229 55.0822 45.063 55.4485 45.063 56.1809C45.063 57.0964 45.4095 57.8812 46.1291 58.5613C47.3017 59.6861 49.2205 60 51.0594 60C53.0848 60 55.057 59.5292 56.2029 58.2736C56.9225 57.4888 57.2423 56.6256 57.2423 55.5008C57.2423 54.2975 56.8958 53.3819 56.123 52.6233C55.2169 51.7601 54.1775 51.4462 52.1787 51.4201L50.3398 51.3939C49.9934 51.3939 49.7802 51.2631 49.7802 51.08C49.7802 50.7138 50.2599 50.3999 51.1393 49.9814C51.4058 50.0075 51.4858 50.0075 51.6457 50.0075C54.4173 50.0075 56.4428 48.3334 56.4428 46.0053C56.4428 45.1159 56.1763 44.4358 55.6699 43.808C56.0963 43.8603 56.2296 43.8865 56.5494 43.8865C57.4555 43.8865 58.1751 43.5987 58.9213 42.8925ZM16.0141 20.841C11.75 21.8612 8.8451 23.8754 8.8451 26.1773C8.8451 27.616 9.96442 28.9239 11.8033 29.9441C11.2436 29.0809 10.9505 28.1392 10.9505 27.1975C10.9771 24.8171 12.8693 22.5936 16.0141 20.841ZM61 29.8656C61 28.3484 60.0406 26.962 58.4416 25.8111C58.5748 26.2819 58.6814 26.7528 58.6814 27.2236C58.6814 31.5397 52.5252 35.2542 43.7838 36.7976C44.7699 36.9022 45.7826 36.9545 46.8486 36.9545C54.6572 36.9284 61 33.7632 61 29.8656ZM55.9631 27.5114C55.9631 25.9157 54.5772 24.4508 52.2054 23.2476C52.765 23.9015 53.0582 24.6078 53.0582 25.3402C53.0582 29.1855 44.7432 32.2983 34.4562 32.2983C24.1958 32.2983 15.8542 29.1855 15.8542 25.3402C15.8542 24.8432 15.9874 24.3724 16.2539 23.9277C14.6016 25.0002 13.6688 26.2296 13.6688 27.5375C13.6688 31.6967 23.1297 35.0711 34.8026 35.0711C46.4755 35.0711 55.9631 31.6444 55.9631 27.5114ZM46.742 27.3021C42.4246 30.0226 29.1527 31.0689 23.4495 27.5637C18.9723 24.8171 20.518 20.4486 7.69913 10.8747C6.02015 9.61907 8.01894 8.285 9.27151 9.14822C10.5241 10.0114 9.37811 10.2207 11.9099 12.7058C17.0268 17.7282 16.9735 13.2028 17.773 14.9292C19.4786 18.5129 23.2097 22.1227 23.2097 22.1227C26.9674 24.5293 29.9522 25.0525 35.4955 21.3642C39.0134 19.0361 37.5743 25.0786 46.1824 20.7102C49.3271 19.1145 49.1939 20.187 52.3919 15.8186C53.7244 14.0137 56.2562 17.205 53.378 17.6497C52.232 17.8328 50.2865 19.0622 49.4604 20.9979C48.2611 23.9015 48.7675 26.0465 46.742 27.3021ZM22.8099 19.9254C21.7439 19.4546 20.6246 17.6758 20.1982 16.9696C21.3975 15.8186 20.9177 13.909 20.2248 12.8627C19.5586 11.8164 18.7324 12.1041 17.8529 11.1363C16.9468 10.1684 18.1994 7.6572 19.3454 9.59291C23.6361 16.8388 26.461 13.8306 29.9522 13.3859C33.3102 12.9673 36.295 14.7723 37.2012 9.67139C37.3611 8.83432 38.1872 8.65121 38.2672 10.0114C38.3471 11.3978 38.8801 14.7461 40.719 15.1646C42.5579 15.6093 44.0503 14.7461 44.4767 14.2753C44.9031 13.8044 45.143 13.8567 45.3295 15.06C45.5161 16.2371 45.9958 17.8851 48.5809 16.054C53.8843 12.3395 52.3653 10.9008 54.444 9.93297C55.6166 9.38365 57.4821 11.1624 54.7904 12.4965C50.9528 14.406 50.553 16.7603 48.1278 18.2513C44.0503 20.7625 45.3029 18.356 38.7469 17.4404C36.2151 17.1004 35.4156 19.847 33.4434 19.0622C28.9395 17.2311 25.7681 17.5974 22.8099 19.9254ZM37.0146 6.50623C37.1745 7.60488 37.3611 7.57872 37.7608 7.6572C38.1606 7.76183 38.6669 7.13403 38.6669 6.55855C38.6936 5.95691 38.4004 5.59069 37.8141 5.61685C37.2012 5.64301 36.988 5.93075 37.0146 6.50623ZM56.7359 8.46811C57.2156 8.9128 58.4949 8.62506 58.788 8.285C59.5609 7.44793 59.5875 6.95092 59.1878 6.37544C58.788 5.82611 57.9618 5.90459 57.1357 6.50623C56.3095 7.10787 56.4694 8.23268 56.7359 8.46811ZM56.3895 14.0137C55.9897 14.5368 55.9631 14.9292 56.2562 15.217C56.576 15.5309 57.2156 15.7924 57.6687 15.4524C58.1218 15.0862 58.1218 14.563 57.7486 14.1183C57.3489 13.6475 56.8159 13.6475 56.3895 14.0137ZM15.9341 7.47409C16.5471 7.6572 16.8402 8.23268 17.3466 7.57872C17.6131 7.26482 17.6397 6.82013 17.2933 6.34928C17.0801 6.06154 16.0674 5.85227 15.641 6.27081C15.2146 6.68934 15.6143 7.36946 15.9341 7.47409ZM3.43506 7.10787C4.55438 7.78799 5.27394 8.80816 6.12676 7.89262C6.41991 7.57872 6.76637 7.0294 6.15341 5.93075C5.70035 5.11984 4.23458 4.80594 3.72822 5.11984C3.19521 5.40758 2.5556 6.58471 3.43506 7.10787ZM13.7488 12.3134C14.0952 12.6796 14.7082 12.6534 15.0813 12.4442C15.4278 12.2349 15.3745 11.6856 15.028 11.2147C14.8148 10.927 14.1752 10.77 13.7488 11.2147C13.3224 11.6594 13.5089 12.0518 13.7488 12.3134Z" fill="#FFFFFF"></path>
 </svg>`;
 
+const LOGO_GREEN = `<img src="data:image/png;base64,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" alt="JFrog" width="42" height="42">`;
+
 /* ═══ HELPERS ═══ */
 const fmt = (n) => (Number(n) || 0).toLocaleString('en-US');
 const cap = (s) => s ? String(s).charAt(0).toUpperCase() + String(s).slice(1) : '';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const safeHttpHref = (s) => /^https?:\/\//i.test(String(s||'').trim()) ? String(s).trim() : '';
 const pctOf = (a, b) => { b = Number(b) || 0; return b ? Math.round((Number(a) || 0) / b * 100) : 0; };
 const truncate = (s, n) => { s = String(s || ''); return s.length > n ? s.slice(0, n).trim() + '…' : s; };
+const hasText = (s) => String(s == null ? '' : s).trim().length > 0;
+const knownValue = (s) => hasText(s) && !['unknown','n/a','na','—','-'].includes(String(s).trim().toLowerCase());
+function exportHref(name){
+  const files = (DATA.meta && DATA.meta.export_files) || {};
+  const file = files[name];
+  return file ? String(file) : '';
+}
 
 function riskBand(s){
   s = Number(s) || 0;
@@ -844,6 +929,13 @@ function shortComponent(c){
   const parts = c.split(':');
   if (parts.length >= 3) return parts.slice(-2).join(':');
   return c;
+}
+function packageTypeCell(value){
+  const text = String(value || 'unknown');
+  const key = text.toLowerCase().replace(/[^a-z0-9]/g,'');
+  const labels = {docker:'D',maven:'M',npm:'N',pypi:'Py',python:'Py',go:'Go',golang:'Go',nuget:'Nu',conan:'Co',composer:'Cp',debian:'Db',rpm:'R',rubygems:'Rb',gems:'Rb'};
+  const cssKey = ['docker','maven','npm','pypi','go'].includes(key) ? key : 'other';
+  return `<span class="pt-ico pt-${cssKey}">${esc(labels[key] || text.slice(0,2).toUpperCase())}</span><span class="pt">${esc(text)}</span>`;
 }
 function safe(label, fn){
   try { return fn(); }
@@ -902,8 +994,9 @@ function computeActions(){
     body:`${pctOf(unindexed, p.repos_total)}% of the estate has no Xray indexing — any violations there are invisible to this report.`,
     metric:`${fmt(p.repos_indexed)} / ${fmt(p.repos_total)} indexed`, link:'Xray › Indexed Resources'});
   const crit = sev.critical || 0;
+  const impact = vei.highest_impact_fixes || [];
   if (crit > 0) acts.push({pri:'P1', effort:'High', title:`Remediate ${fmt(crit)} critical findings`,
-    body:`Critical vulnerabilities cluster in a handful of components (xstream, net-imap, thymeleaf) under one watch. Assign remediation owners to the highest-hit XRAY IDs.`,
+    body:`Critical vulnerabilities${impact.length?' are led by '+impact.slice(0,3).map(x=>shortComponent(x.component)).join(', '):' need immediate triage'}. Assign remediation owners to the highest-hit XRAY IDs.`,
     metric:`${fmt(crit)} critical · ${fmt(sev.high||0)} high`, link:'Xray › Violations'});
   const dry = p.curation_policies_dry_run || 0;
   if (dry > 0) acts.push({pri:'P2', effort:'Low', title:`Promote ${dry} curation policies out of dry-run`,
@@ -919,10 +1012,11 @@ function computeActions(){
   // fold in any engine recommendations not already represented
   const themes = acts.map(a => a.title.toLowerCase()).join(' | ');
   (DATA.recommendations || []).forEach(r => {
-    const t = String(r.text || '').toLowerCase();
+    const recTitle = r.title || r.text || '';
+    const t = String(recTitle).toLowerCase();
     const covered = (t.includes('xray') && themes.includes('critical')) ||
                     (t.includes('curation') && (themes.includes('curation') || themes.includes('remotes')));
-    if (!covered && r.text) acts.push({pri:r.priority||'P3', effort:cap(r.effort||''), title:r.text, body:r.detail||'', metric:'', link:null});
+    if (!covered && recTitle) acts.push({pri:r.priority||'P3', effort:cap(r.effort||''), title:recTitle, body:r.detail||'', metric:'', link:null, owner:r.owner, dueDate:r.due_date, score:r.score});
   });
   const order = {P1:0, P2:1, P3:2};
   acts.sort((a,b) => (order[a.pri]??9) - (order[b.pri]??9));
@@ -930,6 +1024,34 @@ function computeActions(){
 }
 
 /* ═══ MASTHEAD ═══ */
+function pdfOutputs(){
+  const m = DATA.meta || {};
+  const mode = m.pdf_mode || 'executive';
+  const out = m.pdf_outputs || {};
+  return {
+    mode,
+    executive: out.executive || (mode !== 'full' ? 'executive-report.pdf' : ''),
+    full: out.full || (mode !== 'executive' ? 'full-report.pdf' : '')
+  };
+}
+
+function pdfExportLinks(compact=false){
+  const out = pdfOutputs();
+  const links = [];
+  if (out.executive) links.push(`<a class="${compact?'':'pdf-link'} executive" href="${esc(out.executive)}" download><b>Executive PDF</b><span>Shareable</span></a>`);
+  if (out.full) links.push(`<a class="${compact?'':'pdf-link'} full" href="${esc(out.full)}" download><b>Full PDF</b><span>Internal</span></a>`);
+  return links.join('');
+}
+
+function pdfExportCard(){
+  const links = pdfExportLinks(false);
+  return `<div class="pdf-card">
+    <div class="pdf-title">PDF exports</div>
+    ${links || '<div class="meta">No PDF artifacts declared for this run.</div>'}
+    <button class="pdf-print" type="button" onclick="window.print()">Print current view</button>
+  </div>`;
+}
+
 function buildMast(){
   const m = DATA.meta || {};
   return `<div class="mast">
@@ -937,8 +1059,61 @@ function buildMast(){
     <div class="divider"></div>
     <div class="title"><b>${esc(m.report_type || 'Weekly')} CISO Report</b><span>Instance: ${esc(m.host || m.server_id || '')}</span></div>
     <div class="spacer"></div>
+    <div class="mast-pdf">${pdfExportLinks(true)}</div>
     <div class="period"><b>${esc(m.date_from || '')} – ${esc(m.date_to || '')}</b><span>${esc(m.report_type || 'Weekly')} · ${esc(m.window_days || 7)}-day window · Generated ${esc(m.generated || '')}</span></div>
   </div>`;
+}
+
+function buildSidebar(){
+  const m = DATA.meta || {}, p = DATA.platform || {}, c = DATA.curation || {};
+  const pi = c.policy_inventory || {};
+  const curationPolicies = pi.total_registered != null
+    ? pi.total_registered
+    : (p.curation_policies_global||0)+(p.curation_policies_repo||0)+(p.curation_policies_user||0);
+  const nav = [
+    ['summary','Executive Summary'],
+    ['curation','Curation Activity'],
+    ['policies','Policy Inventory'],
+    ['audit','Audit Events'],
+    ['users','Active Users'],
+    ['xray','Xray Posture'],
+    ['critical','Critical Issues'],
+    ['governance','Watches & Effectiveness'],
+    ['recommendations','Recommendations'],
+    ['velocity','Threat Velocity & Trend']
+  ];
+  return `<aside class="dashboard-sidebar">
+    <div class="side-brand"><span>${LOGO_GREEN}</span><div><b>CISO Report</b><span>JFrog Security</span></div></div>
+    ${pdfExportCard()}
+    <div class="side-label">Report sections</div>
+    <ol class="side-nav">${nav.map(([id,label],i)=>`<li><a href="#${id}"${i===0?' class="active"':''}>${esc(label)}</a></li>`).join('')}</ol>
+    <div class="side-label">At a glance</div>
+    <div class="side-glance">
+      <div class="glance-row"><span>Repos total</span><b>${fmt(p.repos_total)}</b></div>
+      <div class="glance-row"><span>Repos indexed</span><b>${fmt(p.repos_indexed)}</b></div>
+      <div class="glance-row"><span>Xray watches</span><b>${fmt(p.watches_total)}</b></div>
+      <div class="glance-row"><span>Xray policies</span><b>${fmt(p.policies_total)}</b></div>
+      <div class="glance-row"><span>Curation policies</span><b>${fmt(curationPolicies)}</b></div>
+      <div class="glance-row"><span>Curation remotes</span><b>${fmt((p.curation_state||{}).remote_total)}</b></div>
+      <div class="glance-row"><span>Unique users</span><b>${fmt(c.unique_users)}</b></div>
+    </div>
+  </aside>`;
+}
+
+function buildTopbar(){
+  const m = DATA.meta || {};
+  return `<header class="dashboard-topbar">
+    <div class="host">${esc(m.host||m.server_id||'JFrog Platform')}</div>
+    <div class="period">${esc(m.report_type||'Weekly')} · ${esc(m.window_days||7)}-day window · ${esc(m.date_from||'')} – ${esc(m.date_to||'')}</div>
+  </header>`;
+}
+
+function sectionWrap(id, title, label, html){
+  const kicker = label ? `<span>${esc(label)}</span>` : '';
+  return `<section class="section-block" id="${id}">
+    <div class="section-title"><h2>${esc(title)}</h2>${kicker}</div>
+    ${html}
+  </section>`;
 }
 
 /* ═══ BRIEFING (Direction A) ═══ */
@@ -947,16 +1122,17 @@ function buildBriefing(){
   const blocked = c.blocked || 0;
   const present = v.total || 0;
   const crit = sev.critical || 0;
+  const uniqueCritical = v.unique_critical_issue_count != null ? v.unique_critical_issue_count : ((v.critical_issues || []).length || 0);
   const sig = v.posture_signals || {};
   const cmp = DATA.comparison || {};
   const sd  = cmp.signal_deltas || {};
   const noPrior = !(cmp.available);
 
-  // Helper: format delta as ▲/▼ with colour
+  // Helper: format delta as ▲/▼ with colour. invertGood=true means lower is better.
   function sigDelta(val, invertGood) {
     if (val == null) return `<span class="sig-delta sig-no-prior">No prior period</span>`;
     const up = val > 0;
-    const good = invertGood ? !up : up;  // for coverage_gap: down is good
+    const good = invertGood ? !up : up;
     const arrow = up ? '▲' : '▼';
     const cls = up ? (good ? 'sig-up-good' : 'sig-up-bad') : (good ? 'sig-dn-good' : 'sig-dn-bad');
     return `<span class="sig-delta ${cls}">${arrow}${Math.abs(val)}</span>`;
@@ -967,22 +1143,22 @@ function buildBriefing(){
   const signals = `<div class="posture-signals">
     <div class="sig-item">
       <div class="sig-val">${fmt(sev.critical)}</div>
-      <div class="sig-label">Critical</div>
-      <div class="sig-sub">${fmt(sev.critical)} now · ${severityDeltaText(criticalDelta)}</div>
-      <div class="sig-label" style="margin-top:14px">High</div>
-      <div class="sig-sub">${fmt(sev.high)} now</div>
+      <div class="sig-label">Critical violation occurrences</div>
+      <div class="sig-sub">${fmt(uniqueCritical)} unique critical issues/CVEs · ${severityDeltaText(criticalDelta)}</div>
+      <div class="sig-label" style="margin-top:14px">High violation occurrences</div>
+      <div class="sig-sub">${fmt(sev.high)} current</div>
     </div>
     <div class="sig-sep"></div>
     <div class="sig-item">
       <div class="sig-val">${fmt(sig.violation_volume)}</div>
-      <div class="sig-label">Violation volume</div>
-      <div class="sig-sub">Total inside repos${sigDelta(sd.violation_volume, false)}</div>
+      <div class="sig-label">Total violation occurrences</div>
+      <div class="sig-sub">Inside indexed repositories${sigDelta(sd.violation_volume, true)}</div>
     </div>
     <div class="sig-sep"></div>
     <div class="sig-item">
       <div class="sig-val">${sig.coverage_gap != null ? sig.coverage_gap + '<small>%</small>' : '—'}</div>
-      <div class="sig-label">Coverage gap</div>
-      <div class="sig-sub">Repos not indexed${sigDelta(sd.coverage_gap, true)}</div>
+      <div class="sig-label">Xray indexing gap</div>
+      <div class="sig-sub">Repositories not indexed${sigDelta(sd.coverage_gap, true)}</div>
     </div>
   </div>`;
 
@@ -990,12 +1166,12 @@ function buildBriefing(){
     <div class="brief-hero">
       ${signals}
       <div class="headline-cell">
-        <h1>Your gate stopped <span class="g">${fmt(blocked)}</span> risky package${blocked===1?'':'s'} — but <span class="r">${fmt(present)} violation${present===1?'':'s'}</span> already live inside your repositories.</h1>
+        <h1>Curation blocked <span class="g">${fmt(blocked)}</span> risky package request${blocked===1?'':'s'} this period while Xray reports <span class="r">${fmt(present)} violation instance${present===1?'':'s'}</span> inside repositories.</h1>
         <div class="prevbar">
           <div class="blocked" style="width:${Math.max(0.4, pctOf(blocked, blocked+present)).toFixed(2)}%"></div>
-          <div class="present">${fmt(present)} present inside repositories${crit ? ` &nbsp;·&nbsp; ${fmt(crit)} critical` : ''}</div>
+          <div class="present">${fmt(present)} occurrences inside indexed repositories${crit ? ` &nbsp;·&nbsp; ${fmt(crit)} critical` : ''}</div>
         </div>
-        <div class="prevcap"><span><b>${fmt(blocked)}</b> blocked at the gate this period</span><span>Prevention is working — exposure &amp; coverage are the gap</span></div>
+        <div class="prevcap"><span><b>${fmt(blocked)}</b> blocked at the gate this period</span><span><b>${fmt(present)}</b> Xray violation occurrences need ownership</span></div>
       </div>
     </div>
   </div>`;
@@ -1021,6 +1197,7 @@ function panelWrap(id, on, title, html){
 function buildOverview(){
   const v = DATA.violations || {}, c = DATA.curation || {}, p = DATA.platform || {}, sev = v.by_severity || {};
   const vei = v.executive_insights || {}, cei = (c.executive_insights || {});
+  const uniqueCritical = v.unique_critical_issue_count != null ? v.unique_critical_issue_count : ((v.critical_issues || []).length || 0);
   const cn = connStats();
   const sig = v.posture_signals || {};
   const sd  = (DATA.comparison || {}).signal_deltas || {};
@@ -1039,16 +1216,18 @@ function buildOverview(){
   const attnBlock = `<div class="attention" style="margin:-22px -24px 20px">
     <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
       <h2 style="margin:0">What needs your attention</h2>
-      ${allActions.length > 3 ? `<button class="btn-link" onclick="document.querySelector('[data-tab=recommendations]').click()">See all ${allActions.length} →</button>` : ''}
+      ${allActions.length > 3 ? `<button class="btn-link" onclick="document.getElementById('recommendations').scrollIntoView({behavior:'smooth'})">See all ${allActions.length} →</button>` : ''}
     </div>
     <div class="act-grid">${topCards}</div>
   </div>`;
+  const benefit = DATA.benefit || {};
+  const benefitLine = benefit.compare_line ? `<div class="note"><b>Prevention and residual risk.</b> ${esc(benefit.compare_line)}${benefit.upgrade_rate_computed?` <b>${fmt(benefit.upgrade_rate)}%</b> of uniquely blocked packages were later approved at a higher version.`:''}</div>` : '';
 
   const criticalDelta = cmp.available && cmp.violations ? cmp.violations.critical_delta : null;
   const kpis = `<div class="kpis">
-    <div class="kpi k-navy"><div class="n">${fmt(sev.critical)}</div><div class="l">Critical</div><div class="d">${fmt(sev.critical)} now · ${severityDeltaText(criticalDelta)}<br><b>High</b><br>${fmt(sev.high)} now</div></div>
+    <div class="kpi k-navy"><div class="n">${fmt(sev.critical)}</div><div class="l">Critical violation occurrences</div><div class="d">${fmt(uniqueCritical)} unique critical issues/CVEs · ${severityDeltaText(criticalDelta)}<br><b>High violation occurrences</b><br>${fmt(sev.high)} current</div></div>
     <div class="kpi k-green"><div class="n">${fmt(c.blocked)}</div><div class="l">Blocked at gate</div><div class="d">${pctOf(c.blocked,c.total)<1?'<1':pctOf(c.blocked,c.total)}% of requests</div></div>
-    <div class="kpi k-crit"><div class="n">${fmt(sev.critical)}</div><div class="l">Critical inside</div><div class="d">of ${fmt(v.total)} total</div></div>
+    <div class="kpi k-crit"><div class="n">${fmt((c.request_results||{}).without_inspection||c.without_inspection)}</div><div class="l">Without inspection</div><div class="d">package requests bypassing policy evaluation</div></div>
     <div class="kpi k-info"><div class="n">${pctOf(p.repos_indexed,p.repos_total)}<small>%</small></div><div class="l">Repos indexed</div><div class="d">${fmt(p.repos_indexed)} / ${fmt(p.repos_total)}</div></div>
     <div class="kpi k-med"><div class="n">${cn.pct}<small>%</small></div><div class="l">Remotes gated</div><div class="d">${fmt(cn.connected)} / ${fmt(cn.total)}</div></div>
   </div>`;
@@ -1104,7 +1283,7 @@ function buildOverview(){
   </div></div>`;
 
   const obs = (DATA.curation && DATA.curation.observation) || '';
-  return attnBlock + kpis + insights + comparisonPanel + `<div class="grid-2 wide-l">${topPanel}${covPanel}</div>`;
+  return attnBlock + benefitLine + kpis + insights + comparisonPanel + `<div class="grid-2 wide-l">${topPanel}${covPanel}</div>`;
 }
 function covRow(label, a, b, color, subOverride){
   const pc = pctOf(a, b);
@@ -1119,8 +1298,16 @@ function covRow(label, a, b, color, subOverride){
 function buildCuration(){
   const c = DATA.curation || {}, m = DATA.meta || {}, p = DATA.platform || {};
   const cei = c.executive_insights || {};
-  if (!c.available) return `<div class="empty"><div class="ico">i</div><b>Curation data unavailable</b><p>No curation activity was collected for this window.</p></div>`;
+  if (!c.available) return {
+    activity: `<div class="empty"><div class="ico">i</div><b>Curation data unavailable</b><p>No curation activity was collected for this window.</p></div>`,
+    policies: '',
+    audit: '',
+    users: ''
+  };
   const rr = c.request_results || {};
+  const waiverRequests = c.waiver_requests || {};
+  const cleanPackages = c.clean_packages != null ? c.clean_packages : (rr.clean_packages != null ? rr.clean_packages : c.approved);
+  const withoutInspection = rr.without_inspection != null ? rr.without_inspection : c.without_inspection;
   const cn = connStats();
   const noAuditEvents = Number(c.total || 0) === 0;
   const periodLabel = [m.date_from, m.date_to].filter(Boolean).join(' to ');
@@ -1129,9 +1316,12 @@ function buildCuration(){
   const kpis = `<div class="kpis">
     <div class="kpi k-navy"><div class="n">${fmt(c.total)}</div><div class="l">${noAuditEvents ? 'Audit events' : 'Requests screened'}</div><div class="d">${noAuditEvents ? 'none returned for this period' : 'at the package gate'}</div></div>
     <div class="kpi k-crit"><div class="n">${fmt(c.blocked)}</div><div class="l">Blocked</div><div class="d">${(c.block_rate!=null?c.block_rate:pctOf(c.blocked,c.total))}% block rate</div></div>
-    <div class="kpi k-green"><div class="n">${fmt(c.approved)}</div><div class="l">Approved</div><div class="d">passed policy</div></div>
+    <div class="kpi k-green"><div class="n">${fmt(cleanPackages)}</div><div class="l">Clean packages</div><div class="d">${c.clean_rate!=null?c.clean_rate:pctOf(cleanPackages,(Number(cleanPackages)||0)+(Number(c.blocked)||0))}% of policy decisions</div></div>
+    <div class="kpi k-crit"><div class="n">${fmt(withoutInspection)}</div><div class="l">Without inspection</div><div class="d">bypassed policy evaluation</div></div>
     <div class="kpi k-med"><div class="n">${fmt(rr.dry_run)}</div><div class="l">Dry-run observed</div><div class="d">not enforced</div></div>
     <div class="kpi k-info"><div class="n">${fmt(c.unique_users)}</div><div class="l">Active developers</div><div class="d">unique requesters</div></div>
+    <div class="kpi k-med"><div class="n">${waiverRequests.available?fmt(waiverRequests.pending):'—'}</div><div class="l">Pending waivers</div><div class="d">${waiverRequests.available?'awaiting decision':'API unavailable'}</div></div>
+    <div class="kpi k-green"><div class="n">${waiverRequests.available?fmt(waiverRequests.approved):'—'}</div><div class="l">Approved waivers</div><div class="d">${waiverRequests.available?'current API count':'API unavailable'}</div></div>
   </div>`;
 
   // block reasons
@@ -1144,28 +1334,46 @@ function buildCuration(){
     || `<div class="cov-sub">No blocks recorded in this window.</div>`;
   const reasonPanel = `<div class="panel flush"><div class="ph"><h3>Why packages were blocked</h3></div><div class="pbody"><div class="sevlist">${reasonRows}</div></div></div>`;
 
+  // unique packages blocked at the gate
+  const topBlocked = c.top_blocked || [];
+  const blockedRows = topBlocked.slice(0,10).map(x=>`<tr>
+    <td class="comp">${esc(x.package)}</td>
+    <td><span class="pt">${esc(x.ecosystem||'unknown')}</span></td>
+    <td>${x.malicious?'<span class="sev sev-crit">MALICIOUS</span>':'<span class="meta">Policy violation</span>'}</td>
+    <td class="r"><span class="num">${fmt(x.count)}</span></td>
+  </tr>`).join('');
+  const blockedPanel = `<div class="panel flush"><div class="ph"><h3>Top blocked packages</h3><span class="meta">${fmt((DATA.benefit||{}).unique_blocked_packages||topBlocked.length)} unique packages · showing top ${fmt(Math.min(10,topBlocked.length))} · malicious first</span></div>
+    <table class="dt"><thead><tr><th>Package</th><th>Ecosystem</th><th>Reason</th><th class="r">Blocks</th></tr></thead><tbody>${blockedRows||`<tr><td colspan="4" class="empty" style="padding:20px">No blocked packages.</td></tr>`}</tbody></table></div>`;
+
   // top blocking policies
-  const tp = (c.top_policies && c.top_policies.length ? c.top_policies : c.blocking_events_per_policy) || [];
-  const maxP = Math.max(1, ...tp.map(x=>x.blocked_events||0));
-  const polRows = tp.slice(0,6).map(x=>{
+  const tp = ((c.policies_enforced||{}).by_policy || []).filter(x => (x.audit_hits||0)>0);
+  const polRows = tp.slice(0,10).map(x=>{
     let scopeLabel = x.scope_label || '';
     if (/seen in audit only/i.test(scopeLabel)) scopeLabel = 'Audit-only (not enforced)';
     return `<tr><td class="comp">${esc(x.name)}</td><td>${esc(scopeLabel)}</td>
-    <td class="r" style="width:140px"><div class="minibar"><div class="t"><div class="f" style="width:${pctOf(x.blocked_events,maxP)}%;background:var(--crit)"></div></div><span class="num">${fmt(x.blocked_events)}</span></div></td></tr>`;
+    <td class="r"><span class="num">${fmt(x.blocked_hits)}</span></td>
+    <td class="r"><span class="num">${fmt(x.clean_hits)}</span></td>
+    <td class="r"><span class="num">${fmt(x.blocked_pct)}%</span></td>
+    <td class="r"><span class="num">${fmt(x.clean_pct)}%</span></td></tr>`;
   }).join('');
-  const polPanel = `<div class="panel flush"><div class="ph"><h3>Top blocking policies</h3></div>
-    <table class="dt"><thead><tr><th>Policy</th><th>Scope</th><th class="r">Blocks</th></tr></thead><tbody>${polRows||`<tr><td colspan="3" class="empty" style="padding:20px">No blocking policies triggered.</td></tr>`}</tbody></table></div>`;
+  const polPanel = `<div class="panel flush"><div class="ph"><h3>Protection by policy</h3><span class="meta">policy-evaluated outcomes only</span></div>
+    <table class="dt"><thead><tr><th>Policy</th><th>Scope</th><th class="r">Blocked</th><th class="r">Clean</th><th class="r">Block %</th><th class="r">Clean %</th></tr></thead><tbody>${polRows||`<tr><td colspan="6" class="empty" style="padding:20px">No policy-attributed decisions.</td></tr>`}</tbody></table></div>`;
 
-  // top users — highlight concentration
-  const users = (c.top_users || []).slice(0, 6);
+  // top users — highlight concentration without rendering thousands of rows
+  const users = (c.top_users || []).slice(0, 20);
   const maxEv = Math.max(1, ...users.map(u=>u.events||0));
   const userRows = users.map(u=>`
     <tr><td class="comp">${esc(u.user)}</td>
     <td class="r"><span class="num">${fmt(u.events)}</span></td>
+    <td class="r"><span class="num">${fmt(u.events_pct)}%</span></td>
     <td class="r">${(u.blocked||0)>0?`<span class="status st-block">${fmt(u.blocked)}</span>`:`<span class="num" style="color:var(--muted)">0</span>`}</td>
-    <td class="r" style="width:120px"><div class="minibar"><div class="t"><div class="f" style="width:${pctOf(u.events,maxEv)}%;background:var(--navy-600)"></div></div></div></td></tr>`).join('');
-  const userPanel = `<div class="panel flush"><div class="ph"><h3>Most active developers</h3></div>
-    <table class="dt"><thead><tr><th>User</th><th class="r">Requests</th><th class="r">Blocked</th><th class="r">Activity</th></tr></thead><tbody>${userRows||`<tr><td colspan="4" class="empty" style="padding:20px">No user activity.</td></tr>`}</tbody></table></div>`;
+    <td class="desc">${(u.packages||[]).slice(0,3).map(p=>`${esc(p.package)} <span class="meta">(${esc(p.ecosystem)} · ${fmt(p.requests)})</span>`).join('<br>')||'—'}</td>
+    <td class="r" style="width:100px"><div class="minibar"><div class="t"><div class="f" style="width:${pctOf(u.events,maxEv)}%;background:var(--navy-600)"></div></div></div></td></tr>`).join('');
+  const activeUserCount = c.unique_users != null ? c.unique_users : users.length;
+  const userExport = exportHref('curation_user_package_activity_csv');
+  const userButton = userExport ? `<a class="showmore" style="width:auto;border:0;padding:0" href="${esc(userExport)}" download>Download full CSV</a>` : `<button class="showmore" style="width:auto;border:0;padding:0" onclick="downloadCurationUsers()">Download full CSV</button>`;
+  const userPanel = `<div class="panel flush"><div class="ph"><h3>Active users</h3><span class="meta">Top ${fmt(users.length)} of ${fmt(activeUserCount)} users observed in Curation activity</span>${userButton}</div>
+    <table class="dt"><thead><tr><th>User</th><th class="r">Requests</th><th class="r">Share</th><th class="r">Blocked</th><th>Top requested packages</th><th class="r">Activity</th></tr></thead><tbody>${userRows||`<tr><td colspan="6" class="empty" style="padding:20px">No user activity.</td></tr>`}</tbody></table></div>`;
 
   // connection by package type
   const byType = (cn && (DATA.platform.curation_state||{}).by_package_type) || ((DATA.curation.curation_state||{}).by_package_type) || [];
@@ -1176,7 +1384,7 @@ function buildCuration(){
   const typeRows = typesSorted.map(t=>{
     const pc = pctOf(t.connected, t.remote_total);
     const col = pc>=100?'var(--green)':pc>=50?'var(--med)':'var(--crit)';
-    return `<tr><td class="ptcell"><span class="pt">${esc(t.package_type)}</span></td>
+    return `<tr><td class="ptcell">${packageTypeCell(t.package_type)}</td>
       <td class="r" style="width:180px"><div class="minibar"><div class="t"><div class="f" style="width:${pc}%;background:${col}"></div></div><span class="num">${fmt(t.connected)}/${fmt(t.remote_total)}</span></div></td>
       <td class="r">${(t.blocked_period||t.blocked||0)>0?`<span class="num">${fmt(t.blocked_period||t.blocked)}</span>`:`<span style="color:var(--muted)">—</span>`}</td></tr>`;
   }).join('');
@@ -1196,7 +1404,7 @@ function buildCuration(){
       const unconn = t.unconnected != null ? t.unconnected : total - (t.connected||0);
       const pc = pctOf(t.connected, total);
       return `<tr>
-        <td class="ptcell"><span class="pt">${esc(t.package_type)}</span></td>
+        <td class="ptcell">${packageTypeCell(t.package_type)}</td>
         <td class="r"><span style="font-weight:700;color:var(--crit)">${fmt(unconn)} unconnected</span></td>
         <td class="r" style="width:200px"><div class="minibar"><div class="t"><div class="f" style="width:${pc}%;background:var(--crit)"></div></div><span class="num">${fmt(t.connected)} / ${fmt(total)}</span></div></td>
         <td class="r">${(t.blocked_period||t.blocked||0)>0?`<span class="num">${fmt(t.blocked_period||t.blocked)}</span>`:`<span style="color:var(--muted)">—</span>`}</td>
@@ -1208,8 +1416,23 @@ function buildCuration(){
     </div>`;
   })();
 
+  const passThrough = p.pass_through_repos || [];
+  const passThroughRows = passThrough.slice(0,25).map(x=>`<tr>
+    <td class="comp">${esc(x.repo)}</td>
+    <td class="ptcell">${packageTypeCell(x.package_type||'unknown')}</td>
+    <td>${x.supported?'<span class="sev sev-med">NOT ENABLED</span>':'<span class="meta">Unsupported ecosystem</span>'}</td>
+  </tr>`).join('');
+  const passThroughPanel = passThrough.length ? `<div class="panel flush">
+    <div class="ph"><h3>Remote repositories not protected by Curation</h3><span class="meta">${fmt(passThrough.length)} pass-through remotes · supported package type, not enabled for Curation</span></div>
+    <table class="dt"><thead><tr><th>Repository</th><th>Package type</th><th>Coverage status</th></tr></thead><tbody>${passThroughRows}</tbody></table>
+  </div>` : '';
+
   const enforcement = cei.enforcement_opportunity || {};
   const malicious = cei.malicious_package_defense || {};
+  const benefit = DATA.benefit || {};
+  const inventoryInsights = c.policy_inventory || {};
+  const baselinePosture = inventoryInsights.baseline_policy_posture || {};
+  const cachePosture = inventoryInsights.cached_package_enforcement || {};
   const insightPanels = `<div class="grid-3">
     <div class="panel flush"><div class="ph"><h3>Gate coverage gaps</h3><span class="meta">supported only</span></div><div class="pbody">
       ${(cei.gate_coverage_gaps||[]).slice(0,5).map(g=>`<div class="sevr"><span class="act-pill pill-${String(g.priority||'P2').toLowerCase()}">${esc(g.priority||'P2')}</span><span class="lbl">${esc(g.package_type)}</span><span class="ct">${fmt(g.unconnected)} open</span></div>`).join('') || '<div class="cov-sub">All supported remotes are connected to Curation.</div>'}
@@ -1223,6 +1446,20 @@ function buildCuration(){
       <div class="sevr"><span class="lbl">Malicious blocks</span><span class="ct">${fmt(malicious.malicious_blocks)}</span></div>
       <div class="sevr"><span class="lbl">Malicious policies</span><span class="ct">${fmt(malicious.malicious_policies)}</span></div>
       ${(malicious.top_packages||[]).slice(0,3).map(x=>`<div class="cov-sub"><b>${esc(x.package)}</b> · ${fmt(x.blocks)} blocks</div>`).join('')}
+    </div></div>
+    <div class="panel flush"><div class="ph"><h3>Upgrade after block</h3><span class="meta">developer behavior change</span></div><div class="pbody">
+      <div class="sevr"><span class="lbl">Upgrade rate</span><span class="ct">${benefit.upgrade_rate_computed?fmt(benefit.upgrade_rate)+'%':'—'}</span></div>
+      <div class="sevr"><span class="lbl">Packages upgraded</span><span class="ct">${fmt(benefit.upgraded_packages)}</span></div>
+      <div class="cov-sub">Blocked packages later requested at a higher approved version.</div>
+    </div></div>
+    <div class="panel flush"><div class="ph"><h3>Recommended policy baseline</h3><span class="meta">malicious-package blocking</span></div><div class="pbody">
+      <div class="sevr"><span class="lbl">Block malicious org-wide</span><span class="ct">${baselinePosture.block_malicious_org_wide?'Applied':'Missing'}</span></div>
+      ${(baselinePosture.matching_policies||[]).slice(0,3).map(name=>`<div class="cov-sub">${esc(name)}</div>`).join('')}
+    </div></div>
+    <div class="panel flush"><div class="ph"><h3>Cached-package enforcement</h3><span class="meta">per-policy coverage</span></div><div class="pbody">
+      <div class="sevr"><span class="lbl">Blocking policies covered</span><span class="ct">${fmt(cachePosture.policies_enforcing_cache)} / ${fmt(cachePosture.blocking_policies_total)}</span></div>
+      <div class="cov-sub">${(cachePosture.policies_missing_cache_enforcement||[]).length?fmt(cachePosture.policies_missing_cache_enforcement.length)+' policies do not enforce on cache':'All discovered blocking policies enforce on cache.'}</div>
+      <div class="cov-sub">Global cached-package setting: ${cachePosture.global_enabled==null?'not exposed by collected API':cachePosture.global_enabled?'enabled':'disabled'}</div>
     </div></div>
   </div>`;
 
@@ -1249,6 +1486,15 @@ function buildCuration(){
   const riskPanel = byRisk.length ? `<div class="panel" style="margin-bottom:14px">
     <div class="ph"><h3>Curation policies by risk category</h3><span class="meta">${fmt(pi.total_registered||pi.block_active||0)} total · ${fmt(pi.block_active||0)} block · ${fmt(pi.dry_run_active||0)} dry-run</span></div>
     <div class="pbody"><div style="display:grid;grid-template-columns:repeat(${byRisk.length||4},1fr);gap:12px">${riskChips}</div></div>
+  </div>` : '';
+
+  const dryRunPolicyRows = (pi.dry_run_policies||[]).map(pol=>`<tr>
+    <td class="comp">${esc(pol.name)}</td><td>${esc(pol.scope||'—')}</td>
+    <td class="r"><span class="num">${pol.days_in_dry_run==null?'—':fmt(pol.days_in_dry_run)}</span></td>
+  </tr>`).join('');
+  const maturityPanel = dryRunPolicyRows ? `<div class="panel flush">
+    <div class="ph"><h3>Policies still in dry-run</h3><span class="meta">${fmt((pi.dry_run_policies||[]).length)} policies · all listed</span></div>
+    <table class="dt"><thead><tr><th>Policy</th><th>Scope</th><th class="r">Days in dry-run</th></tr></thead><tbody>${dryRunPolicyRows}</tbody></table>
   </div>` : '';
 
   // Block policy catalog grouped by risk type — all executive categories are visible
@@ -1281,11 +1527,7 @@ function buildCuration(){
     ${catGroupSections}
   </div>` : '';
 
-  return auditEmptyNote + kpis + obs +
-    `<div class="grid-3"><div class="span-2">${polPanel}</div>${reasonPanel}</div>` +
-    `<div class="grid-2">${userPanel}${typePanel}</div>` +
-    insightPanels + uncoveredPanel + cta + riskPanel + catPanel +
-    (() => {
+  const effectivenessPanel = (() => {
       const g = DATA.governance || {};
       const ce = g.curation_policy_effectiveness || [];
       const ceRows = ce.slice(0,6).map(x => {
@@ -1295,29 +1537,40 @@ function buildCuration(){
           <td class="r"><span class="num">${fmt(x.hits)}</span></td><td class="r"><span class="num">${esc(x.pct_of_events!=null?x.pct_of_events+'%':'\u2014')}</span></td></tr>`;
       }).join('');
       if (!ce.length) return '';
-      return `<div class="panel flush"><div class="ph"><h3>Curation policy effectiveness</h3><span class="meta">blocks attributed</span></div>
+      return `<div class="panel flush"><div class="ph"><h3>Blocks by Curation policy</h3><span class="meta">blocked requests attributed to policy</span></div>
         <table class="dt"><thead><tr><th>Policy</th><th>Scope</th><th class="r">Blocks</th><th class="r">Share</th></tr></thead><tbody>${ceRows}</tbody></table></div>`;
     })();
+
+  return {
+    activity: auditEmptyNote + kpis + obs +
+      `<div class="grid-2">${blockedPanel}${reasonPanel}</div>` +
+      typePanel + uncoveredPanel + passThroughPanel + insightPanels,
+    policies: polPanel + riskPanel + maturityPanel + catPanel + effectivenessPanel,
+    audit: cta,
+    users: userPanel
+  };
 }
 
 /* ═══ XRAY TAB ═══ */
 function buildXray(){
   const v = DATA.violations || {}, sev = v.by_severity || {}, byType = v.by_type || {};
   const ei = v.executive_insights || {};
-  const uniqueFindings = (sev.critical||0)+(sev.high||0)+(sev.medium||0)+(sev.low||0);
-  const sevDef = [['Critical','critical','var(--crit)'],['High','high','var(--high)'],['Medium','medium','var(--med)'],['Low','low','var(--low)']];
-  const distTotal = uniqueFindings || 1;
+  const severityTotal = (sev.critical||0)+(sev.high||0)+(sev.medium||0)+(sev.low||0);
+  const uniqueFindings = v.unique_issue_count != null ? v.unique_issue_count : severityTotal;
+  const uniqueCritical = v.unique_critical_issue_count != null ? v.unique_critical_issue_count : ((v.critical_issues || []).length || 0);
+  const sevDef = [['Critical','critical','#b91c1c'],['High','high','#ef6c00'],['Medium','medium','#f2b705'],['Low','low','#3a86f9']];
+  const distTotal = severityTotal || 1;
   const distBar = sevDef.filter(s=>(sev[s[1]]||0)>0).map(s=>{
     const pc = (sev[s[1]]/distTotal*100);
-    return `<span style="background:${s[2]};width:${pc}%">${pc>9?fmt(sev[s[1]]):''}</span>`;
+    return `<span title="${esc(s[0])}: ${fmt(sev[s[1]])}" style="background:${s[2]};width:${pc}%">${pc>9?fmt(sev[s[1]]):''}</span>`;
   }).join('');
   const sevRows = sevDef.map(s=>`<div class="sevr"><span class="dot" style="background:${s[2]}"></span><span class="lbl">${s[0]}</span><span class="ct">${fmt(sev[s[1]])}</span><span class="pc">${(v.severity_pct&&v.severity_pct[s[1]]!=null?v.severity_pct[s[1]]:pctOf(sev[s[1]],distTotal))}%</span></div>`).join('');
 
   const kpis = `<div class="kpis">
-    <div class="kpi k-crit"><div class="n">${fmt(sev.critical)}</div><div class="l">Critical</div><div class="d">${(v.severity_pct&&v.severity_pct.critical)||pctOf(sev.critical,distTotal)}% of findings</div></div>
-    <div class="kpi k-med"><div class="n">${fmt(sev.high)}</div><div class="l">High</div><div class="d">${(v.severity_pct&&v.severity_pct.high)||pctOf(sev.high,distTotal)}% of findings</div></div>
-    <div class="kpi k-info"><div class="n">${fmt(uniqueFindings)}</div><div class="l">Unique findings</div><div class="d">CVEs &amp; violations deduplicated</div></div>
-    <div class="kpi k-green"><div class="n">${fmt(v.total)}</div><div class="l">Total instances</div><div class="d">across all artifacts</div></div>
+    <div class="kpi k-crit"><div class="n">${fmt(sev.critical)}</div><div class="l">Critical occurrences</div><div class="d">${fmt(uniqueCritical)} unique critical issues/CVEs</div></div>
+    <div class="kpi k-med"><div class="n">${fmt(sev.high)}</div><div class="l">High occurrences</div><div class="d">${(v.severity_pct&&v.severity_pct.high)||pctOf(sev.high,distTotal)}% of all occurrences</div></div>
+    <div class="kpi k-info"><div class="n">${fmt(uniqueFindings)}</div><div class="l">Unique issues/CVEs</div><div class="d">deduplicated across artifacts</div></div>
+    <div class="kpi k-green"><div class="n">${fmt(v.total)}</div><div class="l">Total occurrences</div><div class="d">inside indexed repositories</div></div>
   </div>`;
 
   const distPanel = `<div class="panel flush"><div class="ph"><h3>Severity distribution</h3><span class="meta">${fmt(uniqueFindings)} unique findings</span></div><div class="pbody">
@@ -1379,18 +1632,79 @@ function buildXray(){
   // Critical issues — sourced from Xray violations API, severity=Critical, enriched with JFrog Research descriptions
   const ci = v.critical_issues || [];
   const ciShown = 10;
+  const hasExploitData = ci.some(r => ['active','poc','none'].includes(String(r.exploit_status||'').toLowerCase()));
+  const hasEnvironmentData = ci.some(r => (r.affected_environments||[]).some(knownValue));
+  const hasPlaybookData = ci.some(r => safeHttpHref(r.playbook_link));
+  const ciHeadOptional = [
+    hasExploitData ? '<th>Exploit</th>' : '',
+    hasEnvironmentData ? '<th>Environment</th>' : '',
+    hasPlaybookData ? '<th>Playbook</th>' : '',
+  ].join('');
+  const ciColspan = 6 + (hasExploitData ? 1 : 0) + (hasEnvironmentData ? 1 : 0) + (hasPlaybookData ? 1 : 0);
   const ciRows = ci.map((r,i)=>`<tr class="${i>=ciShown?'row-more':''}">
     <td class="idcell">${esc(r.id)}</td>
+    <td class="comp">${esc(shortComponent(r.component||'—'))}</td>
     <td class="desc">${esc(truncate(r.description, 160))}</td>
     <td class="r"><span class="num">${fmt(r.hits)}</span></td>
-    <td class="mono" style="font-size:11px;color:var(--muted)">${esc(r.first_seen||'')}</td></tr>`).join('');
+    <td class="r"><span class="num">${fmt(r.days_open)}</span></td>
+    <td>${r.fix_status==='available'?`<span class="sev sev-low">FIX AVAILABLE</span><div class="meta">${esc((r.fix_versions||[]).slice(0,2).join(', '))}</div>`:`<span class="meta">${esc(r.fix_status||'unknown')}</span>`}</td>
+    ${hasExploitData?`<td><span class="sev ${r.exploit_status==='active'?'sev-crit':r.exploit_status==='poc'?'sev-high':'sev-low'}">${esc(knownValue(r.exploit_status)?String(r.exploit_status).toUpperCase():'NOT CAPTURED')}</span></td>`:''}
+    ${hasEnvironmentData?`<td class="desc">${esc((r.affected_environments||[]).filter(knownValue).join(', ')||'—')}</td>`:''}
+    ${hasPlaybookData?`<td>${safeHttpHref(r.playbook_link)?`<a href="${esc(safeHttpHref(r.playbook_link))}">Runbook →</a>`:'—'}</td>`:''}</tr>`).join('');
   const ciPanel = `<div class="panel flush" id="ciPanel">
-    <div class="ph"><h3>Critical issues</h3><span class="meta">${fmt(ci.length)} issues · source: Xray violations API · severity=Critical · enriched by JFrog Research</span></div>
-    <table class="dt"><thead><tr><th>Issue ID</th><th>Description</th><th class="r">Artifact hits</th><th>First seen</th></tr></thead><tbody>${ciRows||`<tr><td colspan="4" class="empty" style="padding:20px">No critical issues recorded in this window.</td></tr>`}</tbody></table>
+    <div class="ph"><h3>Critical issues</h3><button class="showmore" style="width:auto;border:0;padding:0" onclick="downloadXrayIssues()">Download CSV</button></div>
+    <table class="dt"><thead><tr><th>Issue ID</th><th>Component</th><th>Description</th><th class="r">Occurrences</th><th class="r">Days open</th><th>Fix</th>${ciHeadOptional}</tr></thead><tbody>${ciRows||`<tr><td colspan="${ciColspan}" class="empty" style="padding:20px">No critical issues recorded in this window.</td></tr>`}</tbody></table>
     ${ci.length>ciShown?`<button class="showmore" data-target="ciPanel"><span class="more-label">Show all ${fmt(ci.length)} issues</span><span class="less-label">Show top ${ciShown}</span></button>`:''}
   </div>`;
 
   const obs = v.observation ? `<div class="note"><b>What this means.</b> ${esc(v.observation)}</div>` : '';
+
+  const topRepos = v.top_repos || [];
+  const hasBusinessService = topRepos.some(x => knownValue(x.business_service));
+  const hasRepoCriticality = topRepos.some(x => knownValue(x.criticality));
+  const hasRepoEnvironment = topRepos.some(x => knownValue(x.environment));
+  const topRepoHead = [
+    '<th>Repository</th>',
+    hasBusinessService ? '<th>Business service</th>' : '',
+    hasRepoCriticality ? '<th>Criticality</th>' : '',
+    hasRepoEnvironment ? '<th>Environment</th>' : '',
+    '<th class="r">Critical</th>',
+    '<th class="r">Occurrences</th>',
+  ].join('');
+  const topRepoColspan = 3 + (hasBusinessService ? 1 : 0) + (hasRepoCriticality ? 1 : 0) + (hasRepoEnvironment ? 1 : 0);
+  const topRepoRows = topRepos.slice(0,10).map(x=>`<tr><td class="comp">${esc(x.repo)}</td>${hasBusinessService?`<td>${esc(x.business_service||'—')}</td>`:''}${hasRepoCriticality?`<td><span class="sev ${x.criticality==='critical'?'sev-crit':x.criticality==='high'?'sev-high':'sev-med'}">${esc(knownValue(x.criticality)?String(x.criticality).toUpperCase():'—')}</span></td>`:''}${hasRepoEnvironment?`<td>${esc(x.environment||'—')}</td>`:''}<td class="r"><span class="num">${fmt(x.critical)}</span></td><td class="r"><span class="num">${fmt(x.count)}</span></td></tr>`).join('');
+  const topRepoPanel = `<div class="panel flush"><div class="ph"><h3>Repositories with the most exposure</h3><span class="meta">ranked by critical then total violations</span></div>
+    <table class="dt"><thead><tr>${topRepoHead}</tr></thead><tbody>${topRepoRows||`<tr><td colspan="${topRepoColspan}" class="empty" style="padding:20px">Repository attribution unavailable.</td></tr>`}</tbody></table></div>`;
+
+  const velocity = DATA.threat_velocity || {};
+  const velocityPeriods = velocity.periods || [];
+  const velocityRows = velocityPeriods.map(x=>`<tr><td class="mono">${esc(x.label)}</td><td class="r"><span class="num">${fmt(x.critical)}</span></td><td class="r"><span class="num">${fmt(x.violations)}</span></td><td class="r"><span class="num">${fmt(x.blocked)}</span></td></tr>`).join('');
+  const trendCard = (label, key, lowerIsBetter=true) => {
+    const vals = velocityPeriods.map(x => Number(x[key] || 0));
+    const first = vals[0] || 0, last = vals.length ? vals[vals.length - 1] : 0;
+    const delta = last - first;
+    const state = delta === 0 ? 'flat' : ((delta < 0) === lowerIsBetter ? 'good' : 'bad');
+    const max = Math.max(1, ...vals);
+    const bars = vals.map(v => `<i title="${fmt(v)}" style="height:${Math.max(8, pctOf(v, max))}%"></i>`).join('');
+    const sign = delta > 0 ? '+' : '';
+    return `<div class="vel-card ${state}"><div class="vh"><b>${esc(label)}</b><span>${sign}${fmt(delta)}</span></div><div class="spark">${bars}</div></div>`;
+  };
+  const velocityCards = `<div class="velocity-summary">
+    ${trendCard('Critical occurrences', 'critical', true)}
+    ${trendCard('Total violation occurrences', 'violations', true)}
+    ${trendCard('Gate blocks', 'blocked', false)}
+  </div>`;
+  const velocityPanel = velocity.available ? `<div class="panel flush"><div class="ph"><h3>Threat velocity</h3><span class="meta">last ${fmt(velocityPeriods.length)} validated reports</span></div>
+    ${velocityCards}
+    <table class="dt"><thead><tr><th>Period</th><th class="r">Critical</th><th class="r">Violations</th><th class="r">Gate blocks</th></tr></thead><tbody>${velocityRows}</tbody></table>
+    <div class="velocity-note"><div class="cov-sub">${esc(velocity.trend_summary||'')}</div></div></div>` : `<div class="panel flush"><div class="ph"><h3>Threat velocity</h3><span class="meta">Not available</span></div><div class="empty"><div class="ico">↗</div><b>Trend comparison requires two validated runs</b><p>${esc(velocity.trend_summary||'The next report will add period-over-period critical, violation, and gate-block trends.')}</p></div></div>`;
+
+  const watchCoverage = (DATA.governance||{}).repo_watch_coverage || [];
+  const watchMeta = blindMeta || {};
+  const watchCoverageRows = watchCoverage.slice(0,12).map(x=>`<tr><td class="comp">${esc(x.repo)}</td><td class="r"><span class="num">${fmt(x.watch_count)}</span></td><td class="r"><span class="num">${fmt(x.critical_count)}</span></td><td><span class="sev ${x.risk_level==='critical'?'sev-crit':x.risk_level==='high'?'sev-high':'sev-low'}">${esc(String(x.risk_level||'covered').toUpperCase())}</span></td></tr>`).join('');
+  const mappedWatchRepos = watchCoverage.filter(x => (x.watch_count||0) > 0).length;
+  const watchCoveragePanel = watchCoverage.length && watchMeta.available !== false && mappedWatchRepos > 1 ? `<div class="panel flush"><div class="ph"><h3>Watch-to-repository coverage</h3><span class="meta">mapped repository assignments</span></div>
+    <table class="dt"><thead><tr><th>Repository</th><th class="r">Watches</th><th class="r">Critical</th><th>Coverage</th></tr></thead><tbody>${watchCoverageRows}</tbody></table></div>` : '';
 
   // Xray policy effectiveness
   const g = DATA.governance || {}, l = DATA.license || {}, o = DATA.operational || {};
@@ -1438,17 +1752,35 @@ function buildXray(){
     return '';
   })();
 
-  return kpis + obs + `<div class="grid-2 wide-l">${slaPanel}${readinessPanel}</div>` +
-    `<div class="grid-2">${impactPanel}${newPanel}</div>` +
-    `<div class="grid-2 wide-l">${distPanel}${watchPanel}</div>` + ciPanel +
-    `<div class="grid-2">${blindPanel}${blastPanel}</div>` + xePanel + `<div class="grid-2">${licBlock}${opBlock}</div>` + repoPanel;
+  return {
+    posture: kpis + obs + `<div class="grid-2 wide-l">${distPanel}${slaPanel}</div>` +
+      `<div class="grid-2">${impactPanel}${newPanel}</div>` + readinessPanel,
+    critical: ciPanel,
+    governance: `<div class="grid-2 wide-l">${watchPanel}${topRepoPanel}</div>` +
+      (watchCoveragePanel ? `<div class="grid-2"><div class="span-2">${watchCoveragePanel}</div></div>` : '') +
+      `<div class="grid-2">${blindPanel}${blastPanel}</div>` + xePanel +
+      `<div class="grid-2">${licBlock}${opBlock}</div>` + repoPanel,
+    velocity: velocityPanel
+  };
 }
 
 /* ═══ RECOMMENDATIONS TAB ═══ */
 function buildRecommendations(){
-  const actions = computeActions();
+  const produced = DATA.recommendations || [];
+  const order = {P1:0,P2:1,P3:2};
+  const actions = produced.length ? produced.map(r=>({
+    pri:r.priority||'P3',
+    effort:cap(r.effort||''),
+    title:r.title||r.text||'Security action',
+    body:r.detail||'',
+    owner:r.owner,
+    dueDate:r.due_date,
+    score:r.score,
+    metric:'',
+    link:null
+  })).sort((a,b)=>(order[a.pri]??9)-(order[b.pri]??9)||(Number(b.score)||0)-(Number(a.score)||0)) : computeActions();
   if (!actions.length) return `<div class="empty"><div class="ico">✓</div><b>No actions outstanding</b><p>Your posture is clean for this window.</p></div>`;
-  const note = `<div class="note"><b>Prioritized for impact.</b> Each action is derived from this week's data and ordered P1 → P3. Quick wins (low effort) are flagged so you can close gaps fast.</div>`;
+  const note = `<div class="note"><b>Prioritized for impact.</b> Each action is derived from this period's data and ordered P1 → P3. Owners and due dates establish accountability. <button class="btn-link" onclick="downloadRecommendations()">Download CSV</button></div>`;
   const cards = actions.map((a,i)=>`
     <div class="rec-card ${(a.pri||'p3').toLowerCase()}">
       <div class="rec-rank">${i+1}</div>
@@ -1457,6 +1789,9 @@ function buildRecommendations(){
         <div class="rec-body">${esc(a.body)}</div>
         <div class="rec-foot">
           ${a.effort?`<span class="chip-eff">Effort: ${esc(a.effort)}</span>`:''}
+          ${a.owner?`<span class="chip-eff">Owner: ${esc(a.owner)}</span>`:''}
+          ${a.dueDate?`<span class="chip-eff">Due: ${esc(a.dueDate)}</span>`:''}
+          ${a.score!=null?`<span class="chip-eff">Score: ${fmt(a.score)}</span>`:''}
           ${a.metric?`<span class="chip-eff" style="font-family:var(--mono)">${esc(a.metric)}</span>`:''}
           ${a.link?`<span class="rec-link">→ ${esc(a.link)}</span>`:''}
         </div>
@@ -1469,8 +1804,7 @@ function buildRecommendations(){
 function buildFooter(){
   const m = DATA.meta || {};
   return `<div class="footer">
-    <b>${esc((m.report_type||'Weekly'))} Security Report</b> · ${esc(m.host||m.server_id||'')} · ${esc(m.date_from||'')} – ${esc(m.date_to||'')} · generated ${esc(m.generated||'')}.<br>
-    Curation figures from package-gate audit events; Xray figures from the violations API for this window. Posture signals are independent measures — no composite weighting applied. Schema ${esc(m.schema_version||'')}.
+    <b>${esc((m.report_type||'Weekly'))} Security Report</b> · ${esc(m.host||m.server_id||'')} · ${esc(m.date_from||'')} – ${esc(m.date_to||'')} · generated ${esc(m.generated||'')}.
   </div>`;
 }
 
@@ -1484,33 +1818,90 @@ window.filterRepos = function(el){
   });
 };
 
+function downloadCsv(filename, headers, rows){
+  const cell = value => `"${String(value==null?'':value).replace(/"/g,'""')}"`;
+  const csv = [headers, ...rows].map(row => row.map(cell).join(',')).join('\n');
+  const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+window.downloadCurationUsers = function(){
+  const curation = DATA.curation||{};
+  const activity = curation.user_package_activity||[];
+  const rows = activity.map(pkg => [
+    pkg.user,pkg.user_events,pkg.user_events_pct,pkg.user_blocked,pkg.user_approved,
+    pkg.package,pkg.ecosystem,pkg.requests
+  ]);
+  downloadCsv('curation-user-package-activity.csv',
+    ['user','total_requests','request_share_pct','blocked','clean_approved','package','ecosystem','package_requests'], rows);
+};
+window.downloadXrayIssues = function(){
+  const rows = ((DATA.violations||{}).critical_issues||[]).map(issue => [
+    issue.id, issue.component, issue.description, issue.hits, issue.repo_count, issue.artifact_count,
+    issue.first_seen, issue.days_open, issue.fix_status, (issue.fix_versions||[]).join('|'),
+    issue.exploit_status, (issue.affected_environments||[]).join('|'), issue.playbook_link||''
+  ]);
+  downloadCsv('xray-critical-issues.csv',
+    ['issue_id','component','description','hits','repositories','artifacts','first_seen','days_open','fix_status','fix_versions','exploit_status','environments','playbook_link'], rows);
+};
+window.downloadRecommendations = function(){
+  const rows = (DATA.recommendations||[]).map(rec => [
+    rec.priority,rec.score,rec.title||rec.text,rec.detail,rec.effort,rec.owner,rec.due_date,(rec.dependencies||[]).join('|')
+  ]);
+  downloadCsv('security-recommendations.csv',
+    ['priority','score','title','detail','effort','owner','due_date','dependencies'], rows);
+};
+
 /* ═══ MOUNT ═══ */
 (function mount(){
   const root = document.getElementById('report');
-  root.innerHTML =
-    safe('Masthead', buildMast) +
-    safe('Tabs', buildTabs) +
-    safe('Briefing', buildBriefing) +
-    panelWrap('overview', true, 'Overview', safe('Overview', buildOverview)) +
-    panelWrap('curation', false, 'Curation — Supply-chain gate', safe('Curation', buildCuration)) +
-    panelWrap('xray', false, 'Xray — Security posture', safe('Xray', buildXray)) +
-    panelWrap('recommendations', false, 'Recommendations', safe('Recommendations', buildRecommendations)) +
-    buildFooter();
+  const reportType = esc((DATA.meta&&DATA.meta.report_type)||'Weekly');
+  const curation = (() => { try { return buildCuration(); } catch (e) { console.error(e); return {activity:`<div class="note warn"><b>Section error:</b> ${esc(e.message)}</div>`,policies:'',audit:'',users:''}; } })();
+  const xray = (() => { try { return buildXray(); } catch (e) { console.error(e); return {posture:`<div class="note warn"><b>Section error:</b> ${esc(e.message)}</div>`,critical:'',governance:'',velocity:''}; } })();
+  root.innerHTML = `<div class="dashboard-shell">
+    ${safe('Sidebar', buildSidebar)}
+    <main class="dashboard-main">
+      ${safe('Top bar', buildTopbar)}
+      <div class="dashboard-content">
+        <h1 class="page-title">${reportType} CISO Report</h1>
+        ${sectionWrap('summary', 'Executive Summary', '',
+          safe('Briefing', buildBriefing) + `<div class="section-overview">${safe('Overview', buildOverview)}</div>`)}
+        ${sectionWrap('curation', 'Curation Activity', 'Supply-chain gate', curation.activity || '')}
+        ${sectionWrap('policies', 'Policy Inventory', 'Gate enforcement', curation.policies || '')}
+        ${sectionWrap('audit', 'Audit Events', 'Blocked downloads', curation.audit || '')}
+        ${sectionWrap('users', 'Active Users', 'Request volume', curation.users || '')}
+        ${sectionWrap('xray', 'Xray Posture', 'Security exposure', xray.posture || '')}
+        ${sectionWrap('critical', 'Critical Issues', 'Open now', xray.critical || '')}
+        ${sectionWrap('governance', 'Watches & Effectiveness', 'Coverage and blind spots', xray.governance || '')}
+        ${sectionWrap('recommendations', 'Recommended Actions', 'Owners and due dates', safe('Recommendations', buildRecommendations))}
+        ${sectionWrap('velocity', 'Threat Velocity & Trend', 'Period comparison', xray.velocity || '')}
+        ${buildFooter()}
+      </div>
+    </main>
+  </div>`;
 
   document.title = `CISO Security Report — ${(DATA.meta&&DATA.meta.host)||''} — ${(DATA.meta&&DATA.meta.generated)||''}`;
 
-  // tab switching
-  root.querySelectorAll('.tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.tab;
-      root.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === btn));
-      root.querySelectorAll('.tabpanel').forEach(pn => pn.classList.toggle('on', pn.dataset.panel === id));
-      const bar = root.querySelector('.tabbar');
-      if (bar) window.scrollTo({top: bar.offsetTop - 0, behavior: 'instant'});
+  // Supplied template navigation: one-page scroll with active step indicator.
+  const navLinks = [...root.querySelectorAll('.side-nav a')];
+  const syncNav = () => {
+    let active = navLinks[0];
+    navLinks.forEach(link => {
+      const target = document.getElementById(link.getAttribute('href').slice(1));
+      if (target && target.getBoundingClientRect().top <= 120) active = link;
     });
-  });
+    navLinks.forEach(link => link.classList.toggle('active', link === active));
+  };
+  window.addEventListener('scroll', syncNav, {passive:true});
+  syncNav();
+
   // show more / less
-  root.querySelectorAll('.showmore').forEach(btn => {
+  root.querySelectorAll('.showmore[data-target]').forEach(btn => {
     btn.addEventListener('click', () => {
       const panel = document.getElementById(btn.dataset.target);
       if (panel) panel.classList.toggle('expanded');

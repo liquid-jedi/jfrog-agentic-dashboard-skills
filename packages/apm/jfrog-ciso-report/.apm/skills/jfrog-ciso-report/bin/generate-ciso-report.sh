@@ -19,6 +19,54 @@ LOCAL_ROOT="${2:?local root required}"
 REPORT_TYPE="${3:-${REPORT_TYPE:-weekly}}"
 REPORT_TYPE_LOWER="$(printf '%s' "$REPORT_TYPE" | tr '[:upper:]' '[:lower:]')"
 REPORT_DATE_EXPLICIT="${REPORT_DATE+x}"
+if [[ -z "${DATE_FROM:-}" ]]; then
+  case "$REPORT_TYPE_LOWER" in
+    weekly)
+      if [[ -z "${DATE_TO:-}" ]]; then
+        DATE_TO="$(date -u +%Y-%m-%dT23:59:59Z)"
+      fi
+      DATE_FROM="$(python3 - "$DATE_TO" 6 <<'PY'
+import sys
+from datetime import datetime, timedelta, timezone
+value = sys.argv[1].replace('Z', '+00:00')
+days = int(sys.argv[2])
+dt = datetime.fromisoformat(value).astimezone(timezone.utc) - timedelta(days=days)
+print(dt.strftime('%Y-%m-%dT00:00:00Z'))
+PY
+)"
+      ;;
+    monthly)
+      if [[ -z "${DATE_TO:-}" ]]; then
+        read -r DATE_FROM DATE_TO < <(python3 - <<'PY'
+from datetime import datetime, timezone
+today = datetime.now(timezone.utc).date()
+first_this_month = today.replace(day=1)
+last_prev_month = first_this_month.fromordinal(first_this_month.toordinal() - 1)
+first_prev_month = last_prev_month.replace(day=1)
+print(first_prev_month.strftime('%Y-%m-%dT00:00:00Z'), last_prev_month.strftime('%Y-%m-%dT23:59:59Z'))
+PY
+)
+      else
+        DATE_FROM="$(python3 - "$DATE_TO" 29 <<'PY'
+import sys
+from datetime import datetime, timedelta, timezone
+value = sys.argv[1].replace('Z', '+00:00')
+days = int(sys.argv[2])
+dt = datetime.fromisoformat(value).astimezone(timezone.utc) - timedelta(days=days)
+print(dt.strftime('%Y-%m-%dT00:00:00Z'))
+PY
+)"
+      fi
+      ;;
+    *)
+      echo "ERROR: DATE_FROM is required for custom reports" >&2
+      exit 1
+      ;;
+  esac
+fi
+if [[ -z "${DATE_TO:-}" ]]; then
+    DATE_TO="$(date -u +%Y-%m-%dT23:59:59Z)"
+fi
 if [[ -n "${REPORT_DATE:-}" ]]; then
     REPORT_DATE="$REPORT_DATE"
 elif [[ -n "${DATE_TO:-}" ]]; then
@@ -35,6 +83,17 @@ esac
 
 SKILL_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 TEMPLATE_PATH="$SKILL_DIR/references/dashboard.html"
+PDF_TEMPLATE_PATH="$SKILL_DIR/references/dashboard-pdf.html"
+PDF_FULL_TEMPLATE_PATH="$SKILL_DIR/references/dashboard-pdf-full.html"
+PDF_RENDERER_PATH="$SKILL_DIR/bin/generate-ciso-pdf.js"
+CISO_PDF_MODE="$(printf '%s' "${CISO_PDF_MODE:-executive}" | tr '[:upper:]' '[:lower:]')"
+case "$CISO_PDF_MODE" in
+  executive|full|both) ;;
+  *)
+    echo "ERROR: CISO_PDF_MODE must be executive, full, or both (got: $CISO_PDF_MODE)" >&2
+    exit 1
+    ;;
+esac
 SERVER_SLUG="$(printf '%s' "$SERVER_ID" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g')"
 REPORT_TYPE_SLUG="$REPORT_TYPE_LOWER"
 LOCAL_DIR="${LOCAL_ROOT%/}/${SERVER_SLUG}/${REPORT_TYPE_SLUG}/${REPORT_DATE}"
@@ -43,17 +102,30 @@ export SERVER_SLUG REPORT_TYPE_SLUG
 mkdir -p "$LOCAL_DIR"
 
 OUTPUT_PATH="${LOCAL_DIR}/report.html"
+PDF_OUTPUT_PATH="${LOCAL_DIR}/executive-report.pdf"
+PDF_FULL_OUTPUT_PATH="${LOCAL_DIR}/full-report.pdf"
 DATA_COPY_PATH="${LOCAL_DIR}/data.json"
 SNAPSHOT_COPY_PATH="${LOCAL_DIR}/snapshot.json"
 RUN_META_PATH="${LOCAL_DIR}/run-meta.json"
+CURATION_USER_CSV_PATH="${LOCAL_DIR}/curation-user-package-activity.csv"
+PRINT_HTML_PATH="/tmp/ciso-report-print-${SERVER_SLUG}-${REPORT_TYPE_SLUG}-${REPORT_DATE}-$$.html"
+PRINT_HTML_FULL_PATH="/tmp/ciso-report-print-full-${SERVER_SLUG}-${REPORT_TYPE_SLUG}-${REPORT_DATE}-$$.html"
+
+cleanup_pdf_temp() {
+  rm -f "$PRINT_HTML_PATH" "$PRINT_HTML_FULL_PATH"
+}
+trap cleanup_pdf_temp EXIT
 
 if [[ -f "$OUTPUT_PATH" && "${CISO_OVERWRITE_REPORT:-false}" != "true" ]]; then
   RERUN_DIR="${LOCAL_DIR}/rerun-$(date +%H%M%S)"
   mkdir -p "$RERUN_DIR"
   OUTPUT_PATH="${RERUN_DIR}/report.html"
+  PDF_OUTPUT_PATH="${RERUN_DIR}/executive-report.pdf"
+  PDF_FULL_OUTPUT_PATH="${RERUN_DIR}/full-report.pdf"
   DATA_COPY_PATH="${RERUN_DIR}/data.json"
   SNAPSHOT_COPY_PATH="${RERUN_DIR}/snapshot.json"
   RUN_META_PATH="${RERUN_DIR}/run-meta.json"
+  CURATION_USER_CSV_PATH="${RERUN_DIR}/curation-user-package-activity.csv"
   echo "Existing report found. Writing rerun to: $RERUN_DIR"
 fi
 
@@ -61,6 +133,15 @@ if [[ ! -f "$TEMPLATE_PATH" ]]; then
   echo "ERROR: missing dashboard template: $TEMPLATE_PATH" >&2
   exit 1
 fi
+if [[ ! -f "$PDF_TEMPLATE_PATH" || ! -f "$PDF_FULL_TEMPLATE_PATH" || ! -f "$PDF_RENDERER_PATH" ]]; then
+  echo "ERROR: missing PDF template or renderer under $SKILL_DIR" >&2
+  exit 1
+fi
+if ! command -v node >/dev/null 2>&1; then
+  echo "ERROR: node is required to generate PDF exports" >&2
+  exit 1
+fi
+node "$PDF_RENDERER_PATH" --check
 
 if [[ -z "${DATE_FROM:-}" ]]; then
   case "$REPORT_TYPE_LOWER" in
@@ -103,8 +184,8 @@ if [[ -z "${DATE_TO:-}" ]]; then
 fi
 
 export SERVER_ID REPORT_TYPE REPORT_TYPE_LOWER REPORT_DATE DATE_FROM DATE_TO
-export LOCAL_ROOT OUTPUT_PATH DATA_COPY_PATH SNAPSHOT_COPY_PATH RUN_META_PATH
-export SKILL_DIR TEMPLATE_PATH SAVE_DATA_JSON
+export LOCAL_ROOT OUTPUT_PATH PDF_OUTPUT_PATH PDF_FULL_OUTPUT_PATH DATA_COPY_PATH SNAPSHOT_COPY_PATH RUN_META_PATH CURATION_USER_CSV_PATH
+export SKILL_DIR TEMPLATE_PATH PDF_TEMPLATE_PATH PDF_FULL_TEMPLATE_PATH PDF_RENDERER_PATH PRINT_HTML_PATH PRINT_HTML_FULL_PATH SAVE_DATA_JSON CISO_PDF_MODE
 SOURCE_FINGERPRINT_PATH="/tmp/ciso-source-fingerprint-${SERVER_SLUG}-${REPORT_TYPE_SLUG}-$$.json"
 export SOURCE_FINGERPRINT_PATH
 
@@ -117,7 +198,7 @@ import os
 from pathlib import Path
 
 skill_dir = Path(os.environ["SKILL_DIR"])
-tracked_suffixes = {".md", ".html", ".sh", ".json"}
+tracked_suffixes = {".md", ".html", ".sh", ".js", ".json"}
 fingerprint = {}
 for path in sorted(skill_dir.rglob("*")):
     if not path.is_file() or path.suffix not in tracked_suffixes:
@@ -131,6 +212,7 @@ PY
 rm -f /tmp/ciso-data.json /tmp/ciso-platform.json /tmp/ciso-curation.json \
   /tmp/ciso-curation-diagnostics.json /tmp/ciso-curation-page-*.json \
   /tmp/ciso-curation-policies.json /tmp/ciso-curation-policies-raw.json \
+  /tmp/ciso-curation-waivers.json \
   /tmp/ciso-indexed-repos.json /tmp/ciso-indexed.json /tmp/ciso-indexed.json.err \
   /tmp/ciso-watches.json /tmp/ciso-policies.json /tmp/ciso-repos-all.json \
   /tmp/ciso-repos-remote.json /tmp/ciso-version.json /tmp/ciso-violations-page-*.json \
@@ -239,6 +321,27 @@ while True:
     offset += len(batch)
 json.dump({"data": policies, "meta": {"total_count": total_policies}}, open("/tmp/ciso-curation-policies.json", "w"), indent=2)
 
+# Waiver workflow counts. This endpoint can be unavailable by entitlement or
+# permission; preserve that as available=false instead of failing the report.
+waiver_counts, waivers_available = {}, False
+for waiver_status in ("pending", "approved", "rejected"):
+    status, body = get_xr_with_status(
+        f"/api/v1/curation/waiver_requests?status={waiver_status}&num_of_rows=1&page_num=1"
+    )
+    if status == 200 and isinstance(body, dict):
+        waivers_available = True
+        meta = body.get("meta") or {}
+        waiver_counts[waiver_status] = int(
+            meta.get("total_count") or body.get("total_count") or len(body.get("data") or [])
+        )
+    else:
+        waiver_counts[waiver_status] = 0
+json.dump(
+    {"available": waivers_available, **waiver_counts},
+    open("/tmp/ciso-curation-waivers.json", "w"),
+    indent=2,
+)
+
 # Curation audit
 print("track: curation audit")
 all_rows, pages_fetched, reported_total, http_status = [], 0, 0, 200
@@ -250,7 +353,7 @@ for wstart, wend in month_windows():
             "/api/v1/curation/audit/packages"
             f"?order_by=id&direction=desc&num_of_rows={limit}"
             f"&created_at_start={wstart}&created_at_end={wend}"
-            f"&include_total=true&offset={offset}"
+            f"&include_total=true&dry_run=false&offset={offset}"
         )
         http_status, page = get_xr_with_status(path)
         if http_status in (403, 404):
@@ -285,18 +388,21 @@ PID_CURATION=$!
 
 # ── Track 3: violations ───────────────────────────────────────────────────────
 # --http1.1 forces HTTP/1.1 to prevent CURLE_HTTP2_STREAM (exit 92) on large
-# instances. limit=500 is kept for efficiency (~23 pages for 11k violations).
-# Override with CISO_VIOLATIONS_LIMIT env var if needed.
+# instances. limit=500 is intentionally conservative because some Xray versions
+# cap page size; fetch pages concurrently instead of raising the limit.
+# Override with CISO_VIOLATIONS_LIMIT / CISO_VIOLATIONS_CONCURRENCY if needed.
 (python3 - <<'PY'
 import json, os, subprocess
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 server = os.environ["SERVER_ID"]
 date_from = os.environ["DATE_FROM"]
 date_to = os.environ["DATE_TO"]
 limit = int(os.environ.get("CISO_VIOLATIONS_LIMIT", "500"))
+concurrency = max(1, min(int(os.environ.get("CISO_VIOLATIONS_CONCURRENCY", "4")), 8))
+debug_pages = str(os.environ.get("CISO_DEBUG_PAGES", "")).lower() in ("1", "true", "yes", "on")
 
-violations, total_violations, offset, page_idx = [], 0, 0, 0
-while True:
+def fetch(offset):
     body = {
         "filters": {"created_from": date_from, "created_until": date_to},
         "pagination": {"limit": limit, "offset": offset, "order_by": "severity", "direction": "desc"},
@@ -307,18 +413,55 @@ while True:
         capture_output=True, text=True
     )
     if proc.returncode != 0:
-        raise SystemExit(f"violations page {page_idx} failed (exit {proc.returncode}): {proc.stderr[:300]}")
+        raise RuntimeError(f"violations offset {offset} failed (exit {proc.returncode}): {proc.stderr[:300]}")
     page = json.loads(proc.stdout or "{}") if proc.stdout else {}
-    batch = page.get("violations") or []
-    total_violations = int(page.get("total_violations") or total_violations or len(batch))
-    violations.extend(batch)
-    json.dump(page, open(f"/tmp/ciso-violations-page-{page_idx}.json", "w"), indent=2)
-    page_idx += 1
-    if len(batch) < limit or offset + len(batch) >= total_violations:
-        break
-    offset += limit
-json.dump({"violations": violations, "total_violations": total_violations}, open("/tmp/ciso-violations.json", "w"), indent=2)
-print(f"track: violations done rows={len(violations)} total={total_violations}")
+    if not isinstance(page, dict):
+        raise RuntimeError(f"violations offset {offset}: expected object page, got {type(page).__name__}")
+    return offset, page
+
+pages = {}
+offset, first = fetch(0)
+pages[offset] = first
+total_violations = int(first.get("total_violations") or 0)
+
+if len(first.get("violations") or []) >= limit:
+    next_offset = limit
+    stop_offset = None
+    while stop_offset is None:
+        offsets = [next_offset + (i * limit) for i in range(concurrency)]
+        if total_violations:
+            offsets = [off for off in offsets if off < total_violations + limit]
+        got = {}
+        with ThreadPoolExecutor(max_workers=concurrency) as pool:
+            futures = {pool.submit(fetch, off): off for off in offsets}
+            for fut in as_completed(futures):
+                off, page = fut.result()
+                got[off] = page
+        for off in sorted(got):
+            pages[off] = got[off]
+            batch_len = len(got[off].get("violations") or [])
+            page_total = int(got[off].get("total_violations") or 0)
+            total_violations = max(total_violations, page_total)
+            if batch_len < limit or (total_violations and off + batch_len >= total_violations):
+                stop_offset = off
+                break
+        if stop_offset is not None:
+            break
+        next_offset = offsets[-1] + limit
+
+if total_violations:
+    pages = {off: page for off, page in pages.items() if off <= total_violations}
+
+violations = []
+for off in sorted(pages):
+    page = pages[off]
+    if debug_pages:
+        json.dump(page, open(f"/tmp/ciso-violations-page-{off}.json", "w"), separators=(",", ":"))
+    violations.extend(page.get("violations") or [])
+if total_violations == 0 and violations:
+    total_violations = len(violations)
+json.dump({"violations": violations, "total_violations": total_violations}, open("/tmp/ciso-violations.json", "w"), separators=(",", ":"))
+print(f"track: violations done rows={len(violations)} total={total_violations} pages={len(pages)} concurrency={concurrency}")
 PY
 ) > /tmp/ciso-track-violations.log 2>&1 &
 PID_VIOLATIONS=$!
@@ -639,6 +782,7 @@ def repo_from_text(text, repo_names):
         for name in repo_names:
             if text == name or text.startswith(name + "/") or f"/{name}/" in text or text.startswith("default/" + name + "/"):
                 return name
+        return ""
     if parts:
         return clean_repo_name(parts[0])
     return ""
@@ -737,13 +881,35 @@ data = load_json("/tmp/ciso-data.json", {})
 violations = [row for row in load_violations() if isinstance(row, dict)]
 repo_names = extract_repo_names()
 watch_map, watch_assignment_exposed = extract_watch_mapping(repo_names)
+criticality_path = os.environ.get("CISO_REPO_CRITICALITY_JSON", "")
+criticality_rows = load_json(criticality_path, []) if criticality_path else []
+if isinstance(criticality_rows, dict):
+    criticality_rows = criticality_rows.get("repositories") or criticality_rows.get("repo_criticality") or []
+criticality_map = {
+    str(row.get("repo")): row
+    for row in criticality_rows
+    if isinstance(row, dict) and row.get("repo")
+}
+data.setdefault("platform", {})["repo_criticality"] = list(criticality_map.values())
 meta = data.get("meta") or {}
 period_end = parse_time(meta.get("period_end") or meta.get("generated")) or datetime.now(timezone.utc)
 prev = prior_snapshot()
 prev_critical_ids = set(((prev.get("violations") or {}).get("critical_ids") or []))
 
 critical_rows = [row for row in violations if severity(row).startswith("crit")]
-issue_stats = defaultdict(lambda: {"hits": 0, "repos": set(), "artifacts": set(), "component": "unknown", "first_seen": None, "description": "", "fix_versions": set(), "fix_statuses": Counter()})
+issue_stats = defaultdict(lambda: {
+    "hits": 0,
+    "repos": set(),
+    "artifacts": set(),
+    "component": "unknown",
+    "first_seen": None,
+    "description": "",
+    "fix_versions": set(),
+    "fix_statuses": Counter(),
+    "exploit_statuses": Counter(),
+    "affected_environments": set(),
+    "playbook_link": None,
+})
 repo_stats = defaultdict(lambda: {"violations": 0, "critical": 0})
 component_stats = defaultdict(lambda: {"critical_issues": set(), "hits": 0})
 
@@ -770,6 +936,13 @@ for row in violations:
         fstate, fvers = fix_state(row)
         stat["fix_statuses"][fstate] += 1
         stat["fix_versions"].update(fvers)
+        exploit = first_text(row, ("exploit_status", "exploitStatus", "exploitability", "applicability")).lower()
+        if exploit:
+            exploit_key = exploit.replace("-", "_").replace(" ", "_")
+            normalized_exploit = "active" if "active" in exploit_key or "exploited" in exploit_key else "poc" if "poc" in exploit_key or "proof" in exploit_key else "none" if exploit_key in ("none", "not_exploitable", "not_applicable") else "unknown"
+            stat["exploit_statuses"][normalized_exploit] += 1
+        stat["affected_environments"].update(values_for_keys(row, {"affected_environments", "affectedenvironments", "environment", "environments"}))
+        stat["playbook_link"] = stat["playbook_link"] or first_text(row, ("playbook_link", "playbookLink", "runbook_url", "runbookUrl"))
         component_stats[comp]["critical_issues"].add(rid)
         component_stats[comp]["hits"] += 1
 
@@ -797,6 +970,14 @@ for rid, stat in issue_stats.items():
         fstatus = "none"
     else:
         fstatus = "unknown"
+    if stat["exploit_statuses"].get("active"):
+        exploit_status = "active"
+    elif stat["exploit_statuses"].get("poc"):
+        exploit_status = "poc"
+    elif stat["exploit_statuses"].get("none"):
+        exploit_status = "none"
+    else:
+        exploit_status = "unknown"
     fix_counts[fstatus] += 1
     fix_hits[fstatus] += stat["hits"]
     is_new = bool(prev_critical_ids) and rid not in prev_critical_ids
@@ -817,9 +998,9 @@ for rid, stat in issue_stats.items():
         "fix_status": fstatus,
         "fix_available": fstatus == "available",
         "fix_versions": sorted(stat["fix_versions"])[:5],
-        "exploit_status": "unknown",
-        "affected_environments": [],
-        "playbook_link": None,
+        "exploit_status": exploit_status,
+        "affected_environments": sorted(stat["affected_environments"])[:5],
+        "playbook_link": stat["playbook_link"],
     })
 
 critical_issues.sort(key=lambda row: (-row["hits"], -row["days_open"], row["id"]))
@@ -859,6 +1040,24 @@ blast.sort(key=lambda row: (-row["repos"], -row["artifacts"], -row["hits"]))
 
 v = data.setdefault("violations", {})
 v["critical_issues"] = critical_issues[:50]
+v["unique_critical_issue_count"] = len(issue_stats)
+v["unique_issue_count"] = len({issue_id(row) for row in violations if issue_id(row) != "unknown"})
+v["top_repos"] = [
+    {
+        "repo": repo,
+        "count": stat["violations"],
+        "critical": stat["critical"],
+        "business_service": (criticality_map.get(repo) or {}).get("business_service", ""),
+        "criticality": (criticality_map.get(repo) or {}).get("criticality", "unknown"),
+        "environment": (criticality_map.get(repo) or {}).get("environment", ""),
+        "owner": (criticality_map.get(repo) or {}).get("owner", ""),
+    }
+    for repo, stat in sorted(
+        repo_stats.items(),
+        key=lambda item: (-item[1]["critical"], -item[1]["violations"], item[0]),
+    )
+    if clean_repo_name(repo) and repo != "unknown"
+][:25]
 v["executive_insights"] = {
     "sla_risk_backlog": {"buckets": [buckets[label] for label, _, _ in bucket_defs], "sla_breach_issues": sla_breach_issues, "sla_days": 30},
     "remediation_readiness": {
@@ -873,6 +1072,24 @@ v["executive_insights"] = {
     "watch_blind_spots_meta": {"available": watch_assignment_exposed, "reason": "Watch payload did not expose repository assignments" if not watch_assignment_exposed else ""},
     "blast_radius": blast[:10],
 }
+g = data.setdefault("governance", {})
+g["repo_watch_coverage"] = [
+    {
+        "repo": repo,
+        "indexed": True,
+        "watch_count": len(watch_map.get(repo, [])),
+        "watch_names": sorted(watch_map.get(repo, [])),
+        "violation_count": stat["violations"],
+        "critical_count": stat["critical"],
+        "business_service": (criticality_map.get(repo) or {}).get("business_service", ""),
+        "criticality": (criticality_map.get(repo) or {}).get("criticality", "unknown"),
+        "environment": (criticality_map.get(repo) or {}).get("environment", ""),
+        "owner": (criticality_map.get(repo) or {}).get("owner", ""),
+        "risk_level": "critical" if stat["critical"] and not watch_map.get(repo) else "high" if stat["violations"] and not watch_map.get(repo) else "covered",
+    }
+    for repo, stat in sorted(repo_stats.items(), key=lambda item: (-item[1]["critical"], -item[1]["violations"], item[0]))
+    if clean_repo_name(repo) and repo != "unknown"
+][:100]
 
 c = data.setdefault("curation", {})
 p = data.get("platform") or {}
@@ -917,7 +1134,6 @@ for pol in policies:
     if "malicious" in text:
         malicious_policies += 1
 audit_rows = as_rows(load_json("/tmp/ciso-curation.json", {}), ("data", "items"))
-would_block = 0
 malicious_blocks = 0
 malicious_pkgs = Counter()
 for row in audit_rows:
@@ -925,8 +1141,6 @@ for row in audit_rows:
         continue
     text = json.dumps(row).lower()
     action = str(row.get("action") or row.get("status") or "").lower()
-    if "dry" in text and ("block" in text or "violation" in text):
-        would_block += 1
     if "malicious" in text and action == "blocked":
         malicious_blocks += 1
         pkg = first_text(row, ("package_name", "packageName", "package", "name")) or "unknown"
@@ -935,7 +1149,7 @@ c["executive_insights"] = {
     "gate_coverage_gaps": gate_gaps[:15],
     "enforcement_opportunity": {
         "dry_run_policies": int(p.get("curation_policies_dry_run") or len(set(dry_run_names))),
-        "would_have_blocked": would_block,
+        "would_have_blocked": int((c.get("request_results") or {}).get("dry_run") or 0),
         "top_policies": [{"policy": name, "events": 0} for name in sorted(set(dry_run_names))[:5]],
     },
     "malicious_package_defense": {
@@ -944,6 +1158,19 @@ c["executive_insights"] = {
         "top_packages": [{"package": pkg, "blocks": count} for pkg, count in malicious_pkgs.most_common(5)],
     },
 }
+
+benefit = data.setdefault("benefit", {})
+blocked_unique = int((benefit.get("unique_blocked_packages") or len(c.get("top_blocked") or [])))
+repos_total = int(p.get("repos_total") or 0)
+repos_indexed = int(p.get("repos_indexed") or 0)
+benefit.update({
+    "curation_headline": f"Stopped {blocked_unique} unique packages at the gate",
+    "xray_headline": f"Surfaced {int(v.get('total') or 0)} violation instances across {v.get('unique_issue_count', 0)} issues",
+    "compare_line": f"Curation allowed {int(c.get('clean_packages') or c.get('approved') or 0)} clean packages and blocked {blocked_unique} unique packages. Xray found {int(v.get('total') or 0)} violation instances inside.",
+    "cves_prevented": int(benefit.get("cves_prevented") or 0),
+    "xray_coverage": round(repos_indexed / repos_total * 100, 1) if repos_total else 0,
+    "roi_estimate": benefit.get("roi_estimate"),
+})
 
 json.dump(data, open("/tmp/ciso-data.json", "w"), indent=2)
 print("executive insights:", {
@@ -957,8 +1184,9 @@ PY
 
 echo "=== build recommendations ==="
 python3 - <<'PY'
-import json
+import json, os
 from collections import Counter, defaultdict
+from datetime import date, timedelta
 
 data = json.load(open("/tmp/ciso-data.json"))
 p  = data.get("platform") or {}
@@ -1091,6 +1319,12 @@ if not any(r["priority"] == "P1" for r in recs):
         "detail": "Impact: Critical violations represent immediate risk. Next step: open the Xray tab, sort by Critical severity, and assign remediation owners for the top-hit XRAY IDs."
     })
 
+report_date = date.fromisoformat(os.environ.get("REPORT_DATE") or date.today().isoformat())
+for rec in recs:
+    rec["title"] = rec.get("text") or "Security action"
+    rec["owner"] = "Security Operations" if rec.get("priority") == "P1" else "Platform Security"
+    rec["due_date"] = (report_date + timedelta(days=7 if rec.get("priority") == "P1" else 30)).isoformat()
+    rec["dependencies"] = rec.get("dependencies") or []
 data["recommendations"] = recs
 json.dump(data, open("/tmp/ciso-data.json", "w"), indent=2)
 print(f"recommendations: {len(recs)} generated (P1={sum(1 for r in recs if r['priority']=='P1')}, P2={sum(1 for r in recs if r['priority']=='P2')}, P3={sum(1 for r in recs if r['priority']=='P3')})")
@@ -1186,6 +1420,70 @@ else:
     print(f"comparison: no prior snapshot found in {scan_dir}")
 PY
 
+echo "=== build threat velocity ==="
+python3 - <<'PY'
+import json, os
+from pathlib import Path
+
+data = json.load(open("/tmp/ciso-data.json"))
+local_root = os.environ.get("LOCAL_ROOT", "")
+server_slug = os.environ.get("SERVER_SLUG", "")
+report_type_slug = os.environ.get("REPORT_TYPE_SLUG", "")
+report_date = os.environ.get("REPORT_DATE", "")
+scan_dir = Path(local_root) / server_slug / report_type_slug
+
+periods = []
+if scan_dir.is_dir():
+    for path in sorted(scan_dir.glob("*/snapshot.json")):
+        if path.parent.name.startswith("rerun-") or path.parent.name == report_date:
+            continue
+        try:
+            snap = json.load(open(path))
+        except Exception:
+            continue
+        cur = snap.get("curation") or {}
+        vio = snap.get("violations") or {}
+        periods.append({
+            "label": snap.get("date") or path.parent.name,
+            "blocked": int(cur.get("blocked") or 0),
+            "violations": int(vio.get("total") or 0),
+            "critical": int(vio.get("critical") or (vio.get("by_severity") or {}).get("critical") or 0),
+        })
+
+c = data.get("curation") or {}
+v = data.get("violations") or {}
+periods.append({
+    "label": report_date,
+    "blocked": int(c.get("blocked") or 0),
+    "violations": int(v.get("total") or 0),
+    "critical": int((v.get("by_severity") or {}).get("critical") or 0),
+})
+periods = periods[-8:]
+
+summary = "Trend comparison will be available after another validated run."
+if len(periods) >= 2:
+    first, last = periods[0], periods[-1]
+    critical_direction = "rose" if last["critical"] > first["critical"] else "fell" if last["critical"] < first["critical"] else "held steady"
+    violation_direction = "rose" if last["violations"] > first["violations"] else "fell" if last["violations"] < first["violations"] else "held steady"
+    action = (
+        "Prioritize the oldest fixable critical issues and owners this week."
+        if last["critical"] >= first["critical"]
+        else "Sustain remediation while closing indexing and watch-coverage gaps."
+    )
+    summary = (
+        f"Across {len(periods)} reports, critical findings {critical_direction} from {first['critical']} to {last['critical']}; "
+        f"total violations {violation_direction} from {first['violations']} to {last['violations']}, while gate blocks moved "
+        f"from {first['blocked']} to {last['blocked']}. {action}"
+    )
+data["threat_velocity"] = {
+    "available": len(periods) >= 2,
+    "periods": periods,
+    "trend_summary": summary,
+}
+json.dump(data, open("/tmp/ciso-data.json", "w"), indent=2)
+print(f"threat velocity: periods={len(periods)} available={len(periods) >= 2}")
+PY
+
 echo "=== compute posture signals ==="
 # Three independent signals — no composite score or vendor-defined weighting.
 # Operators can derive their own composite from these values if desired.
@@ -1261,10 +1559,19 @@ if n(c, "total") != int(diag.get("total_count_reported") or 0):
     errors.append(f"curation.total={c.get('total')} does not match diagnostics={diag.get('total_count_reported')}")
 if n(c, "blocked") > 0 and not c.get("blocking_events_per_policy"):
     errors.append("curation.blocking_events_per_policy missing")
+if n(c, "blocked") > 0 and not c.get("top_blocked"):
+    errors.append("curation.top_blocked missing while blocked events exist")
+rr = c.get("request_results") or {}
+if n(c, "clean_packages") != int(rr.get("approved") or 0):
+    errors.append("curation.clean_packages must equal request_results.approved")
+if int(rr.get("without_inspection") or 0) < 0:
+    errors.append("curation.request_results.without_inspection cannot be negative")
 if n(c, "blocked") > 0 and not (c.get("policy_inventory") or {}).get("total_registered"):
     errors.append("curation.policy_inventory missing")
 if n(v, "total") > 0 and not v.get("top_watch_policies"):
     errors.append("violations.top_watch_policies missing")
+if n(v, "total") > 0 and n(v, "unique_issue_count") <= 0:
+    errors.append("violations.unique_issue_count missing")
 if n(v, "total") > 0 and not g.get("xray_policy_effectiveness"):
     errors.append("governance.xray_policy_effectiveness missing")
 if n(c, "blocked") > 0 and not g.get("curation_policy_effectiveness"):
@@ -1272,6 +1579,9 @@ if n(c, "blocked") > 0 and not g.get("curation_policy_effectiveness"):
 cs = p.get("curation_state") or c.get("curation_state") or {}
 if n(cs, "supported_remote_total") > 0 and n(cs, "supported_connected") == 0:
     errors.append("curation supported_connected is 0 while supported remotes exist")
+for i, rec in enumerate(d.get("recommendations") or []):
+    if not rec.get("title") or rec.get("score") is None:
+        errors.append(f"recommendations[{i}] missing title or score")
 
 if errors:
     for err in errors:
@@ -1289,19 +1599,124 @@ print("validation passed:", {
 })
 PY
 
+echo "=== write export artifacts ==="
+python3 - <<'PY'
+import csv
+import json
+import os
+
+data = json.load(open("/tmp/ciso-data.json"))
+curation = data.setdefault("curation", {})
+activity = curation.get("user_package_activity") or []
+csv_path = os.environ["CURATION_USER_CSV_PATH"]
+headers = [
+    "user",
+    "total_requests",
+    "request_share_pct",
+    "blocked",
+    "clean_approved",
+    "package",
+    "ecosystem",
+    "package_requests",
+]
+with open(csv_path, "w", newline="") as handle:
+    writer = csv.writer(handle)
+    writer.writerow(headers)
+    for row in activity:
+        if not isinstance(row, dict):
+            continue
+        writer.writerow([
+            row.get("user", ""),
+            row.get("user_events", ""),
+            row.get("user_events_pct", ""),
+            row.get("user_blocked", ""),
+            row.get("user_approved", ""),
+            row.get("package", ""),
+            row.get("ecosystem", ""),
+            row.get("requests", ""),
+        ])
+
+meta = data.setdefault("meta", {})
+exports = meta.setdefault("export_files", {})
+exports["curation_user_package_activity_csv"] = os.path.basename(csv_path)
+meta.setdefault("export_counts", {})["curation_user_package_activity_rows"] = len(activity)
+
+# Keep the HTML and saved data compact for customers with thousands of users.
+curation["top_users"] = (curation.get("top_users") or [])[:20]
+curation["user_package_activity_embedded"] = False
+curation["user_package_activity_rows"] = len(activity)
+curation["user_package_activity"] = []
+
+json.dump(data, open("/tmp/ciso-data.json", "w"), indent=2)
+print("curation user activity csv:", csv_path, "rows=", len(activity))
+PY
+
 echo "=== render ==="
 python3 - <<'PY'
+import json
 import os
 import sys
 
 template = open(os.environ["TEMPLATE_PATH"]).read()
-data = open("/tmp/ciso-data.json").read().strip()
+payload = json.load(open("/tmp/ciso-data.json"))
+mode = os.environ["CISO_PDF_MODE"]
+meta = payload.setdefault("meta", {})
+pdf_outputs = {}
+if mode in ("executive", "both"):
+    pdf_outputs["executive"] = os.path.basename(os.environ["PDF_OUTPUT_PATH"])
+if mode in ("full", "both"):
+    pdf_outputs["full"] = os.path.basename(os.environ["PDF_FULL_OUTPUT_PATH"])
+meta["pdf_mode"] = mode
+meta["pdf_outputs"] = pdf_outputs
+data = json.dumps(payload, separators=(",", ":"))
 if "__CISO_DATA__" not in template:
     print("ERROR: template missing __CISO_DATA__")
     sys.exit(1)
 open(os.environ["OUTPUT_PATH"], "w").write(template.replace("__CISO_DATA__", data))
 print("report written:", os.environ["OUTPUT_PATH"])
 PY
+
+render_pdf_from_template() {
+  local template_path="$1"
+  local print_html_path="$2"
+  local output_path="$3"
+  local label="$4"
+
+  CISO_RENDER_TEMPLATE_PATH="$template_path" \
+  CISO_RENDER_PRINT_HTML_PATH="$print_html_path" \
+  CISO_RENDER_LABEL="$label" \
+  python3 - <<'PY'
+import os
+import sys
+
+template_path = os.environ["CISO_RENDER_TEMPLATE_PATH"]
+print_html_path = os.environ["CISO_RENDER_PRINT_HTML_PATH"]
+label = os.environ["CISO_RENDER_LABEL"]
+template = open(template_path).read()
+data = open("/tmp/ciso-data.json").read().strip()
+if "__CISO_DATA__" not in template:
+    print(f"ERROR: {label} PDF template missing __CISO_DATA__")
+    sys.exit(1)
+open(print_html_path, "w").write(template.replace("__CISO_DATA__", data))
+print(f"{label} print HTML written:", print_html_path)
+PY
+  node "$PDF_RENDERER_PATH" "$print_html_path" "$output_path"
+}
+
+echo "=== render PDF (${CISO_PDF_MODE}) ==="
+rm -f "$PDF_OUTPUT_PATH" "$PDF_FULL_OUTPUT_PATH" "$(dirname "$PDF_OUTPUT_PATH")/report.pdf" "$(dirname "$PDF_OUTPUT_PATH")/report-full.pdf"
+case "$CISO_PDF_MODE" in
+  executive)
+    render_pdf_from_template "$PDF_TEMPLATE_PATH" "$PRINT_HTML_PATH" "$PDF_OUTPUT_PATH" "executive"
+    ;;
+  full)
+    render_pdf_from_template "$PDF_FULL_TEMPLATE_PATH" "$PRINT_HTML_PATH" "$PDF_FULL_OUTPUT_PATH" "full"
+    ;;
+  both)
+    render_pdf_from_template "$PDF_TEMPLATE_PATH" "$PRINT_HTML_PATH" "$PDF_OUTPUT_PATH" "executive"
+    render_pdf_from_template "$PDF_FULL_TEMPLATE_PATH" "$PRINT_HTML_FULL_PATH" "$PDF_FULL_OUTPUT_PATH" "full"
+    ;;
+esac
 
 if [[ "$SAVE_DATA_JSON" == "true" ]]; then
   cp /tmp/ciso-data.json "$DATA_COPY_PATH"
@@ -1321,6 +1736,8 @@ snap = {
         "total": d.get("curation", {}).get("total", 0),
         "blocked": d.get("curation", {}).get("blocked", 0),
         "approved": d.get("curation", {}).get("approved", 0),
+        "clean_packages": d.get("curation", {}).get("clean_packages", 0),
+        "without_inspection": d.get("curation", {}).get("without_inspection", 0),
         "passed": d.get("curation", {}).get("passed", 0),
     },
     "violations": {
@@ -1329,6 +1746,8 @@ snap = {
         "high": d.get("violations", {}).get("by_severity", {}).get("high", 0),
         "medium": d.get("violations", {}).get("by_severity", {}).get("medium", 0),
         "low": d.get("violations", {}).get("by_severity", {}).get("low", 0),
+        "unique_issue_count": d.get("violations", {}).get("unique_issue_count", 0),
+        "critical_ids": [row.get("id") for row in d.get("violations", {}).get("critical_issues", []) if row.get("id")],
     },
     # Posture signals stored for period-over-period delta computation
     "posture_signals": d.get("violations", {}).get("posture_signals", {}),
@@ -1337,6 +1756,132 @@ snap = {
 }
 json.dump(snap, open(os.environ["SNAPSHOT_COPY_PATH"], "w"), indent=2)
 
+def _int_or_none(value):
+    if value in (None, ""):
+        return None
+    try:
+        return int(float(str(value).replace(",", "").strip()))
+    except Exception:
+        return None
+
+def _float_or_none(value):
+    if value in (None, ""):
+        return None
+    try:
+        return float(str(value).replace(",", "").strip())
+    except Exception:
+        return None
+
+def detect_agent():
+    explicit = os.environ.get("CISO_AGENT_NAME")
+    if explicit:
+        return {"name": explicit, "detected": True, "source": "CISO_AGENT_NAME"}
+    if any(os.environ.get(k) for k in ("CLAUDE_PROJECT_DIR", "CLAUDE_ENV_FILE", "CLAUDE_CODE_REMOTE", "CLAUDE_CODE_BRIDGE_SESSION_ID")):
+        return {"name": "claude_code", "detected": True, "source": "claude_environment"}
+    if any(os.environ.get(k) for k in ("CURSOR_TRACE_ID", "CURSOR_WORKSPACE_ID", "CURSOR_AGENT")):
+        return {"name": "cursor", "detected": True, "source": "cursor_environment"}
+    if any(os.environ.get(k) for k in ("CODEX_HOME", "CODEX_SESSION_ID", "OPENAI_CODEX")):
+        return {"name": "codex", "detected": True, "source": "codex_environment"}
+    return {"name": "unknown", "detected": False, "source": "unavailable"}
+
+def usage_from_env():
+    fields = {
+        "input_tokens": _int_or_none(os.environ.get("CISO_INPUT_TOKENS")),
+        "output_tokens": _int_or_none(os.environ.get("CISO_OUTPUT_TOKENS")),
+        "cache_read_input_tokens": _int_or_none(os.environ.get("CISO_CACHE_READ_TOKENS")),
+        "cache_creation_input_tokens": _int_or_none(os.environ.get("CISO_CACHE_CREATION_TOKENS")),
+        "total_tokens": _int_or_none(os.environ.get("CISO_TOTAL_TOKENS")),
+        "total_cost_usd": _float_or_none(os.environ.get("CISO_TOTAL_COST_USD")),
+    }
+    if any(v is not None for v in fields.values()):
+        if fields["total_tokens"] is None:
+            parts = [fields.get("input_tokens"), fields.get("output_tokens"), fields.get("cache_read_input_tokens"), fields.get("cache_creation_input_tokens")]
+            fields["total_tokens"] = sum(v for v in parts if v is not None)
+        fields.update({"status": "captured", "source": "environment"})
+        return fields
+    return None
+
+def normalize_usage(body, source):
+    if not isinstance(body, dict):
+        return None
+    fields = {
+        "input_tokens": _int_or_none(body.get("input_tokens")),
+        "output_tokens": _int_or_none(body.get("output_tokens")),
+        "cache_read_input_tokens": _int_or_none(body.get("cache_read_input_tokens")),
+        "cache_creation_input_tokens": _int_or_none(body.get("cache_creation_input_tokens")),
+        "total_tokens": _int_or_none(body.get("total_tokens")),
+        "total_cost_usd": _float_or_none(body.get("total_cost_usd") or body.get("cost_usd")),
+    }
+    if fields["total_tokens"] is None:
+        parts = [fields.get("input_tokens"), fields.get("output_tokens"), fields.get("cache_read_input_tokens"), fields.get("cache_creation_input_tokens")]
+        fields["total_tokens"] = sum(v for v in parts if v is not None) if any(v is not None for v in parts) else None
+    if any(v is not None for v in fields.values()):
+        fields.update({"status": "captured", "source": source})
+        return fields
+    return None
+
+def usage_from_file():
+    for path in (os.environ.get("CISO_TOKEN_USAGE_PATH"), "/tmp/ciso-token-usage.json"):
+        if not path or not os.path.isfile(path) or os.path.getsize(path) == 0:
+            continue
+        try:
+            usage = normalize_usage(json.load(open(path)), path)
+            if usage:
+                return usage
+        except Exception:
+            continue
+    return None
+
+def usage_from_claude_transcript():
+    path = os.environ.get("CISO_CLAUDE_TRANSCRIPT_PATH") or os.environ.get("CLAUDE_TRANSCRIPT_PATH")
+    if not path or not os.path.isfile(path):
+        return None
+    totals = {"input_tokens": 0, "output_tokens": 0, "cache_read_input_tokens": 0, "cache_creation_input_tokens": 0}
+    seen = set()
+    try:
+        for line in open(path):
+            try:
+                row = json.loads(line)
+            except Exception:
+                continue
+            msg = row.get("message") if isinstance(row, dict) else None
+            if not isinstance(msg, dict):
+                continue
+            mid = msg.get("id") or row.get("uuid")
+            if mid and mid in seen:
+                continue
+            usage = msg.get("usage")
+            if not isinstance(usage, dict):
+                continue
+            if mid:
+                seen.add(mid)
+            totals["input_tokens"] += int(usage.get("input_tokens") or 0)
+            totals["output_tokens"] += int(usage.get("output_tokens") or 0)
+            totals["cache_read_input_tokens"] += int(usage.get("cache_read_input_tokens") or 0)
+            totals["cache_creation_input_tokens"] += int(usage.get("cache_creation_input_tokens") or 0)
+    except Exception:
+        return None
+    if any(totals.values()):
+        totals["total_tokens"] = sum(totals.values())
+        totals["total_cost_usd"] = None
+        totals["status"] = "captured"
+        totals["source"] = "claude_transcript"
+        return totals
+    return None
+
+def token_usage():
+    usage = usage_from_env() or usage_from_file() or usage_from_claude_transcript()
+    if usage:
+        usage["note"] = "Best-effort agent/session usage. Billing systems remain authoritative."
+        return usage
+    return {
+        "status": "unavailable",
+        "source": None,
+        "total_tokens": None,
+        "total_cost_usd": None,
+        "capture_instruction": "If using Claude Code, run /usage after the report and provide totals, or rerun with CISO_TOTAL_TOKENS / CISO_TOTAL_COST_USD. For automation, write /tmp/ciso-token-usage.json before the runner exits.",
+    }
+
 run_meta = {
     "server_id": os.environ["SERVER_ID"],
     "server_slug": os.environ["SERVER_SLUG"] if "SERVER_SLUG" in os.environ else "",
@@ -1344,14 +1889,32 @@ run_meta = {
     "report_date": os.environ["REPORT_DATE"],
     "local_root": os.environ["LOCAL_ROOT"],
     "output_path": os.environ["OUTPUT_PATH"],
+    "pdf_mode": os.environ["CISO_PDF_MODE"],
+    "pdf_output_path": os.environ["PDF_OUTPUT_PATH"] if os.environ["CISO_PDF_MODE"] in ("executive", "both") else os.environ["PDF_FULL_OUTPUT_PATH"],
+    "pdf_full_output_path": os.environ["PDF_FULL_OUTPUT_PATH"] if os.environ["CISO_PDF_MODE"] in ("full", "both") else None,
+    "pdf_outputs": {
+        "executive": os.environ["PDF_OUTPUT_PATH"] if os.environ["CISO_PDF_MODE"] in ("executive", "both") else None,
+        "full": os.environ["PDF_FULL_OUTPUT_PATH"] if os.environ["CISO_PDF_MODE"] in ("full", "both") else None,
+    },
+    "export_outputs": {
+        "curation_user_package_activity_csv": os.environ["CURATION_USER_CSV_PATH"],
+    },
     "save_data_json": os.environ["SAVE_DATA_JSON"] == "true",
     "data_source": "live",
     "fallback_mode": {"used": False, "user_requested": False},
+    "agent": detect_agent(),
+    "token_usage": token_usage(),
     "runner": {"script": "bin/generate-ciso-report.sh", "version": 1},
     "curation_diagnostics": json.load(open("/tmp/ciso-curation-diagnostics.json")),
 }
 json.dump(run_meta, open(os.environ["RUN_META_PATH"], "w"), indent=2)
 print("data:", os.environ["DATA_COPY_PATH"] if os.environ["SAVE_DATA_JSON"] == "true" else "not saved")
+print("pdf mode:", os.environ["CISO_PDF_MODE"])
+if os.environ["CISO_PDF_MODE"] in ("executive", "both"):
+    print("executive pdf:", os.environ["PDF_OUTPUT_PATH"])
+if os.environ["CISO_PDF_MODE"] in ("full", "both"):
+    print("full pdf:", os.environ["PDF_FULL_OUTPUT_PATH"])
+print("curation user csv:", os.environ["CURATION_USER_CSV_PATH"])
 print("snapshot:", os.environ["SNAPSHOT_COPY_PATH"])
 print("run-meta:", os.environ["RUN_META_PATH"])
 PY
@@ -1370,6 +1933,27 @@ if "buildMast" not in s:
 if s.count("\n") + 1 < 1000:
     raise SystemExit("ERROR: rendered report is unexpectedly small")
 print("report verification passed:", p)
+
+csv_path = Path(os.environ["CURATION_USER_CSV_PATH"])
+if not csv_path.exists() or csv_path.stat().st_size == 0:
+    raise SystemExit("ERROR: curation user activity CSV is missing or empty")
+print("Curation user CSV verification passed:", csv_path)
+
+if os.environ["CISO_PDF_MODE"] in ("executive", "both"):
+    pdf = Path(os.environ["PDF_OUTPUT_PATH"])
+    if not pdf.exists() or pdf.stat().st_size < 10000:
+        raise SystemExit("ERROR: rendered executive PDF is missing or unexpectedly small")
+    if pdf.read_bytes()[:5] != b"%PDF-":
+        raise SystemExit("ERROR: rendered executive PDF has an invalid signature")
+    print("Executive PDF verification passed:", pdf)
+
+if os.environ["CISO_PDF_MODE"] in ("full", "both"):
+    full_pdf = Path(os.environ["PDF_FULL_OUTPUT_PATH"])
+    if not full_pdf.exists() or full_pdf.stat().st_size < 10000:
+        raise SystemExit("ERROR: rendered full PDF is missing or unexpectedly small")
+    if full_pdf.read_bytes()[:5] != b"%PDF-":
+        raise SystemExit("ERROR: rendered full PDF has an invalid signature")
+    print("Full PDF verification passed:", full_pdf)
 PY
 
 echo "=== live proof ==="
@@ -1385,7 +1969,7 @@ from pathlib import Path
 
 skill_dir = Path(os.environ["SKILL_DIR"])
 before = json.load(open(os.environ["SOURCE_FINGERPRINT_PATH"]))
-tracked_suffixes = {".md", ".html", ".sh", ".json"}
+tracked_suffixes = {".md", ".html", ".sh", ".js", ".json"}
 after = {}
 for path in sorted(skill_dir.rglob("*")):
     if not path.is_file() or path.suffix not in tracked_suffixes:
@@ -1405,3 +1989,10 @@ PY
 rm -f "$SOURCE_FINGERPRINT_PATH"
 
 echo "Final report path: $OUTPUT_PATH"
+if [[ "$CISO_PDF_MODE" == "executive" || "$CISO_PDF_MODE" == "both" ]]; then
+  echo "Final executive PDF path: $PDF_OUTPUT_PATH"
+fi
+if [[ "$CISO_PDF_MODE" == "full" || "$CISO_PDF_MODE" == "both" ]]; then
+  echo "Final full PDF path: $PDF_FULL_OUTPUT_PATH"
+fi
+echo "Final curation user CSV path: $CURATION_USER_CSV_PATH"

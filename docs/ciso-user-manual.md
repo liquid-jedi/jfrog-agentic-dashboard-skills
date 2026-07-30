@@ -251,8 +251,15 @@ Date-window default for `monthly`:
 
 - Plain `monthly` resolves to the **last full calendar month**.
 - Example: if today is May 20, `monthly` resolves to April 1-30.
-- To target the current month-to-date, specify explicit dates or ask for
-  month-to-date directly.
+- To target the current month-to-date, ask for `this month`, `current month`, or
+  `month-to-date`; the report should end on today, not the last future day of the
+  month.
+
+Large active-user populations:
+
+- The dashboard shows the top active Curation users only.
+- The full user/package export is written as
+  `curation-user-package-activity.csv` next to `report.html`.
 
 Before collection begins, the skill should surface a short execution summary containing:
 
@@ -322,9 +329,11 @@ Token usage metadata:
 
 - `run-meta.json` includes `token_usage.total_tokens` when available.
 - Capture sources:
-  - `CISO_TOTAL_TOKENS` environment variable, or
-  - `/tmp/ciso-token-usage.json` containing `total_tokens`.
+  - `CISO_TOTAL_TOKENS` or detailed token environment variables.
+  - `CISO_TOKEN_USAGE_PATH` or `/tmp/ciso-token-usage.json`.
+  - `CISO_CLAUDE_TRANSCRIPT_PATH` / `CLAUDE_TRANSCRIPT_PATH` for best-effort Claude Code transcript aggregation.
 - If no source is available, `token_usage.total_tokens` is `null` and status is `unavailable`.
+- Boost token savings are terminal-output savings and are separate from model/session token usage.
 
 If the same instance/report-type/date already exists, the skill writes the next run into:
 
