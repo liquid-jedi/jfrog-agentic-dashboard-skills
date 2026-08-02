@@ -10,7 +10,9 @@ The skill generates a branded CISO Security and Curation HTML dashboard from a J
 apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.0.1
 ```
 
-To install the previous repository release instead:
+To install an older repository release instead, use `#v3.0.0` rather than
+`#v4.0.0` — the Claude guardrail in v4.0.0 shipped with an invalid
+`settings.json` and never loaded, which is what v4.0.1 fixes.
 
 ```bash
 apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v3.0.0

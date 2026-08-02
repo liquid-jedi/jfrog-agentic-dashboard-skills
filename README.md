@@ -112,7 +112,9 @@ apm init -y --target claude,codex,cursor
 apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.0.1
 ```
 
-Need an older tagged release instead?
+Need an older tagged release instead? Use `#v3.0.0`, not `#v4.0.0` — the
+Claude guardrail in v4.0.0 shipped with an invalid `settings.json` and never
+loaded, which is what v4.0.1 fixes.
 
 ```bash
 apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v3.0.0
