@@ -1,13 +1,25 @@
 .DS_Store
-.claude/
 .remember/
 *.log
 __pycache__/
 *.pyc
 apm_modules/
 *.tar.gz
-.claude-plugin/
 build/
+
+# Offline APM bundles are build artifacts: rebuild with the documented zip
+# command and attach to the GitHub Release rather than committing them.
+/packages/apm/*.zip
+
+# Claude Code: track project-level config and guardrail hooks, ignore local state.
+# A blanket ".claude/" rule silently dropped these files from an earlier release.
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
+.claude/settings.local.json
+
+# Claude plugin manifest: ignore a stray root-level one, keep the packaged manifest
+/.claude-plugin/
 
 # Internal sample reports
 /samples/
@@ -25,11 +37,23 @@ build/
 !/Example Reports/**/data.json
 !/Example Reports/**/snapshot.json
 !/Example Reports/**/run-meta.json
+!/Example Reports/**/*.pdf
+!/Example Reports/**/*.csv
 
 # Root-level legacy generated reports (scope to root only — does NOT affect samples/)
 /ciso-report-*.html
 
-# Root-level one-off scripts (not part of the project)
+# One-off slide/deck builders kept locally; not part of this project
+/scripts/*.mjs
+
+# Browser-automation session dumps
+/.playwright-mcp/
+
+# Local Copilot instructions (not part of the distributed project)
+/.github/copilot-instructions.md
+
+# Screenshots and preview images captured while iterating on the dashboard
+/ciso-dashboard-preview.png
 
 # Internal working docs
 /docs/ciso-skill-changelog.md

@@ -7,7 +7,7 @@ The skill generates a branded CISO Security and Curation HTML dashboard from a J
 ## Install
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.0.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.0.1
 ```
 
 To install the previous repository release instead:
@@ -25,18 +25,25 @@ apm pack --dry-run --verbose
 
 ## Offline Package
 
-For customers running with limited internet access, package the entire APM
-directory as a zip and transfer that archive:
+The bundle is a build artifact, so it is not committed to the repository.
+Download it from the [GitHub Release](https://github.com/liquid-jedi/jfrog-agentic-dashboard-skills/releases),
+or rebuild it locally:
 
 ```bash
 cd packages/apm
-zip -r jfrog-ciso-report-v4.0.0.zip jfrog-ciso-report
+zip -r jfrog-ciso-report-v4.0.1.zip jfrog-ciso-report -x '*.DS_Store'
 ```
 
-On the customer side, unzip and install or validate from the local directory:
+On the customer side, unzip and install from the local directory:
 
 ```bash
-unzip jfrog-ciso-report-v4.0.0.zip
+unzip jfrog-ciso-report-v4.0.1.zip
+apm install ./jfrog-ciso-report --target claude,cursor,codex
+```
+
+To validate the bundle without installing it:
+
+```bash
 cd jfrog-ciso-report
 apm pack --dry-run --verbose
 ```

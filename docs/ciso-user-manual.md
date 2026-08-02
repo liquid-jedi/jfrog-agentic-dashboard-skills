@@ -35,7 +35,7 @@ See **[INSTALL.md](INSTALL.md)** for prerequisites, APM install, generic Skills 
 Quick reference — APM install:
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v2.5.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.0.1
 ```
 
 Quick reference — local development install:
@@ -367,7 +367,7 @@ This project includes a separate builder skill for creating new persona packs:
 Recommended installation:
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v2.3.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v4.0.1
 ```
 
 Typical builder prompt:

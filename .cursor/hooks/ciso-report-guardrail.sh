@@ -105,6 +105,11 @@ def rm_is_scoped(command_text):
     for idx, token in enumerate(tokens):
         if token != "rm":
             continue
+        # "git rm" only stages the removal of an already-tracked file and is
+        # recoverable via "git checkout --" / "git reset". It is a version
+        # control operation, not a filesystem wipe, so it is not restricted.
+        if idx > 0 and tokens[idx - 1] == "git":
+            continue
         targets = []
         recursive = False
         for part in tokens[idx + 1:]:

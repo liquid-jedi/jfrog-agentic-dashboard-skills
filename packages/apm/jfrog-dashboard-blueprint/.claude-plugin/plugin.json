@@ -1,7 +1,7 @@
 {
-  "name": "jfrog-ciso-report",
-  "version": "4.0.1",
-  "description": "Generate a branded CISO Security and Curation HTML dashboard from a JFrog Platform instance.",
+  "name": "jfrog-dashboard-blueprint",
+  "version": "2.1.1",
+  "description": "Scaffold persona-specific JFrog dashboard and report skills from a guided interview.",
   "author": {
     "name": "Avinash Giri"
   },
@@ -10,9 +10,9 @@
   "repository": "https://github.com/liquid-jedi/jfrog-agentic-dashboard-skills",
   "keywords": [
     "jfrog",
-    "ciso",
-    "security",
-    "curation",
-    "dashboard"
+    "dashboard",
+    "blueprint",
+    "skill",
+    "scaffolding"
   ]
 }

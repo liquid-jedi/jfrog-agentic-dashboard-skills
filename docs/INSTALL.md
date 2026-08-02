@@ -10,7 +10,8 @@ Get the dashboard skills installed, verified, and ready to run against your JFro
 | **JFrog Xray** | Required for vulnerability and violation data |
 | **JFrog Curation** | Optional — dashboard shows "Not configured" when absent |
 | **JFrog CLI** (`jf`) | Installed and authenticated |
-| **Tools on PATH** | `jf`, `jq`, `python3`; `apm` for APM installs or `npx` for generic Skills installs |
+| **Tools on PATH** | `jf`, `jq`, `python3`, `node`; `apm` for APM installs or `npx` for generic Skills installs |
+| **PDF rendering** | Puppeteer, or an installed Chrome / Chromium / Edge (override with `CISO_CHROME_BIN`) |
 | **Base skill** | [`jfrog`](https://github.com/jfrog/jfrog-skills) from JFrog Platform Skills |
 
 ### Install JFrog CLI
@@ -28,12 +29,12 @@ jf config add --interactive
 
 ### Current skill versions in this repository
 
-- `jfrog-ciso-report` — `3.0.0`
+- `jfrog-ciso-report` — `4.0.1`
 - `jfrog-dashboard-blueprint` — `2.1.1`
 
 Previous release:
 
-- `jfrog-ciso-report` — `2.3.0`
+- `jfrog-ciso-report` — `3.0.0`
 - `jfrog-dashboard-blueprint` — `2.1.0`
 
 ### Install the base `jfrog` skill
@@ -101,13 +102,13 @@ Install the CISO report package from the published repository:
 mkdir -p ~/ciso-reporting
 cd ~/ciso-reporting
 apm init -y --target claude,codex,cursor
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v3.0.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.0.1
 ```
 
 Optional: install the persona scaffolder package:
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v2.3.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v4.0.1
 ```
 
 Run project-local APM skills from the same folder:
@@ -119,7 +120,7 @@ claude
 
 For Codex or Cursor, open/use the `~/ciso-reporting` folder as the active project/workspace.
 
-Use `#v2.3.0` when you need the older repository release. Do not use `#v2.2.0` for APM installs because that release predates APM packaging.
+Use `#v3.0.0` when you need the older repository release. Do not use `#v2.2.0` for APM installs because that release predates APM packaging.
 
 ### Option 2: Generic Skills install
 
@@ -220,12 +221,15 @@ Runtime defaults:
 
 ## Example reports
 
-If you want to see the output format before running the skill against your own instance, open one of the shipped sample reports from the repository:
+If you want to see the output format before running the skill against your own instance, open the shipped sample artifacts from the repository:
 
-- `Example Reports/ciso-reports/weekly/report-1.html`
-- `Example Reports/ciso-reports/Monthly/report-1.html`
+- `Example Reports/ciso-reports/weekly/report.html` — full interactive dashboard
+- `Example Reports/ciso-reports/weekly/executive-report.pdf` — CISO-shareable PDF
+- `Example Reports/ciso-reports/weekly/full-report.pdf` — detailed internal PDF
+- `Example Reports/ciso-reports/weekly/curation-user-package-activity.csv` — active-user export
+- `Example Reports/ciso-reports/monthly/report.html` and `monthly/executive-report.pdf`
 
-These files are static reference artifacts. They are useful for reviewing the generated dashboard layout and narrative style, but they are not live data and are not updated automatically.
+These are real v4.0.1 outputs captured from a live instance. They are static reference artifacts, useful for reviewing dashboard layout and narrative style, but they are not live data and are not updated automatically.
 
 **Claude Code example:**
 
@@ -253,7 +257,7 @@ bash "$REPO_ROOT/scripts/agentic-dashboard-prechecks.sh" --fix --yes   # non-int
 
 ### What “good” looks like
 
-- `jf`, `jq`, `python3`, and `npx` on PATH
+- `jf`, `jq`, `python3`, `node`, and `npx` on PATH
 - Global skills include `jfrog` and `jfrog-ciso-report`
 - At least one JFrog CLI server configured
 - Multiple servers → runtime asks which server to use (no silent default)

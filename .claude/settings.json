@@ -13,18 +13,3 @@
     ]
   }
 }
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash|PowerShell",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/ciso-report-guardrail-claude.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
