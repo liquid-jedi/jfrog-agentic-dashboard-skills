@@ -8,7 +8,7 @@ Get the dashboard skills installed, verified, and ready to run against your JFro
 |-------------|--------|
 | **JFrog Platform** | SaaS or self-hosted |
 | **JFrog Xray** | Required for vulnerability and violation data |
-| **JFrog Curation** | Optional — dashboard shows "Not configured" when absent |
+| **JFrog Curation** | Required — the run's final collection-proof gate fails without registered Curation policies and recent package-gate audit activity |
 | **JFrog CLI** (`jf`) | Installed and authenticated |
 | **Tools on PATH** | `jf`, `jq`, `python3`, `node`; `apm` for APM installs or `npx` for generic Skills installs |
 | **PDF rendering** | Puppeteer, or an installed Chrome / Chromium / Edge (override with `CISO_CHROME_BIN`) |

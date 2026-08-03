@@ -28,13 +28,19 @@ This table is the canonical platform reference; other docs link here.
 | JFrog SaaS | Yes |
 | JFrog Self-Hosted | Yes |
 | JFrog Xray | Required |
-| JFrog Curation | Optional |
+| JFrog Curation | Required — see below |
 | macOS | Yes — primary tested platform |
 | Linux | Yes |
 | Windows via WSL2 | Yes — see the note below about the browser |
 | Windows via Git Bash | Untested; use WSL2 if you have the choice |
 | Windows native (CMD/PowerShell) | No — the runner is a bash script |
 | Chrome / Chromium / Edge | Required — see below |
+
+**Curation is not optional.** Every run finishes with a live collection proof
+that fails when the instance has no Curation policies registered and no
+package-gate audit activity in the last seven days. On an Xray-only instance the
+report and PDFs are still written, but the runner exits non-zero at that gate, so
+treat Xray plus Curation as the supported baseline.
 
 **PDF export is not optional.** `CISO_PDF_MODE` accepts `executive`, `full`, or
 `both`; there is no way to skip it. The runner probes for a browser *before* it
