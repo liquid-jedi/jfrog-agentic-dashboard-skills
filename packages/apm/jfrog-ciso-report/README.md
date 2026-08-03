@@ -7,7 +7,7 @@ The skill generates a branded CISO Security and Curation HTML dashboard from a J
 ## Install
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.0.1
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.1.0
 ```
 
 To install an older repository release instead, use `#v3.0.0` rather than
@@ -33,13 +33,13 @@ or rebuild it locally:
 
 ```bash
 cd packages/apm
-zip -r jfrog-ciso-report-v4.0.1.zip jfrog-ciso-report -x '*.DS_Store'
+zip -r jfrog-ciso-report-v4.1.0.zip jfrog-ciso-report -x '*.DS_Store'
 ```
 
 On the customer side, unzip and install from the local directory:
 
 ```bash
-unzip jfrog-ciso-report-v4.0.1.zip
+unzip jfrog-ciso-report-v4.1.0.zip
 apm install ./jfrog-ciso-report --target claude,cursor,codex
 ```
 

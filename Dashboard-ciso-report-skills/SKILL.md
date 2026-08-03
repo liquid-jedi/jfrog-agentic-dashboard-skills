@@ -10,7 +10,7 @@ description: >-
 metadata:
   role: workflow
   author: Avinash Giri
-  version: 4.0.1
+  version: 4.1.0
 ---
 
 # JFrog CISO Report Generator

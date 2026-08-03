@@ -31,7 +31,8 @@ field. Neither changes the other's job.
       "curation_user_package_activity_csv": "string — relative CSV path next to report.html"
     },
     "export_counts": {
-      "curation_user_package_activity_rows": "number"
+      "curation_user_package_activity_rows": "number — one row per user in the CSV",
+      "curation_user_package_pairs": "number — user/package pairs those rows aggregate"
     }
   },
 
@@ -259,7 +260,9 @@ field. Neither changes the other's job.
             "ecosystem": "string",
             "requests": "number"
           }
-        ]
+        ],
+        "distinct_packages": "number — distinct packages across the whole period, not capped by packages[]",
+        "ecosystems": ["string — every ecosystem the user pulled from in the period"]
       }
     ],
     "user_package_activity": [

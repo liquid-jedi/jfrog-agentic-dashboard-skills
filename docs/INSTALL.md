@@ -29,7 +29,7 @@ jf config add --interactive
 
 ### Current skill versions in this repository
 
-- `jfrog-ciso-report` — `4.0.1`
+- `jfrog-ciso-report` — `4.1.0`
 - `jfrog-dashboard-blueprint` — `2.1.1`
 
 Previous release:
@@ -102,13 +102,13 @@ Install the CISO report package from the published repository:
 mkdir -p ~/ciso-reporting
 cd ~/ciso-reporting
 apm init -y --target claude,codex,cursor
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.0.1
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.1.0
 ```
 
 Optional: install the persona scaffolder package:
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v4.0.1
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v4.1.0
 ```
 
 Run project-local APM skills from the same folder:
@@ -229,7 +229,7 @@ If you want to see the output format before running the skill against your own i
 - `Example Reports/ciso-reports/weekly/curation-user-package-activity.csv` — active-user export
 - `Example Reports/ciso-reports/monthly/report.html` and `monthly/executive-report.pdf`
 
-These are real v4.0.1 outputs captured from a live instance. They are static reference artifacts, useful for reviewing dashboard layout and narrative style, but they are not live data and are not updated automatically.
+These are real v4.1.0 outputs captured from a live instance. They are static reference artifacts, useful for reviewing dashboard layout and narrative style, but they are not live data and are not updated automatically.
 
 **Claude Code example:**
 
@@ -268,12 +268,9 @@ Fix any reported blockers before generating reports.
 
 ### Platform support
 
-| Environment | Supported |
-|-------------|-----------|
-| macOS | Yes |
-| Linux | Yes |
-| Windows (WSL) | Recommended |
-| Native CMD/PowerShell | Not the primary path for prechecks |
+macOS and Linux are supported directly; Windows needs WSL2. See the
+[compatibility table](TROUBLESHOOTING.md#compatibility) for the full matrix,
+including the browser requirement that applies to WSL2.
 
 ### Cursor sandbox
 

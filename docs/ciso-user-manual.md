@@ -9,9 +9,7 @@ and interpreting the CISO dashboard skill.
 |----------|--------|
 | [README](../README.md) | Project overview, quick start, documentation index |
 | [INSTALL.md](INSTALL.md) | Prerequisites, install, verify, update, prechecks, first run |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Data flow, execution contract, persona scaffolding |
-| [BETA-SCHEMA.md](BETA-SCHEMA.md) | Schema 2.0-beta for custom JSON producers |
-| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common issues |
+| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common issues and platform support |
 | **This manual** | Permissions, supported agents, interpretation, tuning |
 
 For installation steps, start with [INSTALL.md](INSTALL.md) rather than duplicating commands here.
@@ -35,7 +33,7 @@ See **[INSTALL.md](INSTALL.md)** for prerequisites, APM install, generic Skills 
 Quick reference — APM install:
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.0.1
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.1.0
 ```
 
 Quick reference — local development install:
@@ -186,39 +184,27 @@ An agent/runtime is considered compliant for this skill only if:
 
 ## Operating System Guidance
 
-### macOS
+See the [compatibility table](TROUBLESHOOTING.md#compatibility) for the
+supported matrix. The notes below cover what differs between platforms.
 
-Works as-is with the documented flow.
+### macOS and Linux
 
-Notes:
-
-- `date -v` examples in some references are macOS-native.
-- `sed -i.bak` usage in the skill is compatible with macOS.
-
-### Linux
-
-Supported with minor shell-awareness.
-
-Notes:
-
-- Use GNU `date` syntax where the references provide Linux alternatives.
-- `sed -i.bak` also works on most common Linux distributions.
+Both work as-is. The runner needs `bash`, and it delegates all date arithmetic
+to `python3` rather than shelling out to `date -d` or `date -v`, so there is no
+BSD-versus-GNU difference to work around.
 
 ### Windows
 
-Supported best through a POSIX-compatible shell environment.
+Use **WSL2**. The runner is a bash script that assumes POSIX semantics and
+writes its scratch files under `/tmp`, so native CMD and PowerShell are not
+viable. Git Bash provides the shell and `/tmp`, but `node` there is a native
+Windows binary and the combination is untested — prefer WSL2 if you can.
 
-Recommended options:
-
-- WSL2
-- Git Bash
-
-Why:
-
-- The skill workflow assumes `bash`/POSIX shell semantics.
-- The instructions rely on commands such as `grep`, `find`, `sed`, and standard shell variable expansion.
-
-Native PowerShell or CMD execution is not the primary documented path. If Windows is required, use WSL2 for the most consistent behavior.
+The one WSL2-specific step is the browser: WSL2 ships without one, and PDF
+export is mandatory and checked before collection starts. Install Chromium
+inside WSL or install Puppeteer. Pointing `CISO_CHROME_BIN` at the Windows
+Chrome under `/mnt/c/...` will launch it but it cannot write the PDF back to a
+Linux path.
 
 ## Runtime Flow
 
@@ -258,8 +244,23 @@ Date-window default for `monthly`:
 Large active-user populations:
 
 - The dashboard shows the top active Curation users only.
-- The full user/package export is written as
-  `curation-user-package-activity.csv` next to `report.html`.
+- Every active user is written to `curation-user-package-activity.csv` next to
+  `report.html`, one row per user:
+
+  | Column | Meaning |
+  |--------|---------|
+  | `user` | Username or user mail from the audit events |
+  | `total_requests` | Package requests attributed to the user in the period |
+  | `request_share_pct` | Share of all attributed requests |
+  | `blocked` | Requests denied by Curation policy |
+  | `clean_approved` | Requests allowed with no blocking rule matched |
+  | `block_rate_pct` | `blocked / total_requests` — sort on this to find risky consumers regardless of volume |
+  | `distinct_packages` | Distinct packages the user pulled in the period |
+  | `ecosystems` | Package types used, for example `Maven; npm` |
+  | `top_packages` | Ten most requested packages as `name (count)` |
+
+- Rows are sorted by `total_requests` descending. A low-volume user with a high
+  `block_rate_pct` is usually more interesting than the top requester.
 
 Before collection begins, the skill should surface a short execution summary containing:
 
@@ -367,7 +368,7 @@ This project includes a separate builder skill for creating new persona packs:
 Recommended installation:
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v4.0.1
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v4.1.0
 ```
 
 Typical builder prompt:
@@ -442,15 +443,17 @@ Validation must happen before template injection.
 
 ### Executive KPIs
 
-- Packages Evaluated: total curation audit events in the period.
-- Blocked at the Gate: requests denied by curation policy.
-- Approved Overrides: requests explicitly approved.
-- Passed by Policy: requests allowed because no blocking rule matched.
-- Threats Found Inside: total Xray violations.
-- Critical Findings: critical-severity subset.
-- Risk Score: normalized weighted index from 0 to 100.
+The Overview KPI strip shows:
 
-### Severity and Risk Method
+- Critical violation occurrences — with unique critical issue/CVE count and period-over-period delta.
+- Blocked at gate: curation requests denied by policy, with % of requests.
+- Without inspection: package requests that bypassed policy evaluation.
+- Repos indexed: % and count of repositories covered by Xray indexing.
+- Remotes gated: % and count of supported remotes connected to Curation.
+
+A second row of insight cards covers critical SLA breach age, fixable exposure, watch blind spots, and gate coverage gaps.
+
+### Severity and Posture Signals
 
 Severity meanings:
 
@@ -459,32 +462,21 @@ Severity meanings:
 - Medium: meaningful exposure with lower immediate blast radius.
 - Low: limited immediate impact, typically suited to batched remediation.
 
-Risk score formula (3-factor composite, computed after platform enrichment):
+Posture signals — three independent measures, **no composite risk score** — computed after platform enrichment:
 
-```text
-# Factor 1 — Severity mix (50%)
-# Weighted average of severity tiers. All-critical = 100, all-low ≈ 6.
-sev = (critical×4 + high×2 + medium×1) / (total×4) × 100
+| Signal | Meaning |
+|--------|---------|
+| `severity_mix` | 0-100 severity-weighted mix of current violations |
+| `violation_volume` | Raw Xray violation count |
+| `coverage_gap` | Percentage of repositories not indexed by Xray |
 
-# Factor 2 — Volume, log-scaled (30%)
-# 0 violations = 0, ~100 = 50, 10 000+ = 100.
-vol = min(100, log10(max(1, total)) / log10(10000) × 100)
-
-# Factor 3 — Coverage gap (20%)
-# Fraction of repositories not indexed by Xray.
-cov = (1 - repos_indexed / repos_total) × 100
-
-risk_score = sev×0.5 + vol×0.3 + cov×0.2
-```
-
-The score and each component are stored in `violations.risk_score` and `violations.risk_score_breakdown` in `data.json`. The gauge ring in the report shows the live breakdown.
+Stored under `violations.posture_signals` in `data.json`. The report shows each signal on its own rather than blending them into a single score.
 
 Interpretation:
 
-- Lower is better.
-- Rising trend is bad.
-- Typical bands: 0–15 low, 15–35 moderate, 35–60 high, 60+ critical.
-- A score of 0 violations with some unindexed repos still shows residual risk from the coverage gap factor.
+- Rising `severity_mix` or `violation_volume` is bad — watch the trend, not just the current value.
+- A high `coverage_gap` means real exposure may be going undetected — invisible risk, not zero risk.
+- The signals can move in tension: shrinking `coverage_gap` (indexing more repos) can raise `severity_mix`/`violation_volume` by surfacing violations that were previously invisible, even while overall posture is improving.
 
 ### Curation
 
@@ -503,45 +495,19 @@ Interpretation:
 - License section reflects policy-backed compliance exposure.
 - Operational risk highlights stale, unmaintained, or end-of-life component risk.
 
-### Governance and Trend Sections
+### Governance and Trend Data
 
-- Governance shows policy effectiveness and repository watch coverage.
+- Policy effectiveness and repository watch coverage (`governance.*`) render inside the Curation and Xray tabs — there is no standalone Governance tab.
 - Comparison appears only when prior snapshots exist.
 - Threat velocity requires enough historical runs to populate trend periods.
 
-## Configurable Methodology Block
+## Configurable Methodology Block (not yet consumed by the renderer)
 
-The renderer supports an optional top-level `methodology` object in DATA so teams can tune explanations and thresholds without editing renderer logic.
-
-```json
-"methodology": {
-  "severity_levels": {
-    "critical": { "meaning": "...", "signal": "..." },
-    "high": { "meaning": "...", "signal": "..." },
-    "medium": { "meaning": "...", "signal": "..." },
-    "low": { "meaning": "...", "signal": "..." }
-  },
-  "risk_score": {
-    "weights": { "critical": 100, "high": 20, "medium": 5, "low": 1 },
-    "bands": [
-      { "min": 0, "max": 15, "label": "Low weighted exposure", "signal": "Good" },
-      { "min": 15, "max": 35, "label": "Moderate weighted exposure", "signal": "Watch trend" },
-      { "min": 35, "max": 60, "label": "High weighted exposure", "signal": "Bad" },
-      { "min": 60, "max": null, "label": "Critical weighted exposure", "signal": "Very bad" }
-    ]
-  },
-  "curation_actions": {
-    "blocked": "Denied by policy.",
-    "approved": "Explicit override approval.",
-    "passed": "Evaluated and allowed because no blocking rule matched."
-  },
-  "repo_watch_risk_levels": [
-    { "level": "critical", "rule": "Repository has critical findings and no watch coverage." },
-    { "level": "high", "rule": "Repository has critical findings or high violation volume." },
-    { "level": "medium", "rule": "Repository has violations, or is indexed with zero watches." },
-    { "level": "low", "rule": "No significant findings and covered." }
-  ]
-}
-```
-
-If omitted, built-in defaults are used.
+`report-data-collection.md` documents an optional top-level `methodology`
+object in DATA — intended to let teams tune severity explanations and
+threshold rules without editing renderer logic. As of the current
+`dashboard.html`, `dashboard-pdf.html`, and `dashboard-pdf-full.html`
+templates, none of them read a `methodology` key, so setting one today has
+no effect on the rendered report. Treat this as reserved/forward-looking
+schema rather than a working customization point, and do not rely on it to
+change on-screen thresholds or wording.

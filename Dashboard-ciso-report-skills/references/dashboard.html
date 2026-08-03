@@ -1511,14 +1511,26 @@ function downloadCsv(filename, headers, rows){
   URL.revokeObjectURL(url);
 }
 window.downloadCurationUsers = function(){
+  // Fallback for a standalone report opened without its sibling CSV. The full
+  // export is emptied out of the payload, so build from the embedded top users.
   const curation = DATA.curation||{};
-  const activity = curation.user_package_activity||[];
-  const rows = activity.map(pkg => [
-    pkg.user,pkg.user_events,pkg.user_events_pct,pkg.user_blocked,pkg.user_approved,
-    pkg.package,pkg.ecosystem,pkg.requests
-  ]);
-  downloadCsv('curation-user-package-activity.csv',
-    ['user','total_requests','request_share_pct','blocked','clean_approved','package','ecosystem','package_requests'], rows);
+  const rows = (curation.top_users||[]).map(u => {
+    const packages = (u.packages||[]).slice().sort((a,b) => (b.requests||0)-(a.requests||0));
+    // packages[] is capped by collection, so prefer the period-wide breadth
+    // fields and leave them blank rather than reporting the truncated count.
+    const ecosystems = u.ecosystems || null;
+    const total = u.events||0;
+    return [
+      u.user, total, u.events_pct, u.blocked, u.approved,
+      total ? Math.round((u.blocked||0)/total*1000)/10 : 0,
+      u.distinct_packages==null ? '' : u.distinct_packages,
+      ecosystems ? ecosystems.join('; ') : '',
+      packages.slice(0,10).map(p => `${p.package} (${p.requests})`).join('; ')
+    ];
+  });
+  downloadCsv('curation-active-users.csv',
+    ['user','total_requests','request_share_pct','blocked','clean_approved',
+     'block_rate_pct','distinct_packages','ecosystems','top_packages'], rows);
 };
 window.downloadXrayIssues = function(){
   const rows = ((DATA.violations||{}).critical_issues||[]).map(issue => [

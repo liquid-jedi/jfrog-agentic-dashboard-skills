@@ -21,16 +21,31 @@
 
 ## Compatibility
 
+This table is the canonical platform reference; other docs link here.
+
 | | Supported |
 |---|:---:|
 | JFrog SaaS | Yes |
 | JFrog Self-Hosted | Yes |
 | JFrog Xray | Required |
 | JFrog Curation | Optional |
-| macOS | Yes |
-| Linux | Yes (date command may need adjustment) |
-| Windows | Via WSL or Git Bash — the runner is a bash script |
-| Chrome / Chromium / Edge | Required for PDF export |
+| macOS | Yes — primary tested platform |
+| Linux | Yes |
+| Windows via WSL2 | Yes — see the note below about the browser |
+| Windows via Git Bash | Untested; use WSL2 if you have the choice |
+| Windows native (CMD/PowerShell) | No — the runner is a bash script |
+| Chrome / Chromium / Edge | Required — see below |
+
+**PDF export is not optional.** `CISO_PDF_MODE` accepts `executive`, `full`, or
+`both`; there is no way to skip it. The runner probes for a browser *before* it
+collects any data, so a missing browser aborts the whole run rather than
+falling back to HTML only. Install Chrome, Chromium or Edge, or install
+Puppeteer, or point `CISO_CHROME_BIN` at a browser executable.
+
+**On WSL2, install a browser inside WSL** (for example
+`sudo apt install chromium-browser`), or install Puppeteer. Pointing
+`CISO_CHROME_BIN` at the Windows Chrome under `/mnt/c/...` launches it
+successfully but it cannot write the PDF back to a Linux output path.
 
 ---
 

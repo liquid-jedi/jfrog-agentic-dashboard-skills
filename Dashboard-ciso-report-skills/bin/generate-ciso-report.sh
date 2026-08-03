@@ -1609,37 +1609,73 @@ data = json.load(open("/tmp/ciso-data.json"))
 curation = data.setdefault("curation", {})
 activity = curation.get("user_package_activity") or []
 csv_path = os.environ["CURATION_USER_CSV_PATH"]
+
+# Collection emits a user x package cross-product, so every user total is
+# repeated once per package that user requested. Collapse to one row per user
+# and carry the package detail as a ranked summary column.
+TOP_PACKAGES = 10
+
+users = {}
+order = []
+for row in activity:
+    if not isinstance(row, dict):
+        continue
+    name = row.get("user", "")
+    entry = users.get(name)
+    if entry is None:
+        entry = users[name] = {
+            "user": name,
+            "total_requests": row.get("user_events") or 0,
+            "request_share_pct": row.get("user_events_pct") or 0,
+            "blocked": row.get("user_blocked") or 0,
+            "clean_approved": row.get("user_approved") or 0,
+            "packages": [],
+            "ecosystems": set(),
+        }
+        order.append(name)
+    ecosystem = row.get("ecosystem") or ""
+    package = row.get("package") or ""
+    if package:
+        entry["packages"].append((row.get("requests") or 0, package, ecosystem))
+    if ecosystem:
+        entry["ecosystems"].add(ecosystem)
+
 headers = [
     "user",
     "total_requests",
     "request_share_pct",
     "blocked",
     "clean_approved",
-    "package",
-    "ecosystem",
-    "package_requests",
+    "block_rate_pct",
+    "distinct_packages",
+    "ecosystems",
+    "top_packages",
 ]
 with open(csv_path, "w", newline="") as handle:
     writer = csv.writer(handle)
     writer.writerow(headers)
-    for row in activity:
-        if not isinstance(row, dict):
-            continue
+    for name in sorted(order, key=lambda n: (-(users[n]["total_requests"] or 0), n)):
+        entry = users[name]
+        total = entry["total_requests"] or 0
+        top = sorted(entry["packages"], key=lambda p: (-p[0], p[1]))[:TOP_PACKAGES]
         writer.writerow([
-            row.get("user", ""),
-            row.get("user_events", ""),
-            row.get("user_events_pct", ""),
-            row.get("user_blocked", ""),
-            row.get("user_approved", ""),
-            row.get("package", ""),
-            row.get("ecosystem", ""),
-            row.get("requests", ""),
+            entry["user"],
+            total,
+            entry["request_share_pct"],
+            entry["blocked"],
+            entry["clean_approved"],
+            round(entry["blocked"] / total * 100, 1) if total else 0,
+            len(entry["packages"]),
+            "; ".join(sorted(entry["ecosystems"])),
+            "; ".join("%s (%s)" % (pkg, count) for count, pkg, _ in top),
         ])
 
 meta = data.setdefault("meta", {})
 exports = meta.setdefault("export_files", {})
 exports["curation_user_package_activity_csv"] = os.path.basename(csv_path)
-meta.setdefault("export_counts", {})["curation_user_package_activity_rows"] = len(activity)
+export_counts = meta.setdefault("export_counts", {})
+export_counts["curation_user_package_activity_rows"] = len(users)
+export_counts["curation_user_package_pairs"] = len(activity)
 
 # Keep the HTML and saved data compact for customers with thousands of users.
 curation["top_users"] = (curation.get("top_users") or [])[:20]
@@ -1648,7 +1684,7 @@ curation["user_package_activity_rows"] = len(activity)
 curation["user_package_activity"] = []
 
 json.dump(data, open("/tmp/ciso-data.json", "w"), indent=2)
-print("curation user activity csv:", csv_path, "rows=", len(activity))
+print("curation user activity csv:", csv_path, "users=", len(users), "package pairs=", len(activity))
 PY
 
 echo "=== render ==="

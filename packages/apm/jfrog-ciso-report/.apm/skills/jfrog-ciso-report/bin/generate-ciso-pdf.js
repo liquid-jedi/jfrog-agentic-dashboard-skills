@@ -10,7 +10,55 @@
 
 const fs = require('fs');
 const path = require('path');
+const { pathToFileURL } = require('url');
 const { spawnSync } = require('child_process');
+
+const IS_WINDOWS = process.platform === 'win32';
+
+// Standard per-user and machine-wide install locations. Resolved from the
+// environment rather than hardcoded so localised or relocated Program Files
+// directories still match.
+function windowsBrowserCandidates() {
+  const roots = [
+    process.env.ProgramFiles,
+    process.env['ProgramFiles(x86)'],
+    process.env.LOCALAPPDATA,
+  ].filter(Boolean);
+  const suffixes = [
+    ['Google', 'Chrome', 'Application', 'chrome.exe'],
+    ['Chromium', 'Application', 'chrome.exe'],
+    ['Microsoft', 'Edge', 'Application', 'msedge.exe'],
+  ];
+  const out = [];
+  for (const root of roots) {
+    // Explicitly win32 so the joined paths are backslash-separated even when
+    // this is exercised from a POSIX host.
+    for (const suffix of suffixes) out.push(path.win32.join(root, ...suffix));
+  }
+  return out;
+}
+
+// A bare command name is looked up on PATH; anything else is treated as a
+// filesystem path. Windows accepts both separators plus drive-letter prefixes.
+function looksLikePath(candidate) {
+  if (candidate.includes('/')) return true;
+  return IS_WINDOWS && (candidate.includes('\\') || /^[A-Za-z]:/.test(candidate));
+}
+
+function resolveOnPath(candidate) {
+  const probe = IS_WINDOWS
+    ? spawnSync('where', [candidate], { encoding: 'utf8' })
+    : spawnSync('sh', ['-c', `command -v "${candidate}"`], { encoding: 'utf8' });
+  if (probe.status !== 0) return null;
+  const first = (probe.stdout || '').split(/\r?\n/).find((line) => line.trim());
+  return first ? first.trim() : null;
+}
+
+// file:// + a Windows path yields file://C:\... which Chrome rejects. Going
+// through pathToFileURL also percent-encodes spaces on every platform.
+function fileUrlFor(inputPath) {
+  return pathToFileURL(path.resolve(inputPath)).href;
+}
 
 function findBrowser() {
   const candidates = [
@@ -21,6 +69,7 @@ function findBrowser() {
     process.platform === 'darwin'
       ? '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge'
       : null,
+    ...(IS_WINDOWS ? windowsBrowserCandidates() : []),
     'google-chrome',
     'google-chrome-stable',
     'chromium',
@@ -29,13 +78,12 @@ function findBrowser() {
   ].filter(Boolean);
 
   for (const candidate of candidates) {
-    if (candidate.includes('/') && fs.existsSync(candidate)) return candidate;
-    if (!candidate.includes('/')) {
-      const check = spawnSync('sh', ['-c', `command -v "${candidate}"`], {
-        encoding: 'utf8',
-      });
-      if (check.status === 0 && check.stdout.trim()) return check.stdout.trim();
+    if (looksLikePath(candidate)) {
+      if (fs.existsSync(candidate)) return candidate;
+      continue;
     }
+    const resolved = resolveOnPath(candidate);
+    if (resolved) return resolved;
   }
   return null;
 }
@@ -66,7 +114,7 @@ async function renderWithPuppeteer(puppeteer, inputPath, outputPath) {
   });
   try {
     const page = await browser.newPage();
-    await page.goto(`file://${inputPath}`, {
+    await page.goto(fileUrlFor(inputPath), {
       waitUntil: 'networkidle0',
       timeout: 20000,
     });
@@ -95,8 +143,8 @@ function renderWithBrowser(browserPath, inputPath, outputPath) {
     '--run-all-compositor-stages-before-draw',
     '--virtual-time-budget=3000',
     '--no-pdf-header-footer',
-    `--print-to-pdf=${outputPath}`,
-    `file://${inputPath}`,
+    `--print-to-pdf=${path.resolve(outputPath)}`,
+    fileUrlFor(inputPath),
   ], {
     encoding: 'utf8',
     timeout: 45000,

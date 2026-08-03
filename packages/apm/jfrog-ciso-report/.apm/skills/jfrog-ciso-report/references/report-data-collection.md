@@ -1400,12 +1400,17 @@ user_package_activity = [
 user_package_activity.sort(key=lambda row: (-row["requests"], row["user"], row["package"], row["ecosystem"]))
 top_users = []
 for st in sorted(user_stats.values(), key=lambda x: (-x["events"], x["user"]))[:25]:
+    counter = st.pop("_packages")
     packages = [
         {"package": package, "ecosystem": ecosystem, "requests": count}
-        for (package, ecosystem), count in st.pop("_packages").most_common(25)
+        for (package, ecosystem), count in counter.most_common(25)
     ]
     st["events_pct"] = round(st["events"] / attributed_events * 100, 1) if attributed_events else 0
     st["packages"] = packages
+    # Breadth over the whole period, not just the 25 packages carried above, so
+    # exports built from top_users do not understate a user's footprint.
+    st["distinct_packages"] = len(counter)
+    st["ecosystems"] = sorted({ecosystem for (_pkg, ecosystem) in counter if ecosystem})
     top_users.append(st)
 
 curation = data.setdefault("curation", {})
