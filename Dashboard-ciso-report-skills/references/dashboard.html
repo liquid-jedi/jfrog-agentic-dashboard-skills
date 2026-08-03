@@ -1514,14 +1514,15 @@ window.downloadCurationUsers = function(){
   // Fallback for a standalone report opened without its sibling CSV. The full
   // export is emptied out of the payload, so build from the embedded top users.
   const curation = DATA.curation||{};
-  const rows = (curation.top_users||[]).map(u => {
+  const ranked = (curation.top_users||[]).slice().sort((a,b) => (b.events||0)-(a.events||0));
+  const rows = ranked.map((u, i) => {
     const packages = (u.packages||[]).slice().sort((a,b) => (b.requests||0)-(a.requests||0));
     // packages[] is capped by collection, so prefer the period-wide breadth
     // fields and leave them blank rather than reporting the truncated count.
     const ecosystems = u.ecosystems || null;
     const total = u.events||0;
     return [
-      u.user, total, u.events_pct, u.blocked, u.approved,
+      i+1, u.user, total, u.events_pct, u.blocked, u.approved,
       total ? Math.round((u.blocked||0)/total*1000)/10 : 0,
       u.distinct_packages==null ? '' : u.distinct_packages,
       ecosystems ? ecosystems.join('; ') : '',
@@ -1529,7 +1530,7 @@ window.downloadCurationUsers = function(){
     ];
   });
   downloadCsv('curation-active-users.csv',
-    ['user','total_requests','request_share_pct','blocked','clean_approved',
+    ['rank','user','total_requests','request_share_pct','blocked','clean_approved',
      'block_rate_pct','distinct_packages','ecosystems','top_packages'], rows);
 };
 window.downloadXrayIssues = function(){
@@ -1581,15 +1582,31 @@ window.downloadRecommendations = function(){
 
   // Supplied template navigation: one-page scroll with active step indicator.
   const navLinks = [...root.querySelectorAll('.side-nav a')];
+  const sectionFor = link => document.getElementById(link.getAttribute('href').slice(1));
   const syncNav = () => {
     let active = navLinks[0];
     navLinks.forEach(link => {
-      const target = document.getElementById(link.getAttribute('href').slice(1));
+      const target = sectionFor(link);
       if (target && target.getBoundingClientRect().top <= 120) active = link;
     });
+    // Trailing sections never push their heading up to the trigger line once
+    // the page is scrolled to the end, which would leave the highlight stuck
+    // on an earlier section. At the bottom, select the last visible section.
+    const doc = document.documentElement;
+    const scrollable = doc.scrollHeight - window.innerHeight > 4;
+    if (scrollable && window.innerHeight + window.scrollY >= doc.scrollHeight - 2) {
+      for (let i = navLinks.length - 1; i >= 0; i--) {
+        const target = sectionFor(navLinks[i]);
+        if (target && target.getBoundingClientRect().top < window.innerHeight) {
+          active = navLinks[i];
+          break;
+        }
+      }
+    }
     navLinks.forEach(link => link.classList.toggle('active', link === active));
   };
   window.addEventListener('scroll', syncNav, {passive:true});
+  window.addEventListener('resize', syncNav, {passive:true});
   syncNav();
 
   // show more / less

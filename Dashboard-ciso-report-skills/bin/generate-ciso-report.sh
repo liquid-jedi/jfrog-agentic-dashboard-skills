@@ -1641,6 +1641,7 @@ for row in activity:
         entry["ecosystems"].add(ecosystem)
 
 headers = [
+    "rank",
     "user",
     "total_requests",
     "request_share_pct",
@@ -1654,11 +1655,13 @@ headers = [
 with open(csv_path, "w", newline="") as handle:
     writer = csv.writer(handle)
     writer.writerow(headers)
-    for name in sorted(order, key=lambda n: (-(users[n]["total_requests"] or 0), n)):
+    ranked = sorted(order, key=lambda n: (-(users[n]["total_requests"] or 0), n))
+    for rank, name in enumerate(ranked, start=1):
         entry = users[name]
         total = entry["total_requests"] or 0
         top = sorted(entry["packages"], key=lambda p: (-p[0], p[1]))[:TOP_PACKAGES]
         writer.writerow([
+            rank,
             entry["user"],
             total,
             entry["request_share_pct"],

@@ -33,7 +33,7 @@ See **[INSTALL.md](INSTALL.md)** for prerequisites, APM install, generic Skills 
 Quick reference — APM install:
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.1.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.2.0
 ```
 
 Quick reference — local development install:
@@ -249,6 +249,7 @@ Large active-user populations:
 
   | Column | Meaning |
   |--------|---------|
+  | `rank` | Position by request volume, `1` to N. The last row's rank is the total active user count |
   | `user` | Username or user mail from the audit events |
   | `total_requests` | Package requests attributed to the user in the period |
   | `request_share_pct` | Share of all attributed requests |
@@ -259,8 +260,9 @@ Large active-user populations:
   | `ecosystems` | Package types used, for example `Maven; npm` |
   | `top_packages` | Ten most requested packages as `name (count)` |
 
-- Rows are sorted by `total_requests` descending. A low-volume user with a high
-  `block_rate_pct` is usually more interesting than the top requester.
+- Rows are sorted by `total_requests` descending, so `rank` doubles as a running
+  count of active users. A low-volume user with a high `block_rate_pct` is
+  usually more interesting than the top requester.
 
 Before collection begins, the skill should surface a short execution summary containing:
 
@@ -368,7 +370,7 @@ This project includes a separate builder skill for creating new persona packs:
 Recommended installation:
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v4.1.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v4.2.0
 ```
 
 Typical builder prompt:

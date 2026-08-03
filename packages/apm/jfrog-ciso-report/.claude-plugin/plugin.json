@@ -1,6 +1,6 @@
 {
   "name": "jfrog-ciso-report",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "Generate a branded CISO Security and Curation HTML dashboard from a JFrog Platform instance.",
   "author": {
     "name": "Avinash Giri"

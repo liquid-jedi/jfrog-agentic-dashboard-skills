@@ -29,7 +29,7 @@ jf config add --interactive
 
 ### Current skill versions in this repository
 
-- `jfrog-ciso-report` — `4.1.0`
+- `jfrog-ciso-report` — `4.2.0`
 - `jfrog-dashboard-blueprint` — `2.1.1`
 
 Previous release:
@@ -102,13 +102,13 @@ Install the CISO report package from the published repository:
 mkdir -p ~/ciso-reporting
 cd ~/ciso-reporting
 apm init -y --target claude,codex,cursor
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.1.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.2.0
 ```
 
 Optional: install the persona scaffolder package:
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v4.1.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v4.2.0
 ```
 
 Run project-local APM skills from the same folder:
@@ -152,6 +152,30 @@ npx skills add "$REPO_ROOT" -g --skill jfrog-dashboard-blueprint
 ```
 
 > **Tip:** Prefer local-clone installs for authoring. Create a frozen distribution copy only when you need a handoff to another machine or team.
+
+### Offline zip bundle (restricted networks)
+
+For customers who cannot reach GitHub. Grab the archive from the
+[latest release](https://github.com/liquid-jedi/jfrog-agentic-dashboard-skills/releases)
+or build it yourself, then transfer it by any means (email, shared drive,
+internal artifact store):
+
+```bash
+cd packages/apm
+zip -r jfrog-ciso-report-v4.2.0.zip jfrog-ciso-report -x '*.DS_Store'
+```
+
+On the customer machine:
+
+```bash
+unzip jfrog-ciso-report-v4.2.0.zip
+apm install ./jfrog-ciso-report --target claude,cursor,codex
+```
+
+The bundle is self-contained — it carries the runner, both PDF templates, the
+dashboard template, schema, and the optional agent-support files. The customer
+still needs the runtime prerequisites above (JFrog CLI, `python3`, `jq`, `node`,
+and a Chrome-compatible browser) since those are not vendored into the zip.
 
 ---
 
@@ -229,7 +253,7 @@ If you want to see the output format before running the skill against your own i
 - `Example Reports/ciso-reports/weekly/curation-user-package-activity.csv` — active-user export
 - `Example Reports/ciso-reports/monthly/report.html` and `monthly/executive-report.pdf`
 
-These are real v4.1.0 outputs captured from a live instance. They are static reference artifacts, useful for reviewing dashboard layout and narrative style, but they are not live data and are not updated automatically.
+These are real v4.2.0 outputs captured from a live instance. They are static reference artifacts, useful for reviewing dashboard layout and narrative style, but they are not live data and are not updated automatically.
 
 **Claude Code example:**
 
