@@ -122,6 +122,33 @@ For Codex or Cursor, open/use the `~/ciso-reporting` folder as the active projec
 
 Use `#v3.0.0` when you need the older repository release. Do not use `#v2.2.0` for APM installs because that release predates APM packaging.
 
+**Confirm the install landed:**
+
+```bash
+cd ~/ciso-reporting
+find .agents/skills/jfrog-ciso-report -maxdepth 2 -type f | sort
+```
+
+A complete install contains the runner, the PDF renderer, and all three
+templates:
+
+```
+.agents/skills/jfrog-ciso-report/SKILL.md
+.agents/skills/jfrog-ciso-report/bin/generate-ciso-pdf.js
+.agents/skills/jfrog-ciso-report/bin/generate-ciso-report.sh
+.agents/skills/jfrog-ciso-report/internal/enrich-ciso-datajson.sh
+.agents/skills/jfrog-ciso-report/internal/verify-ciso-collection-proof.sh
+.agents/skills/jfrog-ciso-report/references/dashboard-pdf-full.html
+.agents/skills/jfrog-ciso-report/references/dashboard-pdf.html
+.agents/skills/jfrog-ciso-report/references/dashboard.html
+.agents/skills/jfrog-ciso-report/references/report-data-collection.md
+.agents/skills/jfrog-ciso-report/references/report-schema.md
+```
+
+If APM stops with **"No harness detected"**, you are installing into a folder
+with no agent markers. Add `--target claude,cursor,codex` to the install command,
+or declare `targets:` in `apm.yml`.
+
 ### Option 2: Generic Skills install
 
 Use this path when your agent runtime already uses the Skills CLI flow.

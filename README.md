@@ -4,7 +4,7 @@
 
 [![version](https://img.shields.io/badge/jfrog--ciso--report-v4.2.0-blue)](#whats-new)
 [![JFrog Xray](https://img.shields.io/badge/Xray-required-green)](docs/INSTALL.md)
-[![Curation](https://img.shields.io/badge/Curation-optional-blue)](docs/INSTALL.md)
+[![Curation](https://img.shields.io/badge/Curation-required-green)](docs/INSTALL.md)
 [![Skills](https://img.shields.io/badge/Skills-framework-orange)](docs/INSTALL.md)
 
 CISOs need a different slice of JFrog Platform data than engineers do. This repository ships a **Skill** that agents use to collect live data, enrich it into executive posture signals and actionable insights, and render a **branded, self-contained HTML** report — the same template every run, every environment.
@@ -17,18 +17,18 @@ flowchart LR
     direction TB
     P0["⓪ Preflight\nserver, dates, storage,\nprior snapshot lookup"]
     P1["① Collect\njf + APIs, in parallel"]
-    P2["② Transform\njq mapping, posture signals,\ncomparison deltas, recommendations"]
+    P2["② Transform\nfield mapping, posture signals,\ncomparison deltas, recommendations"]
     P3["③ Render & publish\ninject JSON, upload"]
     P4["④ Finalize\ncleanup /tmp"]
   end
   subgraph output [Deterministic output]
     direction TB
-    TPL[dashboard.html template]
-    PTPL[dashboard-pdf.html executive template]
-    FPTPL[dashboard-pdf-full.html full template]
-    HTML[report.html]
-    PDF[executive-report.pdf]
-    FPDF[full-report.pdf]
+    TPL["dashboard.html\ntemplate"]
+    PTPL["dashboard-pdf.html\nexecutive template"]
+    FPTPL["dashboard-pdf-full.html\nfull template"]
+    HTML["report.html"]
+    PDF["executive-report.pdf"]
+    FPDF["full-report.pdf"]
   end
   P0 --> P1 --> P2 --> P3 --> P4
   P3 --> TPL --> HTML
@@ -83,20 +83,35 @@ flowchart TD
 
 Before installing the skill, make sure these are available:
 
-| Requirement | Check |
-|-------------|-------|
-| JFrog Platform with Xray | `jf rt ping --server-id <id>` |
-| JFrog CLI configured | `jf config show` |
-| `python3` | `python3 --version` |
-| `jq` | `jq --version` |
-| `node` (PDF export) | `node --version` |
-| Chrome / Chromium / Edge (PDF export) | Auto-detected, or set `CISO_CHROME_BIN` |
-| Base `jfrog` skill | `npx skills list -g` |
+| Requirement | Check | Notes |
+|-------------|-------|-------|
+| JFrog Platform with Xray | `jf rt ping --server-id <id>` | Required. Supplies indexed repos, watches, policies and violations |
+| JFrog Curation | — | Required in practice, see below |
+| JFrog CLI configured | `jf config show` | Every API call goes through `jf` |
+| `python3` | `python3 --version` | Does all collection, transform and render work |
+| `node` | `node --version` | Runs the PDF renderer |
+| Chrome / Chromium / Edge | Auto-detected, or set `CISO_CHROME_BIN` | Or install Puppeteer instead |
+| `jq` | `jq --version` | Checked by the readiness script; not called by the runner |
+| Base `jfrog` skill | `npx skills list -g` | Agent reads it for CLI setup and API paths |
 
-PDF export is part of every run, so `node` and a browser are required. The
-renderer uses Puppeteer when installed, otherwise it drives an already-installed
-Google Chrome, Chromium, or Microsoft Edge — nothing is downloaded mid-run. If
-the browser lives somewhere non-standard, point `CISO_CHROME_BIN` at it.
+**Curation is effectively required, not optional.** Every run ends with a live
+collection proof that fails if the instance has no Curation policies registered
+and no package-gate audit activity in the last seven days. On an Xray-only
+instance the report and PDFs are still written, but the runner exits non-zero at
+that final gate. Treat Xray plus Curation as the supported baseline.
+
+**PDF export cannot be skipped.** `CISO_PDF_MODE` accepts only `executive`
+(default), `full`, or `both` — there is no off switch — so `node` and a browser
+are hard requirements. The renderer prefers Puppeteer when installed, otherwise
+it drives an already-installed Google Chrome, Chromium, or Microsoft Edge;
+nothing is downloaded mid-run. If the browser lives somewhere non-standard,
+point `CISO_CHROME_BIN` at it. Both are verified *before* collection starts, so
+a missing browser fails in seconds rather than after a long run.
+
+**Platforms.** macOS and Linux run natively. On Windows, use WSL2 — the runner
+is a bash script, and a browser must be installed inside the WSL2 distribution
+for PDF export. Git Bash is untested. Full matrix in
+[Troubleshooting](docs/TROUBLESHOOTING.md#compatibility).
 
 Install the base skill if missing:
 
@@ -128,37 +143,10 @@ loaded, which is what v4.0.1 fixes.
 apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v3.0.0
 ```
 
-**Verify APM install:**
-
-```bash
-cd ~/ciso-reporting
-
-# List installed skills and versions
-apm dep list
-
-# Confirm skill files are present
-find .agents/skills/jfrog-ciso-report -maxdepth 2 | sort
-```
-
-Expected output:
-```
-jfrog-ciso-report  4.2.0  (local)
-
-.agents/skills/jfrog-ciso-report
-.agents/skills/jfrog-ciso-report/SKILL.md
-.agents/skills/jfrog-ciso-report/bin
-.agents/skills/jfrog-ciso-report/bin/generate-ciso-pdf.js
-.agents/skills/jfrog-ciso-report/bin/generate-ciso-report.sh
-.agents/skills/jfrog-ciso-report/internal
-.agents/skills/jfrog-ciso-report/references
-.agents/skills/jfrog-ciso-report/references/dashboard-pdf-full.html
-.agents/skills/jfrog-ciso-report/references/dashboard-pdf.html
-.agents/skills/jfrog-ciso-report/references/dashboard.html
-```
-
-If APM stops with **"No harness detected"**, you are installing into a folder
-with no agent markers. Add `--target claude,cursor,codex` to the install
-command, or declare `targets:` in `apm.yml`.
+Verify with `find .agents/skills/jfrog-ciso-report -maxdepth 2 -type f | sort` —
+you should see `SKILL.md`, `bin/`, `internal/` and three templates under
+`references/`. [Full verification and the "No harness detected"
+fix →](docs/INSTALL.md#option-1-apm-install)
 
 ### Option B — global Skills install (run from anywhere)
 
@@ -249,39 +237,64 @@ Both local and Artifactory storage follow the same `<server-id>/<report-type>/<d
 | **manifest.json** | ❌ | ✅ Server-level index of all runs |
 | **rerun-HHMMSS/** | ✅ Same-day reruns land here | ❌ |
 
-```
-LOCAL (~/ciso-reports/)               ARTIFACTORY (ciso-reports-local/)
-──────────────────────────────────    ────────────────────────────────────────
-<server-id>/                          <server-id>/
-├── weekly/                           ├── manifest.json   ← index of all runs
-│   └── 2026-06-14/                   ├── weekly/
-│       ├── report.html               │   └── 2026-06-14/
-│       ├── executive-report.pdf      │       ├── report.html
-│       ├── full-report.pdf           │       ├── executive-report.pdf
-│       ├── data.json                 │       ├── full-report.pdf
+**Local** (`~/ciso-reports/`) — everything the run produces:
+
+```text
+<server-id>/
+├── weekly/
+│   └── 2026-06-14/
+│       ├── report.html
+│       ├── executive-report.pdf
+│       ├── full-report.pdf
+│       ├── data.json
 │       ├── curation-user-package-activity.csv
-│       ├── snapshot.json             │       └── snapshot.json
-│       ├── run-meta.json             └── monthly/
-│       └── rerun-153012/                 └── 2026-06-01/
-│           ├── report.html                   ├── report.html
-│           ├── executive-report.pdf          ├── executive-report.pdf
-│           ├── full-report.pdf               └── snapshot.json
-│           ├── data.json
-│           ├── curation-user-package-activity.csv
-│           ├── snapshot.json
-│           └── run-meta.json
+│       ├── snapshot.json
+│       ├── run-meta.json
+│       └── rerun-153012/          ← same-day rerun, same file set
 └── monthly/
     └── 2026-06-01/
-        ├── report.html
-        ├── executive-report.pdf
-        ├── full-report.pdf
-        ├── data.json
-        ├── curation-user-package-activity.csv
-        ├── snapshot.json
-        └── run-meta.json
+        └── ...                    ← same file set as above
 ```
 
-Same-day reruns land in `rerun-HHMMSS/` locally — prior runs are never overwritten. Artifactory uploads always use the canonical date path (no rerun dirs).
+**Artifactory** (`ciso-reports-local/`) — only the shareable subset, and only when you ask for an upload:
+
+```text
+<server-id>/
+├── manifest.json                  ← server-level index of all runs
+├── weekly/
+│   └── 2026-06-14/
+│       ├── report.html
+│       ├── executive-report.pdf
+│       ├── full-report.pdf        ← only when explicitly requested
+│       └── snapshot.json
+└── monthly/
+    └── 2026-06-01/
+        └── ...
+```
+
+The trees above show a maximal run. `full-report.pdf` appears only under
+`CISO_PDF_MODE=full` or `both`, and `data.json` only while `SAVE_DATA_JSON` is
+true (the default) — a default run writes `report.html`,
+`executive-report.pdf`, the CSV, `snapshot.json` and `run-meta.json`.
+
+Same-day reruns land in `rerun-HHMMSS/` locally, so prior runs are never
+overwritten. Artifactory uploads always use the canonical date path, with no
+rerun directories.
+
+**The Artifactory repository is not hardcoded.** Runs are local-only by default
+and upload nothing. When you ask for an upload, the repo name comes from
+`REPORT_REPO`, which defaults to `ciso-reports-local`; naming another repo in the
+prompt overrides it. If the repo does not exist, the agent asks before creating
+anything — and what it creates is an ordinary **local, generic** Artifactory
+repository, nothing Curation- or Xray-specific:
+
+```bash
+jf rt curl --server-id "$SERVER_ID" -XPUT /api/repositories/ciso-reports-local \
+  -H "Content-Type: application/json" \
+  -d '{"rclass":"local","packageType":"generic","description":"CISO report HTML and JSON snapshots"}'
+```
+
+If the repo exists but returns `403`, the run continues local-only and tells you.
 
 ### PDF export modes
 
