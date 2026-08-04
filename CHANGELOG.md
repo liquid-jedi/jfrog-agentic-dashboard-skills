@@ -3,6 +3,14 @@
 All notable changes to the `jfrog-ciso-report` skill. See [README.md](README.md) for
 current usage and [docs/INSTALL.md](docs/INSTALL.md) for version-pinned install commands.
 
+## Unreleased
+
+*Documentation and repository*
+- **Interpreting the report** — the interpretation material was ~60 lines buried at the end of a 515-line operator manual, mixed in with permissions and agent-compliance detail. It is now [its own guide](docs/INTERPRETING-THE-REPORT.md) aimed at whoever reads the finished report, ordered to match the dashboard, and extended to cover the v4 panels the old section never described
+- **Project site** — [GitHub Pages](https://liquid-jedi.github.io/jfrog-agentic-dashboard-skills/) serves the example dashboards rendered. GitHub shows an HTML file from the repository view as source, so the example `report.html` links were effectively unreadable; the examples moved to `docs/examples/` so a single copy is both browsable and published
+- **Blueprint retired** — the persona scaffolder (`Dashboard-blueprint-skills/` and `packages/apm/jfrog-dashboard-blueprint`) is removed along with its documentation. Existing installs that pin a tag up to `v4.2.0` are unaffected
+- **Reserved schema flagged at the source** — the `methodology` block is read by no template, and the warning about that lived only in the user manual. It now sits on the module itself in `report-data-collection.md` and in `report-schema.md`, where someone would actually hit it
+
 ## v4.2.0 (August 2026)
 
 *Sidebar navigation*

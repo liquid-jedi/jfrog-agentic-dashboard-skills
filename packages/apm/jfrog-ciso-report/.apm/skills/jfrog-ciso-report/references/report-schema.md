@@ -36,6 +36,7 @@ field. Neither changes the other's job.
     }
   },
 
+  "// methodology": "RESERVED — no template reads this key; populating it has no effect on the report",
   "methodology": {
     "severity_levels": {
       "critical": { "meaning": "string", "signal": "string" },

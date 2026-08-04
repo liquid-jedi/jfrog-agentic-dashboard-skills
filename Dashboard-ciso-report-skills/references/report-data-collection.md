@@ -24,7 +24,7 @@ All calls use `jf rt curl` or `jf xr curl` with the configured server.
 - Module: threat-velocity
 - Module: recommendations-metadata
 - Module: adding-a-kpi
-- Module: methodology (optional, configurable explanations)
+- Module: methodology (reserved — not read by any template)
 - Module: storage-upload
 - Module: error-handling
 
@@ -2080,10 +2080,17 @@ When adding a badge/KPI months later, use this sequence to avoid broad rewrites:
 
 This keeps changes scoped to one module per layer instead of touching all logic.
 
-## Module: methodology (optional, configurable explanations)
+## Module: methodology (reserved — not read by any template)
 
-The dashboard supports a configurable methodology block so each organization
-can tune explanations and thresholds without changing template code:
+> **This block has no effect on the rendered report today.** None of
+> `dashboard.html`, `dashboard-pdf.html`, or `dashboard-pdf-full.html` reads a
+> `methodology` key, so populating it changes nothing on screen. It is reserved
+> forward-looking schema, kept so the shape is settled before a renderer consumes
+> it. Do not use it to try to change on-screen thresholds or wording — edit the
+> template instead.
+
+The intended contract is that each organization can tune explanations and
+thresholds without changing template code:
 
 ```json
 "methodology": {

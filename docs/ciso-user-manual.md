@@ -8,6 +8,7 @@ and interpreting the CISO dashboard skill.
 | Document | Focus |
 |----------|--------|
 | [README](../README.md) | Project overview, quick start, documentation index |
+| [INTERPRETING-THE-REPORT.md](INTERPRETING-THE-REPORT.md) | Reading the finished report, panel by panel |
 | [INSTALL.md](INSTALL.md) | Prerequisites, install, verify, update, prechecks, first run |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common issues and platform support |
 | **This manual** | Permissions, supported agents, interpretation, tuning |
@@ -20,11 +21,9 @@ This document is written for:
 
 - Platform engineers operating the skill locally or in CI.
 - Security engineers tuning formulas, thresholds, or recommendation logic.
-- Solution engineers adapting the project for new personas.
 
-The current CISO dashboard is the first production example in a broader
-dashboard blueprint pattern, so this manual focuses on operating the skill
-as-is while keeping the extension path visible for future personas.
+If you are reading the finished report rather than running it, start with
+**[Interpreting the report](INTERPRETING-THE-REPORT.md)** instead.
 
 ## Installation
 
@@ -360,37 +359,6 @@ Typical contents:
 - `snapshot.json`
 - `manifest.json` at the server root for historical lookup
 
-## Skill Builder (Blueprint Generator)
-
-This project includes a separate builder skill for creating new persona packs:
-
-- Skill folder: `Dashboard-blueprint-skills/`
-- Purpose: scaffold a new dashboard/report skill for a persona such as CTO, Head of Engineering, Compliance, or DevOps leadership
-
-Recommended installation:
-
-```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v4.2.0
-```
-
-Typical builder prompt:
-
-```text
-Scaffold a new dashboard pack for Engineering Head.
-```
-
-### Builder Flow
-
-The blueprint generator does not query JFrog APIs. Its job is to scaffold a new skill pack through this flow:
-
-1. Ask a short persona interview.
-2. Capture audience, top questions, decisions, data sources, cadence, outputs, and trust requirements.
-3. Create a new persona skill folder.
-4. Generate `SKILL.md`, `report-schema.md`, `report-data-collection.md`, `dashboard.html`, and `sample-data.json` from templates.
-5. Leave persona-specific TODOs in the generated files where implementation is still needed.
-
-Use the builder when you want to create a new reporting pack without copying the CISO skill by hand.
-
 ## Where to Change Logic
 
 There are three important control points in the project.
@@ -414,7 +382,7 @@ Runtime payloads are generated artifacts, not source-of-truth code:
 
 - `/tmp/ciso-data.json`
 - local run `data.json`
-- checked-in HTML examples under `Example Reports/`
+- checked-in HTML examples under `docs/examples/`
 
 ## Recommendation Contract
 
@@ -443,73 +411,8 @@ Validation must happen before template injection.
 
 ## Report Interpretation
 
-### Executive KPIs
-
-The Overview KPI strip shows:
-
-- Critical violation occurrences — with unique critical issue/CVE count and period-over-period delta.
-- Blocked at gate: curation requests denied by policy, with % of requests.
-- Without inspection: package requests that bypassed policy evaluation.
-- Repos indexed: % and count of repositories covered by Xray indexing.
-- Remotes gated: % and count of supported remotes connected to Curation.
-
-A second row of insight cards covers critical SLA breach age, fixable exposure, watch blind spots, and gate coverage gaps.
-
-### Severity and Posture Signals
-
-Severity meanings:
-
-- Critical: exploit likely or high-impact compromise path.
-- High: serious weakness needing near-term remediation.
-- Medium: meaningful exposure with lower immediate blast radius.
-- Low: limited immediate impact, typically suited to batched remediation.
-
-Posture signals — three independent measures, **no composite risk score** — computed after platform enrichment:
-
-| Signal | Meaning |
-|--------|---------|
-| `severity_mix` | 0-100 severity-weighted mix of current violations |
-| `violation_volume` | Raw Xray violation count |
-| `coverage_gap` | Percentage of repositories not indexed by Xray |
-
-Stored under `violations.posture_signals` in `data.json`. The report shows each signal on its own rather than blending them into a single score.
-
-Interpretation:
-
-- Rising `severity_mix` or `violation_volume` is bad — watch the trend, not just the current value.
-- A high `coverage_gap` means real exposure may be going undetected — invisible risk, not zero risk.
-- The signals can move in tension: shrinking `coverage_gap` (indexing more repos) can raise `severity_mix`/`violation_volume` by surfacing violations that were previously invisible, even while overall posture is improving.
-
-### Curation
-
-- Block rate = blocked / total evaluated.
-- High blocked volume may indicate stronger prevention, higher incoming threat pressure, or both.
-- Read blocked count together with block reasons, ecosystems, and top blocked packages.
-
-### Xray Violations
-
-- By type: security, operational risk, license.
-- By severity: critical, high, medium, low.
-- Critical issues list: unique IDs, hit counts, age, exploitability, and environment context when available.
-
-### License and Operational Risk
-
-- License section reflects policy-backed compliance exposure.
-- Operational risk highlights stale, unmaintained, or end-of-life component risk.
-
-### Governance and Trend Data
-
-- Policy effectiveness and repository watch coverage (`governance.*`) render inside the Curation and Xray tabs — there is no standalone Governance tab.
-- Comparison appears only when prior snapshots exist.
-- Threat velocity requires enough historical runs to populate trend periods.
-
-## Configurable Methodology Block (not yet consumed by the renderer)
-
-`report-data-collection.md` documents an optional top-level `methodology`
-object in DATA — intended to let teams tune severity explanations and
-threshold rules without editing renderer logic. As of the current
-`dashboard.html`, `dashboard-pdf.html`, and `dashboard-pdf-full.html`
-templates, none of them read a `methodology` key, so setting one today has
-no effect on the rendered report. Treat this as reserved/forward-looking
-schema rather than a working customization point, and do not rely on it to
-change on-screen thresholds or wording.
+Moved to its own guide: **[Interpreting the report](INTERPRETING-THE-REPORT.md)**,
+written for the person reading the finished report rather than running it. It
+walks the dashboard in the order the report is laid out and covers what each
+panel means, what "good" looks like, and the readings people most often get
+wrong.

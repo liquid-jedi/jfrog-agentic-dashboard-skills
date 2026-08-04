@@ -30,12 +30,10 @@ jf config add --interactive
 ### Current skill versions in this repository
 
 - `jfrog-ciso-report` — `4.2.0`
-- `jfrog-dashboard-blueprint` — `2.1.1`
 
 Previous release:
 
 - `jfrog-ciso-report` — `3.0.0`
-- `jfrog-dashboard-blueprint` — `2.1.0`
 
 ### Install the base `jfrog` skill
 
@@ -105,12 +103,6 @@ apm init -y --target claude,codex,cursor
 apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.2.0
 ```
 
-Optional: install the persona scaffolder package:
-
-```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-dashboard-blueprint#v4.2.0
-```
-
 Run project-local APM skills from the same folder:
 
 ```bash
@@ -157,12 +149,6 @@ Use this path when your agent runtime already uses the Skills CLI flow.
 npx skills add git@github.com:liquid-jedi/jfrog-agentic-dashboard-skills.git -g --skill jfrog-ciso-report
 ```
 
-Optional skills from the same repository:
-
-```bash
-npx skills add git@github.com:liquid-jedi/jfrog-agentic-dashboard-skills.git -g --skill jfrog-dashboard-blueprint
-```
-
 ### Local clone install (development)
 
 Use this when you are editing skills in this repository — changes take effect immediately without copying stale folders.
@@ -170,12 +156,6 @@ Use this when you are editing skills in this repository — changes take effect 
 ```bash
 REPO_ROOT="$(pwd)"
 npx skills add "$REPO_ROOT" -g --skill jfrog-ciso-report
-```
-
-Other skills in the same clone:
-
-```bash
-npx skills add "$REPO_ROOT" -g --skill jfrog-dashboard-blueprint
 ```
 
 > **Tip:** Prefer local-clone installs for authoring. Create a frozen distribution copy only when you need a handoff to another machine or team.
@@ -215,8 +195,6 @@ npx skills list -g
 ```
 
 Expected result: the global skills list includes `jfrog` and `jfrog-ciso-report`.
-
-If you also installed the scaffolder, the list should include `jfrog-dashboard-blueprint`.
 
 For APM installs, inspect the deployed skills in the target project:
 
@@ -272,13 +250,18 @@ Runtime defaults:
 
 ## Example reports
 
-If you want to see the output format before running the skill against your own instance, open the shipped sample artifacts from the repository:
+If you want to see the output format before running the skill against your own
+instance, view the rendered dashboards:
+[weekly](https://liquid-jedi.github.io/jfrog-agentic-dashboard-skills/examples/weekly/report.html)
+· [monthly](https://liquid-jedi.github.io/jfrog-agentic-dashboard-skills/examples/monthly/report.html).
 
-- `Example Reports/ciso-reports/weekly/report.html` — full interactive dashboard
-- `Example Reports/ciso-reports/weekly/executive-report.pdf` — CISO-shareable PDF
-- `Example Reports/ciso-reports/weekly/full-report.pdf` — detailed internal PDF
-- `Example Reports/ciso-reports/weekly/curation-user-package-activity.csv` — active-user export
-- `Example Reports/ciso-reports/monthly/report.html` and `monthly/executive-report.pdf`
+The same artifacts are in the repository under `docs/examples/`:
+
+- `docs/examples/weekly/report.html` — full interactive dashboard
+- `docs/examples/weekly/executive-report.pdf` — CISO-shareable PDF
+- `docs/examples/weekly/full-report.pdf` — detailed internal PDF
+- `docs/examples/weekly/curation-user-package-activity.csv` — active-user export
+- `docs/examples/monthly/report.html` and `monthly/executive-report.pdf`
 
 These are real v4.2.0 outputs captured from a live instance. They are static reference artifacts, useful for reviewing dashboard layout and narrative style, but they are not live data and are not updated automatically.
 

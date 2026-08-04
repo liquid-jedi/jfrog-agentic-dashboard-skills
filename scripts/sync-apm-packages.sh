@@ -54,7 +54,5 @@ assert_version_match() {
 }
 
 assert_version_match "Dashboard-ciso-report-skills" "packages/apm/jfrog-ciso-report"
-assert_version_match "Dashboard-blueprint-skills" "packages/apm/jfrog-dashboard-blueprint"
 
 sync_skill "Dashboard-ciso-report-skills" "packages/apm/jfrog-ciso-report" "jfrog-ciso-report"
-sync_skill "Dashboard-blueprint-skills" "packages/apm/jfrog-dashboard-blueprint" "jfrog-dashboard-blueprint"

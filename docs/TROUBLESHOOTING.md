@@ -59,3 +59,4 @@ successfully but it cannot write the PDF back to a Linux output path.
 
 - [Installation](INSTALL.md)
 - [CISO user manual](ciso-user-manual.md)
+- [Interpreting the report](INTERPRETING-THE-REPORT.md)

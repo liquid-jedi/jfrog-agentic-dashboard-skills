@@ -360,8 +360,9 @@ If your agent prompts for confirmation on every tool call, start it in auto-appr
 
 | Doc | Contents |
 |-----|----------|
+| [**Interpreting the report**](docs/INTERPRETING-THE-REPORT.md) | For whoever reads the report: what each panel means and the common misreadings |
 | [**Installation**](docs/INSTALL.md) | APM vs global install, verification, first run |
-| [**CISO user manual**](docs/ciso-user-manual.md) | Permissions, runtime behavior, interpretation, tuning |
+| [**CISO user manual**](docs/ciso-user-manual.md) | Permissions, runtime behavior, tuning |
 | [**Troubleshooting**](docs/TROUBLESHOOTING.md) | Common issues and compatibility |
 
 ---
@@ -373,8 +374,8 @@ Dashboard-ciso-report-skills/    # Skill source — SKILL.md, bin/, internal/, r
 packages/apm/
 └── jfrog-ciso-report/           # APM-installable bundle (synced from skill source)
     └── extras/agent-support/    # Optional Boost filters + guardrail hooks per agent
-docs/                            # Operator guides
-Example Reports/                 # Real v4.2.0 output: HTML, executive + full PDF, CSV
+docs/                            # Operator guides + GitHub Pages site
+└── examples/                     # Real v4.2.0 output: HTML, executive + full PDF, CSV
 scripts/                         # Prechecks and utilities
 .boost/                          # Boost output filters for this repo
 .cursor/ .claude/ .codex/ .agents/  # Per-agent guardrail hooks
@@ -382,22 +383,29 @@ scripts/                         # Prechecks and utilities
 
 ## Example reports
 
-`Example Reports/ciso-reports/` holds real v4.2.0 output, so you can see exactly
-what a run produces before connecting to your own instance. The HTML files are
-self-contained — open them straight in a browser.
+**View the live dashboard →
+[weekly](https://liquid-jedi.github.io/jfrog-agentic-dashboard-skills/examples/weekly/report.html)
+· [monthly](https://liquid-jedi.github.io/jfrog-agentic-dashboard-skills/examples/monthly/report.html)**
+
+Those are the real v4.2.0 HTML reports, served rendered. GitHub cannot display an
+HTML file from the repository view — it shows source — so use the links above for
+the dashboards. PDFs do render in the repository view.
+
+`docs/examples/` holds the same output as files:
 
 | File | What it shows |
 |------|---------------|
-| [`weekly/report.html`](Example%20Reports/ciso-reports/weekly/report.html) | Full interactive dashboard: all four tabs, trend cards, severity distribution |
-| [`weekly/executive-report.pdf`](Example%20Reports/ciso-reports/weekly/executive-report.pdf) | The concise PDF you would forward to a CISO |
-| [`weekly/full-report.pdf`](Example%20Reports/ciso-reports/weekly/full-report.pdf) | The detailed internal PDF (`CISO_PDF_MODE=full`) |
-| [`weekly/curation-user-package-activity.csv`](Example%20Reports/ciso-reports/weekly/curation-user-package-activity.csv) | The complete active-user export that accompanies every run |
-| [`monthly/report.html`](Example%20Reports/ciso-reports/monthly/report.html) | Monthly equivalent, showing a wider reporting window |
-| [`monthly/executive-report.pdf`](Example%20Reports/ciso-reports/monthly/executive-report.pdf) | Monthly executive PDF |
+| [`weekly/report.html`](docs/examples/weekly/report.html) | Full interactive dashboard: all four tabs, trend cards, severity distribution |
+| [`weekly/executive-report.pdf`](docs/examples/weekly/executive-report.pdf) | The concise PDF you would forward to a CISO |
+| [`weekly/full-report.pdf`](docs/examples/weekly/full-report.pdf) | The detailed internal PDF (`CISO_PDF_MODE=full`) |
+| [`weekly/curation-user-package-activity.csv`](docs/examples/weekly/curation-user-package-activity.csv) | The complete active-user export that accompanies every run |
+| [`monthly/report.html`](docs/examples/monthly/report.html) | Monthly equivalent, showing a wider reporting window |
+| [`monthly/executive-report.pdf`](docs/examples/monthly/executive-report.pdf) | Monthly executive PDF |
 | `monthly/full-report.pdf`, `monthly/curation-user-package-activity.csv` | Remaining monthly artifacts |
 
 Compare `weekly/report.html` against `weekly/executive-report.pdf` to see how
-much detail the executive mode deliberately leaves out.
+much detail the executive mode deliberately leaves out. New to the report?
+[Interpreting the report](docs/INTERPRETING-THE-REPORT.md) walks it panel by panel.
 
 ---
 

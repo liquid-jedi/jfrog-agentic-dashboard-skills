@@ -31,14 +31,15 @@ build/
 **/run-meta.json
 **/rerun-*/
 
-# Keep curated example run outputs under Example Reports/ tracked
-!/Example Reports/
-!/Example Reports/**/report.html
-!/Example Reports/**/data.json
-!/Example Reports/**/snapshot.json
-!/Example Reports/**/run-meta.json
-!/Example Reports/**/*.pdf
-!/Example Reports/**/*.csv
+# Keep curated example run outputs under docs/examples/ tracked. These are also
+# published by GitHub Pages, so the report.html files must stay in the repo.
+!/docs/examples/
+!/docs/examples/**/report.html
+!/docs/examples/**/data.json
+!/docs/examples/**/snapshot.json
+!/docs/examples/**/run-meta.json
+!/docs/examples/**/*.pdf
+!/docs/examples/**/*.csv
 
 # Root-level legacy generated reports (scope to root only — does NOT affect samples/)
 /ciso-report-*.html
