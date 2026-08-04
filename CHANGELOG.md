@@ -5,6 +5,13 @@ current usage and [docs/INSTALL.md](docs/INSTALL.md) for version-pinned install 
 
 ## Unreleased
 
+*Guardrails*
+- **Scoped to the CISO skill, which is all they were ever meant to cover** — the hooks treated any command containing `jf rt` or `jf xr` as a report workflow, so the whole JFrog CLI was policed in every session: unrelated platform-skill queries, MCP-equivalent calls and ad-hoc admin work all hit CISO rules. They now engage only for commands naming CISO artifacts, plus anything issued while a run is in flight, which the runner signals with a `/tmp/ciso-report-run.active` marker that expires after four hours so a crashed run cannot arm them indefinitely
+- **Read-only AQL is allowed** — `POST /api/search/aql` is a search that happens to use POST, and was being refused as a mutation alongside the already-allowed Xray violations POST
+
+*Curation active users*
+- **Allowed-only user count** — `curation.unique_users_approved` counts identities with at least one allowed request, so users blocked on every attempt no longer read as package consumers. The dashboard surfaces it only when it differs from `unique_users`, which is the case worth reading. Tests `approved + passed` rather than `approved` alone, since an instance reporting only `passed` would otherwise report no active users
+
 *Documentation and repository*
 - **Interpreting the report** — the interpretation material was ~60 lines buried at the end of a 515-line operator manual, mixed in with permissions and agent-compliance detail. It is now [its own guide](docs/INTERPRETING-THE-REPORT.md) aimed at whoever reads the finished report, ordered to match the dashboard, and extended to cover the v4 panels the old section never described
 - **Project site** — [GitHub Pages](https://liquid-jedi.github.io/jfrog-agentic-dashboard-skills/) serves the example dashboards rendered. GitHub shows an HTML file from the repository view as source, so the example `report.html` links were effectively unreadable; the examples moved to `docs/examples/` so a single copy is both browsable and published

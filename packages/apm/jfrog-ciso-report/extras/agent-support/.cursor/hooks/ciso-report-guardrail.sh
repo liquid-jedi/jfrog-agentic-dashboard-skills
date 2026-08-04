@@ -7,6 +7,7 @@ import os
 import re
 import shlex
 import sys
+import time
 
 try:
     payload = json.loads(os.environ.get("HOOK_PAYLOAD") or "{}")
@@ -44,16 +45,38 @@ if not command:
     respond("allow")
 
 lower = command.lower()
-is_ciso_related = any(token in lower for token in (
+
+# These guardrails cover the CISO report skill only. They must not police
+# unrelated JFrog work — the platform skill, the MCP server, or ad-hoc CLI use.
+# Matching any "jf rt"/"jf xr" command would do exactly that, so scope instead to
+# commands that name CISO artifacts, plus anything issued while a report run is
+# in flight (the runner touches RUN_MARKER for its lifetime).
+RUN_MARKER = "/tmp/ciso-report-run.active"
+MARKER_MAX_AGE_SECONDS = 4 * 3600
+
+CISO_TOKENS = (
     "generate-ciso-report.sh",
+    "enrich-ciso-datajson.sh",
+    "verify-ciso-collection-proof.sh",
+    "repair-ciso-report.sh",
     "ciso-report",
     "ciso-reports",
     "/tmp/ciso-",
-    "jf rt ",
-    "jf xr ",
-))
+    "ciso_pdf_mode",
+    "ciso_local_root",
+    "ciso_chrome_bin",
+)
 
-if not is_ciso_related:
+def ciso_run_active():
+    # A crashed run would otherwise leave the marker behind and keep the
+    # guardrails armed for every later command, so ignore a stale marker.
+    try:
+        age = time.time() - os.path.getmtime(RUN_MARKER)
+    except OSError:
+        return False
+    return 0 <= age <= MARKER_MAX_AGE_SECONDS
+
+if not any(token in lower for token in CISO_TOKENS) and not ciso_run_active():
     respond("allow")
 
 if re.search(r"\bjf\s+(rt|xr)\s+curl\b", lower):
@@ -65,11 +88,14 @@ if re.search(r"\bjf\s+(rt|xr)\s+curl\b", lower):
             "Use read-only JFrog API calls for CISO report generation. Destructive methods require explicit user approval outside this hook.",
         )
     post = re.search(r"(^|\s)-x\s*post\b|(^|\s)-xpost\b", lower)
-    if post and "/api/v1/violations" not in lower:
+    # POST is the transport for two read-only queries: the Xray violations
+    # search and AQL. Neither mutates state, so both are read-style here.
+    read_style_post = ("/api/v1/violations" in lower) or ("/api/search/aql" in lower)
+    if post and not read_style_post:
         respond(
             "deny",
             "Blocked an unexpected JFrog POST during a CISO report workflow.",
-            "Only Xray /api/v1/violations POST is treated as a read-style query for this report.",
+            "Only Xray /api/v1/violations and Artifactory /api/search/aql POSTs are treated as read-style queries for this report.",
         )
 
 if re.search(r"\bjf\s+rt\s+(del|delete|rm|move|copy|set-props|sp|upload|u)\b", lower):

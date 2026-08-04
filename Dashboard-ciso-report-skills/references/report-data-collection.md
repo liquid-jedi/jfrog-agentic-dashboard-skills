@@ -847,6 +847,14 @@ jq --argjson available "$CURATION_AVAILABLE" '{
   There is no separate curation-users API — use
   `GET /xray/api/v1/curation/audit/packages` (`jf xr curl`) per
   `../jfrog/references/xray-entities.md` § Curation audit events.
+- `unique_users_approved`: identities with at least one **allowed** request, so
+  `approved + passed > 0`. Curation evaluates every resolution request through a
+  curated remote, not only cache misses, so allowed rows correspond to packages
+  the user actually received; a user whose every request was blocked reached the
+  gate but consumed nothing. Always `<= unique_users`, and equal on most
+  instances — the gap is the signal. Do **not** test `approved` alone: the
+  transform counts `passed` as a separate allowed action, and an instance
+  reporting only `passed` would report zero allowed users.
 - If `blocked > 0` but `audit_events` ends up empty after parsing, do NOT emit
   "no blocked events". Populate summary data from `by_reason`, `by_type`, and
   `top_blocked` so the report still reflects blocked activity.
@@ -1425,6 +1433,14 @@ registry = load_policy_registry()
 events = cur.get("data") or []
 
 curation["unique_users"] = len(user_stats)
+# Identities that actually received a package. A blocked request serves nothing,
+# so a user whose every request was blocked is present at the gate but consumed
+# nothing. Count both allowed actions: instances that report `passed` instead of
+# `approved` would otherwise collapse this to zero.
+curation["unique_users_approved"] = sum(
+    1 for st in user_stats.values()
+    if (st.get("approved") or 0) + (st.get("passed") or 0) > 0
+)
 curation["top_users"] = top_users
 curation["user_package_activity"] = user_package_activity
 curation["request_results"] = build_request_results(events)
@@ -1833,6 +1849,22 @@ if not meta.get('cap') or not meta.get('sort'):
 if c_rows > 0 and int(curation.get('unique_users', 0) or 0) == 0:
   print('ERROR: curation.unique_users is 0 but audit rows exist — run curation-audit-transform')
   sys.exit(1)
+
+# Guard 4b: allowed-user subset must be present and cannot exceed the total. A
+# zero here alongside allowed requests means the filter tested `approved` only
+# and missed instances that report `passed`.
+if c_rows > 0:
+  u_all = int(curation.get('unique_users', 0) or 0)
+  u_ok = curation.get('unique_users_approved')
+  if u_ok is None:
+    print('ERROR: curation.unique_users_approved missing — run curation-audit-transform')
+    sys.exit(1)
+  if int(u_ok) > u_all:
+    print(f"ERROR: unique_users_approved({u_ok}) > unique_users({u_all})")
+    sys.exit(1)
+  if int(u_ok) == 0 and int(curation.get('clean_packages', 0) or 0) > 0:
+    print('ERROR: unique_users_approved is 0 but clean packages were allowed — check approved/passed handling')
+    sys.exit(1)
 
 diag_total = int(diag.get('total_count_reported') or 0)
 if diag_total > 0 and int(curation.get('total', 0) or 0) < diag_total:

@@ -990,6 +990,12 @@ function buildCuration(){
   const withoutInspection = rr.without_inspection != null ? rr.without_inspection : c.without_inspection;
   const cn = connStats();
   const noAuditEvents = Number(c.total || 0) === 0;
+  // Identities that received a package, vs identities merely seen at the gate.
+  // Equal on most instances, so only surface the number when it differs —
+  // a divergence means someone was blocked on every request they made.
+  const usersApproved = c.unique_users_approved;
+  const usersBlockedOnly = (usersApproved != null && c.unique_users != null)
+    ? Number(c.unique_users) - Number(usersApproved) : 0;
   const periodLabel = [m.date_from, m.date_to].filter(Boolean).join(' to ');
   const auditEmptyNote = noAuditEvents ? `<div class="note warn"><b>No Curation audit events returned for this period.</b> The Curation audit API reported zero package-gate rows${periodLabel ? ' for ' + esc(periodLabel) : ''}. Configuration coverage is still shown below, including connected remotes, dry-run policies, and policy inventory.</div>` : '';
 
@@ -999,7 +1005,7 @@ function buildCuration(){
     <div class="kpi k-green"><div class="n">${fmt(cleanPackages)}</div><div class="l">Clean packages</div><div class="d">${c.clean_rate!=null?c.clean_rate:pctOf(cleanPackages,(Number(cleanPackages)||0)+(Number(c.blocked)||0))}% of policy decisions</div></div>
     <div class="kpi k-crit"><div class="n">${fmt(withoutInspection)}</div><div class="l">Without inspection</div><div class="d">bypassed policy evaluation</div></div>
     <div class="kpi k-med"><div class="n">${fmt(rr.dry_run)}</div><div class="l">Dry-run observed</div><div class="d">not enforced</div></div>
-    <div class="kpi k-info"><div class="n">${fmt(c.unique_users)}</div><div class="l">Active developers</div><div class="d">unique requesters</div></div>
+    <div class="kpi k-info"><div class="n">${fmt(c.unique_users)}</div><div class="l">Active developers</div><div class="d">${usersBlockedOnly>0?`${fmt(usersApproved)} received a package`:'unique requesters'}</div></div>
     <div class="kpi k-med"><div class="n">${waiverRequests.available?fmt(waiverRequests.pending):'—'}</div><div class="l">Pending waivers</div><div class="d">${waiverRequests.available?'awaiting decision':'API unavailable'}</div></div>
     <div class="kpi k-green"><div class="n">${waiverRequests.available?fmt(waiverRequests.approved):'—'}</div><div class="l">Approved waivers</div><div class="d">${waiverRequests.available?'current API count':'API unavailable'}</div></div>
   </div>`;
@@ -1052,7 +1058,7 @@ function buildCuration(){
   const activeUserCount = c.unique_users != null ? c.unique_users : users.length;
   const userExport = exportHref('curation_user_package_activity_csv');
   const userButton = userExport ? `<a class="showmore" style="width:auto;border:0;padding:0" href="${esc(userExport)}" download>Download full CSV</a>` : `<button class="showmore" style="width:auto;border:0;padding:0" onclick="downloadCurationUsers()">Download full CSV</button>`;
-  const userPanel = `<div class="panel flush"><div class="ph"><h3>Active users</h3><span class="meta">Top ${fmt(users.length)} of ${fmt(activeUserCount)} users observed in Curation activity</span>${userButton}</div>
+  const userPanel = `<div class="panel flush"><div class="ph"><h3>Active users</h3><span class="meta">Top ${fmt(users.length)} of ${fmt(activeUserCount)} users observed in Curation activity${usersBlockedOnly>0?` · ${fmt(usersApproved)} received a package, ${fmt(usersBlockedOnly)} blocked on every request`:''}</span>${userButton}</div>
     <table class="dt"><thead><tr><th>User</th><th class="r">Requests</th><th class="r">Share</th><th class="r">Blocked</th><th>Top requested packages</th><th class="r">Activity</th></tr></thead><tbody>${userRows||`<tr><td colspan="6" class="empty" style="padding:20px">No user activity.</td></tr>`}</tbody></table></div>`;
 
   // connection by package type

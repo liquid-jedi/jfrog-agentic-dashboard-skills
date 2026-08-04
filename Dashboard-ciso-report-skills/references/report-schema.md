@@ -247,6 +247,7 @@ field. Neither changes the other's job.
       { "type": "string — npm, PyPI, etc.", "total": "number", "blocked": "number" }
     ],
     "unique_users": "number — distinct username or user_mail across all audit events in period",
+    "unique_users_approved": "number — subset of unique_users with >=1 allowed request (approved + passed > 0), i.e. identities that actually received a package; <= unique_users",
     "top_users": [
       {
         "user": "string — username or user_mail",

@@ -111,8 +111,14 @@ CURATION_USER_CSV_PATH="${LOCAL_DIR}/curation-user-package-activity.csv"
 PRINT_HTML_PATH="/tmp/ciso-report-print-${SERVER_SLUG}-${REPORT_TYPE_SLUG}-${REPORT_DATE}-$$.html"
 PRINT_HTML_FULL_PATH="/tmp/ciso-report-print-full-${SERVER_SLUG}-${REPORT_TYPE_SLUG}-${REPORT_DATE}-$$.html"
 
+# Agent guardrail hooks arm themselves only while this marker is fresh, so they
+# police a report run without policing unrelated JFrog work in the same session.
+CISO_RUN_MARKER="/tmp/ciso-report-run.active"
+: > "$CISO_RUN_MARKER" 2>/dev/null || true
+
 cleanup_pdf_temp() {
   rm -f "$PRINT_HTML_PATH" "$PRINT_HTML_FULL_PATH"
+  rm -f "$CISO_RUN_MARKER" 2>/dev/null || true
 }
 trap cleanup_pdf_temp EXIT
 
