@@ -165,6 +165,11 @@ Verify: `npx skills list -g | grep jfrog` should list both `jfrog` and `jfrog-ci
 | **Local clone** (development) | Editing the skill itself — changes take effect immediately, no stale copies |
 | **Offline zip bundle** | Restricted networks that can't reach GitHub |
 
+For the offline bundle, download `jfrog-ciso-report-v4.2.0.zip` from the
+[latest release](https://github.com/liquid-jedi/jfrog-agentic-dashboard-skills/releases/latest)
+— not "Source code (zip)", which GitHub attaches automatically and contains the
+whole repository rather than an installable skill.
+
 Full commands and verification for both, plus everything above →
 **[docs/INSTALL.md](docs/INSTALL.md)**
 

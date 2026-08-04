@@ -6,6 +6,7 @@ Get the dashboard skills installed, verified, and ready to run against your JFro
 
 | Requirement | Notes |
 |-------------|--------|
+| **Operating system** | macOS or Linux natively; Windows through WSL2 — see below |
 | **JFrog Platform** | SaaS or self-hosted |
 | **JFrog Xray** | Required for vulnerability and violation data |
 | **JFrog Curation** | Required — the run's final collection-proof gate fails without registered Curation policies and recent package-gate audit activity |
@@ -14,13 +15,41 @@ Get the dashboard skills installed, verified, and ready to run against your JFro
 | **PDF rendering** | Puppeteer, or an installed Chrome / Chromium / Edge (override with `CISO_CHROME_BIN`) |
 | **Base skill** | [`jfrog`](https://github.com/jfrog/jfrog-skills) from JFrog Platform Skills |
 
+### Platform support
+
+The runner is a bash script, so where you install it matters more than which
+agent you use.
+
+| Platform | Supported | What to know |
+|----------|-----------|--------------|
+| **macOS** | Yes | Primary tested platform |
+| **Linux** | Yes | |
+| **Windows via WSL2** | Yes | Install and run everything *inside* the WSL distribution |
+| **Windows native** (CMD / PowerShell) | No | There is no `.bat` or PowerShell entry point |
+
+On WSL2, install everything inside the Linux distribution — `jf`, `python3`,
+`jq`, `node`, a browser, and the skill itself. Tools installed on the Windows
+host are not on the WSL `PATH`.
+
+The browser catches people out, because a Windows Chrome is already right
+there. It will not work: node runs as Linux under WSL2 and hands the renderer a
+`file:///home/...` URL, which a Windows `chrome.exe` resolves against `C:\` and
+fails to find. Install one in the distribution instead:
+
+```bash
+sudo apt-get install -y chromium-browser   # Debian / Ubuntu
+```
+
+Headless rendering needs no X server or desktop. Full matrix in the
+[compatibility table](TROUBLESHOOTING.md#compatibility).
+
 ### Install JFrog CLI
 
 ```bash
 # macOS
 brew install jfrog-cli
 
-# Linux
+# Linux, and Windows inside WSL2
 curl -fL https://install-cli.jfrog.io | sh
 
 # Configure a server interactively with your own JFrog Platform URL
@@ -66,8 +95,13 @@ That project-local model is different from a global Skills install.
 
 | Install path | Best for | Runtime behavior |
 |--------------|----------|------------------|
-| **Option 1: APM install** | Teams that want reproducible, project-local agent context with `apm.yml` and `apm.lock.yaml` | Run the agent from the APM project folder where the skill was installed. |
-| **Option 2: Generic Skills install** | Users who want the skill available globally from any terminal folder or UI-based agent session | Installs into the user's global skills directory. |
+| **[Option 1: APM install](#option-1-apm-install)** | Teams that want reproducible, project-local agent context with `apm.yml` and `apm.lock.yaml` | Run the agent from the APM project folder where the skill was installed. |
+| **[Option 2: Generic Skills install](#option-2-generic-skills-install)** | Users who want the skill available globally from any terminal folder or UI-based agent session | Installs into the user's global skills directory. |
+| **[Option 3: Local clone](#option-3-local-clone-install-development)** | Editing the skill itself | Same as Option 2, but sourced from your working copy so edits take effect immediately. |
+| **[Option 4: Offline zip bundle](#option-4-offline-zip-bundle-restricted-networks)** | Machines that cannot reach GitHub | Same as Option 1 once unpacked — APM installs from the local folder instead of a remote ref. |
+
+Options 1 and 2 are the common paths; 3 is for development and 4 is for
+air-gapped or restricted networks.
 
 APM is intentionally project-based, similar to how `npm install` works for application dependencies. If you install the skill into `~/ciso-reporting`, start Claude/Codex/Cursor from `~/ciso-reporting` so the runtime can see that project's `.agents/skills/` and `.claude/skills/` folders.
 
@@ -149,7 +183,7 @@ Use this path when your agent runtime already uses the Skills CLI flow.
 npx skills add git@github.com:liquid-jedi/jfrog-agentic-dashboard-skills.git -g --skill jfrog-ciso-report
 ```
 
-### Local clone install (development)
+### Option 3: Local clone install (development)
 
 Use this when you are editing skills in this repository — changes take effect immediately without copying stale folders.
 
@@ -160,12 +194,25 @@ npx skills add "$REPO_ROOT" -g --skill jfrog-ciso-report
 
 > **Tip:** Prefer local-clone installs for authoring. Create a frozen distribution copy only when you need a handoff to another machine or team.
 
-### Offline zip bundle (restricted networks)
+### Option 4: Offline zip bundle (restricted networks)
 
-For customers who cannot reach GitHub. Grab the archive from the
-[latest release](https://github.com/liquid-jedi/jfrog-agentic-dashboard-skills/releases)
-or build it yourself, then transfer it by any means (email, shared drive,
-internal artifact store):
+For customers who cannot reach GitHub. Download the bundle on a machine that
+can, then transfer it by any means — email, shared drive, internal artifact
+store.
+
+**Download `jfrog-ciso-report-v4.2.0.zip` from the
+[latest release](https://github.com/liquid-jedi/jfrog-agentic-dashboard-skills/releases/latest),
+under Assets.** Not "Source code (zip)" — GitHub adds those two archives to
+every release automatically. They contain the whole repository (about 3.6 MB,
+mostly example reports) with the skill nested several folders down, so the
+install command below will not find it.
+
+| Asset | Size | Use it for |
+|-------|------|------------|
+| `jfrog-ciso-report-v4.2.0.zip` | ~650 KB | Installing the skill — this is the one |
+| Source code (zip / tar.gz) | ~3.6 MB | Reading or forking the repository |
+
+To build the same bundle yourself from a clone:
 
 ```bash
 cd packages/apm
@@ -299,12 +346,6 @@ bash "$REPO_ROOT/scripts/agentic-dashboard-prechecks.sh" --fix --yes   # non-int
 - Resolved local output root echoed before collection starts
 
 Fix any reported blockers before generating reports.
-
-### Platform support
-
-macOS and Linux are supported directly; Windows needs WSL2. See the
-[compatibility table](TROUBLESHOOTING.md#compatibility) for the full matrix,
-including the browser requirement that applies to WSL2.
 
 ### Cursor sandbox
 
