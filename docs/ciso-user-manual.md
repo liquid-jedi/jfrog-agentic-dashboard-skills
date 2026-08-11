@@ -32,7 +32,7 @@ See **[INSTALL.md](INSTALL.md)** for prerequisites, APM install, generic Skills 
 Quick reference — APM install:
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.2.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.3.0
 ```
 
 Quick reference — local development install:
@@ -199,11 +199,12 @@ writes its scratch files under `/tmp`, so native CMD and PowerShell are not
 viable. Git Bash provides the shell and `/tmp`, but `node` there is a native
 Windows binary and the combination is untested — prefer WSL2 if you can.
 
-The one WSL2-specific step is the browser: WSL2 ships without one, and PDF
-export is mandatory and checked before collection starts. Install Chromium
-inside WSL or install Puppeteer. Pointing `CISO_CHROME_BIN` at the Windows
-Chrome under `/mnt/c/...` will launch it but it cannot write the PDF back to a
-Linux path.
+The one WSL2-specific step is the browser: WSL2 ships without one, and the PDF
+check runs before collection starts. Install Chromium inside WSL or install
+Puppeteer. Pointing `CISO_CHROME_BIN` at the Windows Chrome under `/mnt/c/...`
+will launch it but it cannot write the PDF back to a Linux path. If you only
+want the interactive HTML, ask for `html only` — the browser check is skipped
+entirely in that mode.
 
 ## Runtime Flow
 
@@ -244,7 +245,25 @@ Large active-user populations:
 
 - The dashboard shows the top active Curation users only.
 - Every active user is written to `curation-user-package-activity.csv` next to
-  `report.html`, one row per user:
+  `report.html`. The file opens with a commented block defining **Active User**,
+  the reporting period, and the active user count, then carries the tables below.
+
+The export has two shapes. **Full** is the default and adds the per-package
+breakdown. **Brief** keeps only the per-user counts and the curated repositories,
+which is what you want on a very large instance — the package breakdown is the
+part whose size grows without bound. Ask for it in the prompt:
+
+```text
+Generate a weekly CISO report for <server>, brief users
+Generate a weekly CISO report for <server>, with package detail
+```
+
+Above roughly 250,000 curation events in the period, the skill reports the count
+and asks which you want. Both shapes list every active user with identical
+counts; brief simply stops after the `curated_repos` column and omits table 2.
+Set `CISO_CURATION_USER_DETAIL=full|brief` to skip the question entirely.
+
+**Table 1 — Active Users in this period**, one row per user (both shapes):
 
   | Column | Meaning |
   |--------|---------|
@@ -255,13 +274,35 @@ Large active-user populations:
   | `blocked` | Requests denied by Curation policy |
   | `clean_approved` | Requests allowed with no blocking rule matched |
   | `block_rate_pct` | `blocked / total_requests` — sort on this to find risky consumers regardless of volume |
-  | `distinct_packages` | Distinct packages the user pulled in the period |
-  | `ecosystems` | Package types used, for example `Maven; npm` |
-  | `top_packages` | Ten most requested packages as `name (count)` |
+  | `curated_repos` | Curated repositories the user pulled through |
+  | `distinct_packages` | Full only. Distinct packages the user pulled in the period, counted across every repo |
+  | `ecosystems` | Full only. Package types used, for example `Maven; npm` |
+  | `top_packages` | Full only. Ten most requested packages as `name (count)` |
 
-- Rows are sorted by `total_requests` descending, so `rank` doubles as a running
-  count of active users. A low-volume user with a high `block_rate_pct` is
-  usually more interesting than the top requester.
+**Table 2 — Full request detail** (full shape only), one row per user, curated
+repo, and package:
+
+  | Column | Meaning |
+  |--------|---------|
+  | `user` | Same identity as table 1 |
+  | `curated_repo` | Curated repository that served the request. Empty when the audit event does not name one |
+  | `ecosystem` | Package type |
+  | `package` | Package name |
+  | `requests` | Requests for that user, repo, and package |
+
+- Both tables are sorted by volume descending, so table 1's `rank` doubles as a
+  running count of active users. A low-volume user with a high `block_rate_pct`
+  is usually more interesting than the top requester.
+- Table 2 is capped at 50,000 rows. When the cap trims the table, its heading
+  states how many rows of the total were written. Table 1 always lists every
+  active user, in both shapes.
+- In brief mode the dashboard's Active Users table shows curated repositories in
+  place of the top-packages column, and the CSV explains in its header why the
+  package columns are absent.
+- Comment lines start with `#`. Excel and Google Sheets show them as text rows;
+  `pandas.read_csv(..., comment='#')` skips them. Because the file holds two
+  tables, point a parser at the header row you want rather than reading the
+  whole file as one frame.
 
 Before collection begins, the skill should surface a short execution summary containing:
 
@@ -306,6 +347,28 @@ Server name is optional.
 - `Generate a CISO report for 2026-05-01 to 2026-05-20.`
 
 If the prompt omits both server and local path, the operator should still expect the skill to show the resolved values before collection starts.
+
+Two outputs are also chosen from the prompt.
+
+**PDF export.** The default is the CISO-shareable `executive-report.pdf`:
+
+| Say | You get |
+|-----|---------|
+| nothing, or `executive pdf` | `executive-report.pdf` |
+| `full pdf`, `detailed pdf` | `full-report.pdf` |
+| `both pdfs` | both files |
+| `html only`, `no pdf` | neither; the browser check is skipped |
+
+**Curation user export.** The default is `full`:
+
+| Say | You get |
+|-----|---------|
+| nothing, or `with package detail` | Per-user counts, curated repos, package breakdown, and the detail table |
+| `brief users`, `user counts only` | Per-user counts and curated repos only |
+
+Above roughly 250,000 curation events the skill reports the count and asks.
+`CISO_PDF_MODE` and `CISO_CURATION_USER_DETAIL` override both, which is how you
+keep a headless run from stopping at a question.
 
 ## Local Output Model
 

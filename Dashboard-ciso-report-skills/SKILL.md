@@ -10,7 +10,7 @@ description: >-
 metadata:
   role: workflow
   author: Avinash Giri
-  version: 4.2.0
+  version: 4.3.0
 ---
 
 # JFrog CISO Report Generator
@@ -266,6 +266,73 @@ On first run, bootstrap a stable local root instead of falling back to `$PWD`.
 | No location provided and `CISO_LOCAL_ROOT` is not set | Ask the user once for a stable local root (recommend `~/ciso-reports`), create the directory, and persist it as `CISO_LOCAL_ROOT` for future runs before continuing. |
 | Resolved `LOCAL_ROOT` equals `$HOME` and user did not explicitly request home root | Ask for confirmation or use `~/ciso-reports` before proceeding. |
 
+### Step 3e: Resolve PDF export mode
+
+Resolve which PDF exports to render:
+
+| Condition | Action |
+|-----------|--------|
+| Prompt asks for the CISO-shareable PDF (`executive pdf`, `ciso pdf`, `summary pdf`) | Set `CISO_PDF_MODE=executive`. |
+| Prompt asks for the detailed PDF (`full pdf`, `detailed pdf`, `full report pdf`) | Set `CISO_PDF_MODE=full`. |
+| Prompt asks for both (`both pdfs`, `executive and full pdf`) | Set `CISO_PDF_MODE=both`. |
+| Prompt asks for no PDF (`html only`, `no pdf`, `skip pdf`) | Set `CISO_PDF_MODE=none`. |
+| `CISO_PDF_MODE` env var is set | Use its value. |
+| No preference provided | Default to `CISO_PDF_MODE=executive`. |
+
+Do not ask the user about PDF mode. The default is the CISO-shareable export,
+which is the right answer for the audience this report is written for.
+
+### Step 3f: Resolve curation user detail
+
+The curation user export has two shapes. Both list every active user with their
+request, block, and approval counts, and the curated repositories they pulled
+through. They differ in whether the per-package breakdown is collected:
+
+| Mode | Contents | Cost |
+|------|----------|------|
+| `full` | Adds `distinct_packages`, `ecosystems`, `top_packages`, and a second table with one row per user / curated repo / package | Memory grows with distinct user-package pairs |
+| `brief` | Per-user counts and curated repositories only, single table | Memory grows with user count only |
+
+Resolve the mode in this order:
+
+| Condition | Action |
+|-----------|--------|
+| Prompt asks for package detail (`with package detail`, `full user detail`, `include packages`) | Set `CISO_CURATION_USER_DETAIL=full`. |
+| Prompt asks for the lean export (`brief users`, `user counts only`, `no package detail`) | Set `CISO_CURATION_USER_DETAIL=brief`. |
+| `CISO_CURATION_USER_DETAIL` env var is set | Use its value. |
+| Non-interactive run (see Headless / CI usage) | Default to `full`. |
+| No preference provided | Run the pre-flight count below, then decide. |
+
+**Pre-flight event count.** User count is not knowable before collection, but
+event volume is, and event volume — not user count — is what drives the cost.
+One request returns the exact total for the period without downloading any of
+it (measured: 3s, 1.1 KB):
+
+```bash
+CURATION_EVENTS=$(jf xr curl -s --server-id "$SERVER_ID" \
+  "/api/v1/curation/audit/packages?order_by=id&direction=desc&num_of_rows=1&include_total=true&dry_run=false&created_at_start=${DATE_FROM}&created_at_end=${DATE_TO}" \
+  | python3 -c "import json,sys; print((json.load(sys.stdin).get('meta') or {}).get('total_count') or 0)")
+echo "Curation events in period: $CURATION_EVENTS"
+```
+
+| Condition | Action |
+|-----------|--------|
+| `CURATION_EVENTS` under 250,000 | Set `CISO_CURATION_USER_DETAIL=full` and continue without asking. |
+| `CURATION_EVENTS` at or above 250,000 | Ask the user once, then continue. |
+| The count call fails or returns 0 | Set `full` and continue. Never block the run on a failed pre-flight. |
+
+When asking, state the number and what each choice costs:
+
+```text
+This period has <CURATION_EVENTS> curation events. The user export can include
+the per-package breakdown, or per-user counts only.
+
+  full   — per-user counts, curated repos, and the per-package breakdown
+  brief  — per-user counts and curated repos only; faster and much lighter
+
+Both list every active user. Which would you like? [full/brief]
+```
+
 Set these once during Phase 0 / Step 3 (before Step 4 snapshot lookup or any
 Python that references them). Step 7 render reuses the same values:
 
@@ -274,7 +341,42 @@ export REPORT_DATE="${REPORT_DATE:-$(date +%Y-%m-%d)}"
 export REPORT_TYPE_LOWER="$(echo "${REPORT_TYPE:-weekly}" | tr '[:upper:]' '[:lower:]')"
 export SERVER_SLUG="$(echo "$SERVER_ID" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g')"
 export REPORT_TYPE_SLUG="$REPORT_TYPE_LOWER"
+export CISO_PDF_MODE="${CISO_PDF_MODE:-executive}"
+export CISO_CURATION_USER_DETAIL="${CISO_CURATION_USER_DETAIL:-full}"
 ```
+
+### Optional Curation active-user planning baseline
+
+Active Curation users are always counted from distinct requester identities in
+the report window. If the customer supplies a planning baseline they want the
+observed count compared against, export it before the runner:
+
+```bash
+export CISO_CURATION_USER_BASELINE=250
+```
+
+The report then shows observed usage against that baseline and the headroom
+left. This is an adoption signal only — it is never a license count, a license
+position, or a compliance statement. Never derive the baseline from platform
+APIs, and leave it unset unless the customer supplied the number themselves.
+
+### Optional masked curation user CSV
+
+To produce a shareable copy of the curation user/package CSV with identities
+replaced by randomly generated names and emails, set:
+
+```bash
+export CISO_CURATION_USER_MASKED=true
+```
+
+This writes `curation-user-package-activity-masked.csv` alongside the real file.
+The mapping is deterministic within a run (Table 1 and Table 2 agree) but is not
+stored and is not reversible. Repository keys are left unchanged, so if a repo
+name embeds a username, mask or redact repos separately before sharing.
+
+Repository retention health is collected automatically from read-only Xray
+repository configuration. `CISO_RETENTION_CONCURRENCY` may tune the default 12
+parallel reads (range 1–24) on very large or rate-limited instances.
 
 **→ Export checkpoint:** all variables above must be exported before Step 4 begins.
 
@@ -283,7 +385,7 @@ informational only — do not wait for acknowledgement, do not ask a
 question. Proceed immediately after printing:
 
 ```text
-Running: <REPORT_TYPE> report | server: <SERVER_ID> | output: <LOCAL_ROOT> | storage: <local-only|artifactory:<REPORT_REPO>>
+Running: <REPORT_TYPE> report | server: <SERVER_ID> | output: <LOCAL_ROOT> | storage: <local-only|artifactory:<REPORT_REPO>> | pdf: <CISO_PDF_MODE> | user detail: <CISO_CURATION_USER_DETAIL>
 ```
 
 If a bootstrap prompt was needed because `CISO_LOCAL_ROOT` was missing, ask
@@ -439,7 +541,7 @@ After the runner succeeds, inspect the saved `data.json`, `snapshot.json`, and
 `run-meta.json`. The agent should then provide the executive interpretation:
 
 - Highlight up to 3 findings per section (security, curation, governance, coverage), ranked first by severity (critical before high), then by absolute delta versus the prior snapshot (largest change first).
-- Call out validation proof (for example indexed repos, watches, policies, curation rows, unique users, named policies).
+- Call out validation proof (for example indexed repos, watches, policies, curation rows, active users, named policies).
 - If needed, improve observations/recommendations in a controlled follow-up pass, then re-run validation/render through the runner or repair helper.
 
 Use `references/report-schema.md` and `references/report-data-collection.md` when interpreting fields or debugging a failed runner gate.
@@ -494,7 +596,7 @@ Populate beta fields when available:
   pass-through repositories
 - `benefit.upgrade_rate` from a blocked package later approved at a higher version
 - `violations.posture_signals` (independent signals; no composite score),
-  `unique_issue_count`, and `top_repos`
+  `unique_issue_count`, `collection_meta`, `exploitability_summary`, and `top_repos`
 - `violations.critical_issues[*].first_seen`, `days_open`, `exploit_status`,
   `affected_environments`, `playbook_link`
 - `benefit.roi_estimate`
@@ -502,6 +604,8 @@ Populate beta fields when available:
 - `governance.repo_watch_coverage`
 - `threat_velocity` with a rich `trend_summary` (see below)
 - `curation.request_results`, `policy_inventory`, `curation_state`, `policy_violations_by_type`, `blocking_events_per_policy`, `package_types`
+- `curation.active_user_context`, waiver pending-age buckets, `platform.retention_health`,
+  and optional `platform.ai_ecosystem`
 - `meta.curation_uninspected_label` = `Passed without inspection`
 - `violations.top_cves`, `violations.top_watch_policies`
 
@@ -534,6 +638,7 @@ python3 -c "
 import json
 data = json.load(open('/tmp/ciso-data.json'))
 snap = {
+  'collector_version': 2,
   'date': data['meta']['generated'],
   'type': data['meta']['report_type'].lower(),
   'server_id': data['meta']['server_id'],
@@ -667,3 +772,11 @@ claude -p "Generate a weekly CISO report for <server-id>. Save to Artifactory." 
 ```
 
 > **Note:** The `--allowedTools` flag is specific to the Claude CLI. Other IDE agents (VS Code Copilot, Cursor, etc.) use their own tool-authorization mechanisms — supply the equivalent allow-list for your agent runner.
+
+A headless run must never stop at a question. Set the mode variables up front so
+Step 3e and Step 3f resolve without the pre-flight gate:
+
+```bash
+export CISO_PDF_MODE=executive          # executive | full | both | none
+export CISO_CURATION_USER_DETAIL=full   # full | brief
+```

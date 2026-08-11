@@ -213,7 +213,7 @@ if clean != int(c.get('approved', 0) or 0):
   print('ERROR: clean_packages must equal approved policy outcomes'); sys.exit(1)
 
 sev = v.get('by_severity', {}) or {}
-sev_sum = sum(int(sev.get(k, 0) or 0) for k in ('critical', 'high', 'medium', 'low'))
+sev_sum = sum(int(sev.get(k, 0) or 0) for k in ('critical', 'high', 'medium', 'low', 'unknown'))
 v_total = int(v.get('total', 0) or 0)
 if sev_sum != v_total:
   print(f'ERROR: violations.total={v_total} does not match by_severity sum={sev_sum}'); sys.exit(1)
@@ -222,6 +222,9 @@ bt = v.get('by_type', {}) or {}
 type_sum = sum(int(bt.get(k, 0) or 0) for k in ('security', 'operational', 'license'))
 if type_sum != v_total:
   print(f'ERROR: violations.total={v_total} does not match by_type sum={type_sum}'); sys.exit(1)
+collection = v.get('collection_meta') or {}
+if collection and not collection.get('complete'):
+  print(f\"ERROR: violations collection incomplete: fetched={collection.get('rows_fetched')} reported={collection.get('total_reported')}\"); sys.exit(1)
 
 repos_total = int(p.get('repos_total', 0) or 0)
 repos_indexed = int(p.get('repos_indexed', 0) or 0)
@@ -267,6 +270,14 @@ if int(c.get('blocked', 0) or 0) > 0:
 bad = [r for r in (g.get('curation_policy_effectiveness') or []) if str(r.get('policy','')).lower() == 'unknown']
 if bad:
   print('ERROR: governance has Unknown curation rows'); sys.exit(1)
+
+state = p.get('curation_state') or c.get('curation_state') or {}
+gaps = (c.get('executive_insights') or {}).get('gate_coverage_gaps') or []
+gap_sum = sum(int(row.get('unconnected', 0) or 0) for row in gaps)
+supported_gap = int(state.get('supported_not_connected', 0) or 0)
+supported_passthrough = sum(1 for row in (p.get('pass_through_repos') or []) if row.get('supported') is True)
+if gap_sum != supported_gap or supported_passthrough != supported_gap:
+  print(f'ERROR: curation coverage mismatch gaps={gap_sum} supported_state={supported_gap} supported_pass_through={supported_passthrough}'); sys.exit(1)
 
 cs = p.get('curation_state') or c.get('curation_state') or {}
 if int(cs.get('supported_remote_total', 0) or 0) > 0 and int(cs.get('supported_connected', 0) or 0) == 0:

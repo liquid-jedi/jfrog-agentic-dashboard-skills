@@ -74,10 +74,10 @@ footer a{color:#c3ccdb}
   <div class="wrap">
     <p class="eyebrow">JFrog Platform · Agent Skill</p>
     <h1>CISO security dashboards,<br>generated from live platform data</h1>
-    <p>One prompt produces a branded, self-contained HTML dashboard plus a
-       board-shareable PDF — collected from JFrog Xray and Curation, rendered
-       through a fixed template so every run looks the same and only the data
-       changes.</p>
+    <p>One prompt produces a branded, self-contained HTML dashboard — and,
+       when you ask for it, a board-shareable PDF — collected from JFrog Xray
+       and Curation, rendered through a fixed template so every run looks the
+       same and only the data changes. Current release: <b>v4.3.0</b>.</p>
     <div class="cta">
       <a class="btn primary" href="examples/weekly/report.html">View a live dashboard</a>
       <a class="btn ghost" href="https://github.com/liquid-jedi/jfrog-agentic-dashboard-skills/releases/latest">Download</a>
@@ -119,6 +119,29 @@ footer a{color:#c3ccdb}
   </div>
 </section>
 
+
+<section>
+  <div class="wrap">
+    <h2>What&rsquo;s new in v4.3.0</h2>
+    <div class="grid g3">
+      <div class="card">
+        <span class="tag">Correctness</span>
+        <h3>Complete violation counts</h3>
+        <p>Xray pagination and Curation audit windowing fixed so large ranges and custom MTD windows no longer undercount.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Executive</span>
+        <h3>Clearer first screen</h3>
+        <p>Hero summary, stacked PDF actions, full-width threat velocity, retention panel removed from the default report.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Scale</span>
+        <h3>Faster large runs</h3>
+        <p>Concurrent audit paging, prompt-driven HTML-only / brief-user modes, and a shareable masked user CSV.</p>
+      </div>
+    </div>
+  </div>
+</section>
 <section>
   <div class="wrap">
     <h2>Install</h2>
@@ -132,11 +155,11 @@ mkdir -p ~/ciso-reporting &amp;&amp; cd ~/ciso-reporting
 apm init -y --target claude,codex,cursor
 
 <span class="c"># 3. Install the skill</span>
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.2.0</code></pre>
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.3.0</code></pre>
     <p class="lead">Then ask your agent: <code>Generate a weekly CISO report for
        server &lt;id&gt;. Save under ~/ciso-reports.</code></p>
     <div class="note">
-      On a restricted network, download <code>jfrog-ciso-report-v4.2.0.zip</code>
+      On a restricted network, download <code>jfrog-ciso-report-v4.3.0.zip</code>
       from the Assets of the
       <a href="https://github.com/liquid-jedi/jfrog-agentic-dashboard-skills/releases/latest">latest release</a>
       &mdash; not &ldquo;Source code&rdquo;, which is the whole repository &mdash; then
@@ -162,7 +185,7 @@ apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-r
         <h3 style="font-size:15px;margin-bottom:8px">Local</h3>
         <ul class="req">
           <li><code>python3</code> — collection, transform and render</li>
-          <li><code>node</code> plus Chrome, Chromium or Edge — PDF export, which cannot be skipped</li>
+          <li><code>node</code> plus Chrome, Chromium or Edge — PDF export (skip with <code>html only</code> / <code>CISO_PDF_MODE=none</code>)</li>
           <li>macOS or Linux natively; Windows via WSL2</li>
         </ul>
       </div>

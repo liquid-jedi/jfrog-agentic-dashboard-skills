@@ -58,7 +58,7 @@ jf config add --interactive
 
 ### Current skill versions in this repository
 
-- `jfrog-ciso-report` — `4.2.0`
+- `jfrog-ciso-report` — `4.3.0`
 
 Previous release:
 
@@ -134,7 +134,7 @@ Install the CISO report package from the published repository:
 mkdir -p ~/ciso-reporting
 cd ~/ciso-reporting
 apm init -y --target claude,codex,cursor
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.2.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.3.0
 ```
 
 Run project-local APM skills from the same folder:
@@ -200,7 +200,7 @@ For customers who cannot reach GitHub. Download the bundle on a machine that
 can, then transfer it by any means — email, shared drive, internal artifact
 store.
 
-**Download `jfrog-ciso-report-v4.2.0.zip` from the
+**Download `jfrog-ciso-report-v4.3.0.zip` from the
 [latest release](https://github.com/liquid-jedi/jfrog-agentic-dashboard-skills/releases/latest),
 under Assets.** Not "Source code (zip)" — GitHub adds those two archives to
 every release automatically. They contain the whole repository (about 3.6 MB,
@@ -209,20 +209,20 @@ install command below will not find it.
 
 | Asset | Size | Use it for |
 |-------|------|------------|
-| `jfrog-ciso-report-v4.2.0.zip` | ~650 KB | Installing the skill — this is the one |
+| `jfrog-ciso-report-v4.3.0.zip` | ~650 KB | Installing the skill — this is the one |
 | Source code (zip / tar.gz) | ~3.6 MB | Reading or forking the repository |
 
 To build the same bundle yourself from a clone:
 
 ```bash
 cd packages/apm
-zip -r jfrog-ciso-report-v4.2.0.zip jfrog-ciso-report -x '*.DS_Store'
+zip -r jfrog-ciso-report-v4.3.0.zip jfrog-ciso-report -x '*.DS_Store'
 ```
 
 On the customer machine:
 
 ```bash
-unzip jfrog-ciso-report-v4.2.0.zip
+unzip jfrog-ciso-report-v4.3.0.zip
 apm install ./jfrog-ciso-report --target claude,cursor,codex
 ```
 

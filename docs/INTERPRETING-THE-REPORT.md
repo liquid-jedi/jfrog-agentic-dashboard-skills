@@ -31,16 +31,17 @@ that is usually the most important sentence in the whole report.
 
 ## Executive Summary
 
-The KPI strip is the headline. Five numbers, each with period-over-period
-movement where a prior report exists:
+The briefing strip holds the Xray posture headline (critical occurrences,
+total occurrences, indexing gap). The Overview KPI row then focuses on
+gate and adoption decisions:
 
 | KPI | What it means | What to watch |
 |-----|---------------|---------------|
-| **Critical occurrences** | Critical-severity violation instances currently open, with the unique critical issue count beside it | The gap between the two numbers. A large ratio means concentration — few root causes, many instances |
-| **Total violation occurrences** | All violation instances inside your repositories | The trend more than the absolute value |
 | **Blocked at gate** | Requests Curation denied by policy, and what share of all requests that is | A rising block count is usually prevention working, not a problem |
-| **Without inspection** | Requests that reached the client without policy evaluation | Any non-trivial number here is a real gap — see [Audit Events](#audit-events) |
-| **Repos indexed** / **Remotes gated** | Xray indexing coverage, and supported remotes connected to Curation | Both are coverage, not risk. Low coverage means unknown risk |
+| **Without inspection** | Requests that reached the client without policy evaluation | Any non-trivial number here is a real gap — see [Curation Activity](#curation-activity) |
+| **Remotes gated** | Supported remotes connected to Curation | Coverage, not risk. Low coverage means unknown risk at the gate |
+| **Active Curation users** | Distinct requester identities this period, with prior-period delta when available | Adoption trend, and usage against a customer-supplied planning baseline when one is configured. This is observed activity, not a license count |
+| **Pending waivers** | Open waiver workflow backlog | Aging backlog means risk accepted without a decision |
 
 Below the strip, insight cards summarise the findings that most often drive a
 decision: how long critical findings have been open past SLA, how much of your
@@ -64,12 +65,24 @@ What the supply-chain gate did during the period.
   higher incoming threat pressure, or a single noisy dependency being retried in
   CI. The *Why packages were blocked* and *Top blocked packages* panels are what
   disambiguate it.
-- **Gate coverage by supported ecosystem** is the coverage question: of the remotes
-  Curation *could* protect, how many are actually connected. Unconnected remotes
-  are a silent bypass — packages flow through them without evaluation.
-- **Remote repositories not protected by Curation** lists those bypasses
-  explicitly. These are supported-but-not-connected, not unsupported: they are
-  fixable with configuration, which makes them the cheapest wins in the report.
+- **Gate coverage by supported ecosystem** is one gap-first table: of the remotes
+  Curation *could* protect, how many are connected and where the remaining gap
+  sits. Unconnected remotes are a silent bypass — packages flow through them
+  without evaluation.
+- **Remote repositories not protected by Curation** lists every ungated remote,
+  split into supported-but-not-enabled (configuration wins) and unsupported
+  ecosystems (product coverage, not a missed toggle).
+- **Waiver governance** shows pending/approved/rejected counts and pending-age
+  buckets. Oldest pending days is the decision-latency signal.
+- The **Curation Audit** link opens the live trail for blocked downloads; the
+  report no longer keeps a separate Audit Events section that only duplicated
+  that CTA.
+
+A package already in a remote repository cache can be served without a fresh
+policy evaluation, depending on configuration. That is what **Without inspection**
+counts. *Cached-package enforcement* shows per-policy coverage and the global
+setting where the API exposes it — when it reports "not exposed by collected API",
+the setting exists but is not readable, so treat it as unknown rather than off.
 
 ---
 
@@ -82,25 +95,9 @@ evaluates and logs but does not stop anything. *Policies still in dry-run* is
 therefore a list of protection you have already designed and are not yet getting
 — usually the highest-value, lowest-effort change available.
 
-*Recommended policy baseline* and *Curation policies by risk category* show gaps
-against a sensible default, so you can see which categories are unpoliced rather
-than just counting policies.
-
----
-
-## Audit Events
-
-Individual gate decisions, and the place where the **cached-package** subtlety
-lives.
-
-A package already in a remote repository cache can be served without a fresh
-policy evaluation, depending on configuration. That is what **Without inspection**
-counts. *Cached-package enforcement* shows per-policy coverage and the global
-setting where the API exposes it — when it reports "not exposed by collected API",
-the setting exists but is not readable, so treat it as unknown rather than off.
-
-The practical read: blocked events prove the gate works; without-inspection events
-prove where it does not apply yet.
+*Protection by policy*, *Recommended policy baseline*, and *Curation policies by
+risk category* show outcomes and gaps against a sensible default, so you can see
+which categories are unpoliced rather than just counting policies.
 
 ---
 
@@ -112,12 +109,19 @@ Who is pulling packages, ranked by request volume, with the full list exported t
 Sort the CSV by **`block_rate_pct`**, not by request count. The heaviest requester
 is usually a CI service account behaving normally. A low-volume user with a high
 block rate is the more interesting signal — either they are reaching for risky
-dependencies, or they are fighting a policy that needs review. `distinct_packages`
-and `ecosystems` add breadth, which separates "one build pulling the same
-dependency repeatedly" from genuinely broad consumption.
+dependencies, or they are fighting a policy that needs review. `curated_repos`
+tells you which remotes they pulled through, which is where a spike gets traced
+back to a team.
 
 The `rank` column is ordered by volume, so the last row's rank is also your active
 user count for the period.
+
+If the report was generated with package detail (the default), two more columns
+add breadth: `distinct_packages` and `ecosystems`, which separate "one build
+pulling the same dependency repeatedly" from genuinely broad consumption. A
+second table then lists every user, repository and package. Reports generated in
+brief mode stop after `curated_repos` and say so in the file header; the user
+list itself is complete either way.
 
 ---
 
@@ -190,13 +194,18 @@ covering it generates no violations — which looks identical to a clean reposit
 in every other number in this report. Blind spots are why `coverage_gap` deserves
 the weight it gets.
 
-*Watch-to-repository coverage*, *Most-triggered watches* and *Xray policy
-effectiveness* show where detection is concentrated. Heavy triggering on one watch
-alongside broad blind spots usually means policy was tuned for a subset of the
-estate and never extended.
+*Watch-to-repository coverage* and *Watch & policy hits* show where detection is
+concentrated, including each watch/policy share of events. Heavy triggering on
+one watch alongside broad blind spots usually means policy was tuned for a subset
+of the estate and never extended.
 
-*Enforcement opportunity* and *Gate coverage gaps* are the Curation-side
-equivalent: protection you are entitled to and not yet using.
+*Scan data retention* reports indexed repositories on the default retention
+window versus custom or below-default settings. Retention expiry removes
+historical scan data; it is not a mandatory 90-day re-index cycle.
+
+*Exploitability context* is explicit: when the violations response did not carry
+exploitability/applicability data, the report says so instead of hiding the
+column or treating unknown as not exploitable.
 
 ---
 
@@ -213,10 +222,15 @@ remediation programme.
 
 ---
 
-## Threat Velocity & Trend
+## Trend & Comparison
 
-Direction over time, across validated prior runs: critical occurrences, total
-violation occurrences, and gate blocks.
+One section holds both prior-period deltas and multi-period velocity.
+
+- **Compared with previous report** — current vs previous for critical
+  occurrences, total violations, indexing gap, gate blocks, and active users.
+- **Threat velocity** — sparklines across validated prior runs, including
+  normalized signals such as violations per indexed repository, Curation block
+  rate, and active users.
 
 Trend needs history. With one report there is nothing to compare and the section
 says so rather than inventing a baseline. Comparisons appear once prior snapshots

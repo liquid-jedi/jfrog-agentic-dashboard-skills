@@ -54,6 +54,7 @@ PID_PLATFORM=$!
 (
 python3 - <<'PY'
 import json, os, subprocess, sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 
 server = os.environ["SERVER_ID"].strip()
@@ -61,7 +62,7 @@ date_from = os.environ["DATE_FROM"].strip()
 date_to = os.environ["DATE_TO"].strip()
 report_type = os.environ.get("REPORT_TYPE", "weekly").strip().lower()
 limit = 2000
-concurrency = max(1, min(int(os.environ.get("CISO_CURATION_CONCURRENCY", "3")), 6))
+concurrency = max(1, min(int(os.environ.get("CISO_CURATION_CONCURRENCY", "4")), 8))
 
 def parse_rfc3339(s: str) -> datetime:
     if s.endswith("Z"):
@@ -126,9 +127,19 @@ def paginate_window(start: str, end: str):
     while len(pages[high].get("data") or []) >= limit:
       batch_start = high + limit
       offsets = [batch_start + i * limit for i in range(concurrency)]
+      # Fetch the wave concurrently. Sequential paging measures ~500 events/sec,
+      # so a large instance spent half an hour here; the same offsets fetched in
+      # parallel return identical pages in the same order at ~4x the rate.
+      fetched = {}
+      with ThreadPoolExecutor(max_workers=concurrency) as pool:
+        futures = {pool.submit(get_page, start, end, off): off for off in offsets}
+        for fut in as_completed(futures):
+          fetched[futures[fut]] = fut.result()
+      # Refuse the whole wave on an auth or licensing failure before committing
+      # any of it, so a partial window never reaches the transform.
       done = {}
-      for off in offsets:
-        st, pg = get_page(start, end, off)
+      for off in sorted(fetched):
+        st, pg = fetched[off]
         if st in (403, 404):
           return st, pages
         done[off] = pg
@@ -192,10 +203,10 @@ date_to = os.environ["DATE_TO"].strip()
 limit = int(os.environ.get("CISO_VIOLATIONS_LIMIT", "500"))
 concurrency = max(1, min(int(os.environ.get("CISO_VIOLATIONS_CONCURRENCY", "4")), 8))
 
-def fetch(offset: int):
+def fetch(page_number: int):
   body = json.dumps({
     "filters":{"created_from":date_from, "created_until":date_to},
-    "pagination":{"limit":limit, "offset":offset, "order_by":"severity", "direction":"desc"}
+    "pagination":{"limit":limit, "offset":page_number, "order_by":"severity", "direction":"desc"}
   })
   p = subprocess.run(
     ["jf","xr","curl","-s","--server-id",server,"-XPOST","/api/v1/violations","-H","Content-Type: application/json","-d",body],
@@ -203,41 +214,46 @@ def fetch(offset: int):
   )
   data = json.loads(p.stdout or "{}")
   if not isinstance(data, dict):
-    raise TypeError(f"violations page offset={offset}: expected JSON object, got {type(data).__name__}")
+    raise TypeError(f"violations page={page_number}: expected JSON object, got {type(data).__name__}")
   return data
 
-pages = {0: fetch(0)}
-if len(pages[0].get("violations") or []) >= limit:
-  high = 0
-  while len(pages[high].get("violations") or []) >= limit:
-    batch_start = high + limit
-    offsets = [batch_start + i * limit for i in range(concurrency)]
+pages = {1: fetch(1)}
+total_violations = int(pages[1].get("total_violations") or 0)
+total_pages = max(1, (total_violations + limit - 1) // limit) if total_violations else 1
+next_page = 2
+while next_page <= total_pages:
+    page_numbers = list(range(next_page, min(next_page + concurrency, total_pages + 1)))
     got = {}
     with ThreadPoolExecutor(max_workers=concurrency) as pool:
-      futs = {pool.submit(fetch, off): off for off in offsets}
+      futs = {pool.submit(fetch, page): page for page in page_numbers}
       for fut in as_completed(futs):
         got[futs[fut]] = fut.result()
-    for off in sorted(got):
-      pages[off] = got[off]
-      if len(got[off].get("violations") or []) < limit:
-        pages = {k: v for k, v in pages.items() if k <= off}
-        high = None
-        break
-    if high is None:
-      break
-    high = offsets[-1]
+    for page in sorted(got):
+      pages[page] = got[page]
+      total_violations = max(total_violations, int(got[page].get("total_violations") or 0))
+      total_pages = max(total_pages, (total_violations + limit - 1) // limit)
+    next_page = page_numbers[-1] + 1
 
 violations = []
-total_violations = 0
-for off in sorted(pages):
-  pg = pages[off]
+for page in sorted(pages):
+  pg = pages[page]
   if not isinstance(pg, dict):
-    raise TypeError(f"violations merge offset={off}: expected object page, got {type(pg).__name__}")
+    raise TypeError(f"violations merge page={page}: expected object page, got {type(pg).__name__}")
   violations.extend(pg.get("violations") or [])
   total_violations = max(total_violations, int(pg.get("total_violations") or 0))
 if total_violations == 0 and violations:
   total_violations = len(violations)
-json.dump({"violations": violations, "total_violations": total_violations}, open("/tmp/ciso-violations.json", "w"), indent=2)
+json.dump({
+  "violations": violations,
+  "total_violations": total_violations,
+  "collection_meta": {
+    "rows_fetched": len(violations),
+    "total_reported": total_violations,
+    "pages_fetched": len(pages),
+    "page_size": limit,
+    "complete": len(violations) == total_violations,
+  },
+}, open("/tmp/ciso-violations.json", "w"), indent=2)
 print(f"violations rows={len(violations)} total={total_violations}")
 PY
 ) > /tmp/ciso-track-violations.log 2>&1 &
@@ -549,12 +565,22 @@ with ThreadPoolExecutor(max_workers=workers) as ex:
   for fut in as_completed(futs):
     key, curated, pkg = fut.result()
     norm = normalize_pkg_type(pkg)
-    slot = by_pkg.setdefault(norm, {"package_type": norm, "remote_total": 0, "connected": 0, "blocked_packages_period": 0})
+    supported = normalize_pkg_type(pkg) in supported_norm
+    slot = by_pkg.setdefault(norm, {
+      "package_type": norm,
+      "remote_total": 0,
+      "connected": 0,
+      "supported": supported,
+      "blocked_packages_period": 0,
+    })
+    # A package type can appear before policy discovery completes on older
+    # instances. Once any repository of that normalized type is known to be
+    # supported, keep the type supported for the aggregate row.
+    slot["supported"] = slot["supported"] or supported
     slot["remote_total"] += 1
     if curated:
       connected += 1
       slot["connected"] += 1
-    supported = normalize_pkg_type(pkg) in supported_norm
     if supported:
       supported_remote_total += 1
       if curated:
@@ -580,10 +606,30 @@ curation_state = {
   "supported_connected": supported_connected,
   "supported_not_connected": max(0, supported_remote_total - supported_connected),
   "supported_connected_pct": round((supported_connected / supported_remote_total) * 100, 2) if supported_remote_total else 0,
+  "pass_through_total": len(pass_through_repos),
+  "pass_through_supported": sum(1 for row in pass_through_repos if row["supported"]),
+  "pass_through_unsupported": sum(1 for row in pass_through_repos if not row["supported"]),
   "package_types_total": len(package_types_in_scope),
   "by_package_type": sorted(by_pkg.values(), key=lambda x: -x["remote_total"]),
   "note": "Connected = remote repositories with Artifactory curated=true. Supported-ecosystem counts include remotes whose package type is covered by Curation policies.",
 }
+
+retention_path = "/tmp/ciso-retention-health.json"
+retention_health = {
+  "available": False,
+  "default_repo_days": 90,
+  "default_build_days": 15,
+  "max_days": 1000,
+  "repositories_checked": 0,
+  "repos_on_default": 0,
+  "repos_custom": 0,
+  "repos_below_default": 0,
+  "unknown_repos": repos_indexed,
+}
+if os.path.isfile(retention_path):
+  loaded_retention = json.load(open(retention_path))
+  if isinstance(loaded_retention, dict):
+    retention_health.update(loaded_retention)
 
 plat = {
   "watches_total": watches_total,
@@ -599,6 +645,7 @@ plat = {
   "indexed_repo_names": sorted(indexed_names),
   "pass_through_repos": sorted(pass_through_repos, key=lambda row: (not row["supported"], row["package_type"], row["repo"])),
   "curation_state": curation_state,
+  "retention_health": retention_health,
 }
 json.dump(plat, open("/tmp/ciso-platform.json", "w"), indent=2)
 print(f"platform merge: watches={watches_total} policies={policies_total} indexed={repos_indexed}/{repos_total} curation_connected={connected}/{len(remote_keys)}")
@@ -1369,6 +1416,17 @@ def user_id(ev):
     m = (ev.get("user_mail") or "").strip()
     return u or m or None
 
+# Brief mode drops the per-user package breakdown. Package cardinality is
+# unbounded, so on a large instance that Counter is effectively the whole memory
+# cost of this transform: 10,000 users at a measured 370 packages each needs
+# 692 MB with it and 2.8 MB without. Curated repos are kept in both modes — a
+# handful of repo names per user is bounded, and it is the one piece of context
+# that says where the activity happened.
+user_detail = (os.environ.get("CISO_CURATION_USER_DETAIL") or "full").strip().lower()
+if user_detail not in ("full", "brief"):
+    user_detail = "full"
+brief_users = user_detail == "brief"
+
 user_stats = {}
 for ev in cur.get("data") or []:
     uid = user_id(ev)
@@ -1381,44 +1439,86 @@ for ev in cur.get("data") or []:
         "approved": 0,
         "passed": 0,
         "_packages": Counter(),
+        "_repos": set(),
     })
     st["events"] += 1
     action = (ev.get("action") or ev.get("status") or "").lower()
     if action in ("blocked", "approved", "passed"):
         st[action] += 1
-    package = (ev.get("package_name") or ev.get("package") or "unknown").strip()
-    ecosystem = normalize_pkg_type(ev.get("package_type"))
-    st["_packages"][(package, ecosystem)] += 1
+    repo = (ev.get("curated_repository_name") or "").strip()
+    if repo:
+        st["_repos"].add(repo)
+    if not brief_users:
+        package = (ev.get("package_name") or ev.get("package") or "unknown").strip()
+        ecosystem = normalize_pkg_type(ev.get("package_type"))
+        # Keyed on the repo as well so the CSV can report which curated remote
+        # served each request. Everything downstream that predates the repo
+        # dimension folds it back out, so distinct_packages keeps counting
+        # packages rather than package/repo pairs.
+        st["_packages"][(package, ecosystem, repo)] += 1
 
 attributed_events = sum(st["events"] for st in user_stats.values())
-user_package_activity = [
+
+def user_pct(st):
+    return round(st["events"] / attributed_events * 100, 1) if attributed_events else 0
+
+# Every active user, counts only. This is what the CSV's per-user table is built
+# from, so the table stays complete in brief mode where there is no package
+# activity to derive it from. Bounded by user count, not by event volume.
+user_summary = [
+    {
+        "user": st["user"],
+        "events": st["events"],
+        "events_pct": user_pct(st),
+        "blocked": st["blocked"],
+        "approved": st["approved"],
+        "repos": sorted(st["_repos"]),
+    }
+    for st in sorted(user_stats.values(), key=lambda x: (-x["events"], x["user"]))
+]
+
+user_package_activity = [] if brief_users else [
     {
         "user": st["user"],
         "user_events": st["events"],
-        "user_events_pct": round(st["events"] / attributed_events * 100, 1) if attributed_events else 0,
+        "user_events_pct": user_pct(st),
         "user_blocked": st["blocked"],
         "user_approved": st["approved"],
         "package": package,
         "ecosystem": ecosystem,
+        "repo": repo,
         "requests": count,
     }
     for st in user_stats.values()
-    for (package, ecosystem), count in st["_packages"].items()
+    for (package, ecosystem, repo), count in st["_packages"].items()
 ]
-user_package_activity.sort(key=lambda row: (-row["requests"], row["user"], row["package"], row["ecosystem"]))
+user_package_activity.sort(key=lambda row: (-row["requests"], row["user"], row["package"], row["ecosystem"], row["repo"]))
 top_users = []
 for st in sorted(user_stats.values(), key=lambda x: (-x["events"], x["user"]))[:25]:
     counter = st.pop("_packages")
-    packages = [
-        {"package": package, "ecosystem": ecosystem, "requests": count}
-        for (package, ecosystem), count in counter.most_common(25)
-    ]
-    st["events_pct"] = round(st["events"] / attributed_events * 100, 1) if attributed_events else 0
-    st["packages"] = packages
-    # Breadth over the whole period, not just the 25 packages carried above, so
-    # exports built from top_users do not understate a user's footprint.
-    st["distinct_packages"] = len(counter)
-    st["ecosystems"] = sorted({ecosystem for (_pkg, ecosystem) in counter if ecosystem})
+    # Both private keys must come off before top_users is serialised: a set is
+    # not JSON-encodable and the Counter would bloat the payload.
+    st["repos"] = sorted(st.pop("_repos"))
+    st["events_pct"] = user_pct(st)
+    if brief_users:
+        # Left absent rather than zeroed: the dashboard and the CSV fall back to
+        # a blank cell for missing breadth fields, but would render a real 0 as
+        # "this user pulled nothing", which is false.
+        st["packages"] = []
+    else:
+        # Fold the repo dimension away: top_users reports packages, and the same
+        # package served by three curated remotes is still one package.
+        by_package = Counter()
+        for (package, ecosystem, _repo), count in counter.items():
+            by_package[(package, ecosystem)] += count
+        st["packages"] = [
+            {"package": package, "ecosystem": ecosystem, "requests": count}
+            for (package, ecosystem), count in by_package.most_common(25)
+        ]
+        # Breadth over the whole period, not just the 25 packages carried above,
+        # so exports built from top_users do not understate a user's footprint.
+        st["distinct_packages"] = len(by_package)
+        st["ecosystems"] = sorted({ecosystem for (_pkg, ecosystem) in by_package if ecosystem})
     top_users.append(st)
 
 curation = data.setdefault("curation", {})
@@ -1433,6 +1533,8 @@ registry = load_policy_registry()
 events = cur.get("data") or []
 
 curation["unique_users"] = len(user_stats)
+curation["user_detail_mode"] = user_detail
+curation["user_summary"] = user_summary
 # Identities that actually received a package. A blocked request serves nothing,
 # so a user whose every request was blocked is present at the gate but consumed
 # nothing. Count both allowed actions: instances that report `passed` instead of
@@ -1644,10 +1746,10 @@ date_to = os.environ["DATE_TO"].strip()
 limit = int(os.environ.get("CISO_VIOLATIONS_LIMIT", "500"))
 concurrency = max(1, min(int(os.environ.get("CISO_VIOLATIONS_CONCURRENCY", "4")), 8))
 
-def fetch(offset: int):
+def fetch(page_number: int):
   body = json.dumps({
     "filters":{"created_from":date_from, "created_until":date_to},
-    "pagination":{"limit":limit, "offset":offset, "order_by":"severity", "direction":"desc"}
+    "pagination":{"limit":limit, "offset":page_number, "order_by":"severity", "direction":"desc"}
   })
   p = subprocess.run(
     ["jf","xr","curl","-s","--server-id",server,"-XPOST","/api/v1/violations","-H","Content-Type: application/json","-d",body],
@@ -1655,42 +1757,46 @@ def fetch(offset: int):
   )
   data = json.loads(p.stdout or "{}")
   if not isinstance(data, dict):
-    raise TypeError(f"violations page offset={offset}: expected JSON object, got {type(data).__name__}")
+    raise TypeError(f"violations page={page_number}: expected JSON object, got {type(data).__name__}")
   return data
 
-pages = {0: fetch(0)}
-if len(pages[0].get("violations") or []) >= limit:
-  high = 0
-  while len(pages[high].get("violations") or []) >= limit:
-    batch_start = high + limit
-    offsets = [batch_start + i * limit for i in range(concurrency)]
+pages = {1: fetch(1)}
+total_violations = int(pages[1].get("total_violations") or 0)
+total_pages = max(1, (total_violations + limit - 1) // limit) if total_violations else 1
+next_page = 2
+while next_page <= total_pages:
+    page_numbers = list(range(next_page, min(next_page + concurrency, total_pages + 1)))
     got = {}
     with ThreadPoolExecutor(max_workers=concurrency) as pool:
-      futs = {pool.submit(fetch, off): off for off in offsets}
+      futs = {pool.submit(fetch, page): page for page in page_numbers}
       for fut in as_completed(futs):
         got[futs[fut]] = fut.result()
-    stop_offset = None
-    for off in sorted(got):
-      pages[off] = got[off]
-      if len(got[off].get("violations") or []) < limit:
-        stop_offset = off
-        break
-    if stop_offset is not None:
-      pages = {k: v for k, v in pages.items() if k <= stop_offset}
-      break
-    high = offsets[-1]
+    for page in sorted(got):
+      pages[page] = got[page]
+      total_violations = max(total_violations, int(got[page].get("total_violations") or 0))
+      total_pages = max(total_pages, (total_violations + limit - 1) // limit)
+    next_page = page_numbers[-1] + 1
 
 violations = []
-total_violations = 0
-for off in sorted(pages):
-  pg = pages[off]
+for page in sorted(pages):
+  pg = pages[page]
   if not isinstance(pg, dict):
-    raise TypeError(f"violations merge offset={off}: expected object page, got {type(pg).__name__}")
+    raise TypeError(f"violations merge page={page}: expected object page, got {type(pg).__name__}")
   violations.extend(pg.get("violations") or [])
   total_violations = max(total_violations, int(pg.get("total_violations") or 0))
 if total_violations == 0 and violations:
   total_violations = len(violations)
-json.dump({"violations": violations, "total_violations": total_violations}, open("/tmp/ciso-violations.json", "w"), indent=2)
+json.dump({
+  "violations": violations,
+  "total_violations": total_violations,
+  "collection_meta": {
+    "rows_fetched": len(violations),
+    "total_reported": total_violations,
+    "pages_fetched": len(pages),
+    "page_size": limit,
+    "complete": len(violations) == total_violations,
+  },
+}, open("/tmp/ciso-violations.json", "w"), indent=2)
 print(f"violations merged: rows={len(violations)} total={total_violations}")
 PY
 ```
@@ -1698,7 +1804,9 @@ PY
 Parse:
 ```bash
 jq '{
-  total: (.total_violations // (.violations | length)),
+  total: (.violations | length),
+  total_reported: (.total_violations // (.violations | length)),
+  collection_meta,
   risk_score_raw: (
     ([.violations[]? | select(.severity == "Critical")] | length) * 100 +
     ([.violations[]? | select(.severity == "High")] | length) * 20 +
@@ -1819,11 +1927,12 @@ cur = json.load(open('/tmp/ciso-curation.json'))
 diag = json.load(open('/tmp/ciso-curation-diagnostics.json'))
 data = json.load(open('/tmp/ciso-data.json'))
 
-# Guard 1: violations totals should never undercount merged rows.
+# Guard 1: the Xray page total and merged rows must be coherent. The violations
+# endpoint uses a one-based page number in pagination.offset.
 v_rows = len(viol.get('violations') or [])
 v_total = int(viol.get('total_violations') or 0)
-if v_total < v_rows:
-  print(f"ERROR: total_violations({v_total}) < rows({v_rows})")
+if v_total != v_rows:
+  print(f"ERROR: total_violations({v_total}) != rows({v_rows})")
   sys.exit(1)
 
 # Guard 2: curation diagnostics coherence.

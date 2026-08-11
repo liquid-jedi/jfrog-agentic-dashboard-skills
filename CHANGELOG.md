@@ -3,14 +3,63 @@
 All notable changes to the `jfrog-ciso-report` skill. See [README.md](README.md) for
 current usage and [docs/INSTALL.md](docs/INSTALL.md) for version-pinned install commands.
 
-## Unreleased
+## v4.3.0 (August 2026)
+
+*Curation audit windows*
+- **Any range longer than 168 hours is chunked** — the Curation audit API rejects windows over seven days (`Maximum allowed duration is 168 hours`). Chunking previously ran for `monthly` only, so a custom or month-to-date window such as Aug 1–11 was refused and silently rendered as zero events and zero active users. Every report type now chunks at six-day windows, records the mode in diagnostics, and fails the run if a window comes back with an `errors` array instead of data
+*Executive presentation*
+- **Executive Summary rebuilt as the hero** — posture verdict, five decision tiles, and a prevented-vs-present flow replace the earlier two-column layout that buried the story
+- **Sidebar PDF actions no longer overlap** — Executive PDF and Print current view sit in a stacked card with consistent spacing
+- **Threat velocity table is full width** — Active Users is no longer clipped beside the prior-period comparison panel
+- **Scan data retention removed from the report** — the panel and the default per-repository fan-out are gone; set `CISO_RETENTION_HEALTH=1` only when collecting that data for a separate workstream
+*Active-user export*
+- **Masked CSV for sharing** — `CISO_CURATION_USER_MASKED=1` writes a companion `*-masked.csv` with randomised names and emails
+- **CSV metadata is a key/value block** — the export no longer opens with `#` comment lines that break spreadsheet import
+*Metric correctness*
+- **Xray pagination now uses page numbers** — `/api/v1/violations` defines `pagination.offset` as a one-based page number. The collector treated it as a row offset (`0`, `500`, `1000`), so large runs kept the API-reported total but built every severity, type, repository, and critical-issue breakdown from only the first 500 rows. It now drains pages `1..N`, records collection completeness, and fails before render unless the API total, fetched rows, severity sum, and type sum agree
+- **One Curation coverage denominator** — supported-remotes, ecosystem gaps, and pass-through inventory now all derive support from Curation policy `supported_pkg_types`. The runner rejects a report unless the ecosystem gap sum and supported pass-through count equal `supported_not_connected`; unsupported remotes remain visible as a separate inventory count
+
+- **Snapshots carry a collector version** — the first run after the pagination fix would otherwise compare a complete violation count against a prior snapshot built from one page, reporting the fix as a 27,000-violation increase in posture. Snapshots now record `collector_version`, and violation deltas, sparklines, and trend prose are withheld with a stated reason when the baseline predates the fix. Curation and coverage history, which the bug never touched, keeps trending
+
+- **JAS applicability now parsed from violations** — critical rows already carry `applicability` / `applicability_details` from Contextual Analysis; the collector was only reading string `exploit_status` fields, so every issue showed NOT CAPTURED. It now rolls up applicable / not applicable / undetermined and only shows the Critical Issues column when data exists
+- **New critical introductions gated like violation deltas** — withheld when the prior snapshot predates `collector_version` 2, with the trend context living under Trend & Comparison
+
+*CISO decision signals*
+- **Retention health** — read-only repository configuration collection reports indexed repositories on the 90-day default, custom retention, below-default settings, and unknowns. The report explicitly distinguishes retention expiry from a mandatory 90-day re-index cycle
+- **Active-user adoption context** — period-based active users now trend through snapshots. Customers can optionally supply `CISO_CURATION_USER_BASELINE` to compare observed activity against their own planning number and see the headroom left. The report states plainly that this is an observed activity count, never a license count or contractual position
+- **Waiver age and exploitability availability** — pending waivers are bucketed by age and the oldest backlog is surfaced; critical exploitability is always shown as captured or unavailable instead of disappearing silently
+- **Normalized trend context** — trend history adds violations per indexed repository, Curation block rate, coverage gap, and active users alongside raw totals
+
+*Report consolidation*
+- **Repeated panels merged without dropping detail** — ecosystem coverage is one gap-first table, Curation policy outcomes use the richer protection table, Xray watch/policy hits carry trigger share in one table, the audit link sits with Curation activity, and prior-period comparison now lives beside multi-period trend
+- **Pass-through labels reconciled** — the repository inventory states total ungated remotes, supported-but-not-enabled remotes, and unsupported ecosystems separately
+
+*Terminology*
+- **One name for the user count** — the same `curation.unique_users` figure was labelled three ways in one report: "Unique users" in the sidebar, "Active developers" on the KPI, and "Active users" on the panel below it, which read as three different measurements. Everything now says **Active users**, matching the executive PDF, the CSV export and the metric's own definition. The full PDF's user table header and its "additional developers" footnote follow, and "developer behavior change" on the upgrade-after-block panel becomes "user behavior change" — the report describes requester identities, which are not always developers
 
 *Guardrails*
+- **`/tmp` is no longer policed** — deletes were restricted to `/tmp/ciso-*`, so removing a scratch render or a test fixture from `/tmp` was refused mid-task. Everything under `/tmp` is scratch space and is now unrestricted, apart from the directory itself; `/private/tmp` is treated identically because on macOS it is the same place. Paths outside `/tmp` are unchanged, and `..` is resolved before the check so `/tmp/../<anything>` is still caught. Verified across all four agent hooks against 16 commands each
 - **Scoped to the CISO skill, which is all they were ever meant to cover** — the hooks treated any command containing `jf rt` or `jf xr` as a report workflow, so the whole JFrog CLI was policed in every session: unrelated platform-skill queries, MCP-equivalent calls and ad-hoc admin work all hit CISO rules. They now engage only for commands naming CISO artifacts, plus anything issued while a run is in flight, which the runner signals with a `/tmp/ciso-report-run.active` marker that expires after four hours so a crashed run cannot arm them indefinitely
 - **Read-only AQL is allowed** — `POST /api/search/aql` is a search that happens to use POST, and was being refused as a mutation alongside the already-allowed Xray violations POST
 
+*Performance on large instances*
+- **Audit pages are fetched concurrently** — collection paged the Curation audit API one request at a time, measured at ~500 events/sec, so an instance holding a million audit events spent over half an hour in that loop alone and ten million ran for hours. Four pages now go out at once, verified against a live instance to return the same 20,870 rows in the same order as the sequential drain, 3.2x faster. Tunable with `CISO_AUDIT_CONCURRENCY` (default `4`, clamped `1`–`8`); set it to `1` to restore the old one-at-a-time behaviour if a JPD rate-limits the endpoint
+- **The agent-side collector was serial despite looking otherwise** — `report-data-collection.md` built waves of offsets and then fetched each one in a `for` loop, so `CISO_CURATION_CONCURRENCY` had no effect at all. It now uses a thread pool, and a wave that hits 403 or 404 is refused whole rather than committing the pages that happened to succeed
+- **Scale documented** — [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md#large-instances) records what actually drives runtime. User count is close to free: 10,000 users across a million events aggregate and export in under 5 seconds. Event volume is the cost, and memory is the harder ceiling at roughly 0.5 KB per audit row
+
 *Curation active users*
 - **Allowed-only user count** — `curation.unique_users_approved` counts identities with at least one allowed request, so users blocked on every attempt no longer read as package consumers. The dashboard surfaces it only when it differs from `unique_users`, which is the case worth reading. Tests `approved + passed` rather than `approved` alone, since an instance reporting only `passed` would otherwise report no active users
+- **The export states what an Active User is** — `curation-user-package-activity.csv` opens with a commented definition of the metric, the reporting period and the user count. The number is routinely read as a licence count, and nothing in the file previously said what it counts: distinct requester identities as JFrog recorded them, offered as a yardstick for adoption and licence planning
+- **Two tables instead of one** — the file now carries the per-user summary (table 1, every active user) followed by the underlying per-request detail (table 2), so the adoption question and the drill-down are both answerable from one attachment. Table 2 is capped at 50,000 rows and says so in its heading when the cap bites; table 1 is never capped
+- **Curated repository named** — both tables report which curated remote served each request, which the export never carried, so a spike could not be traced to a repository without going back to the audit log. `distinct_packages` still counts packages: on live data one user's 318 packages arrived as 359 package/repo pairs, and counting pairs would have overstated their footprint by 13%
+- **Comment lines are written unquoted** — routing them through the CSV writer would have quoted every line containing a comma, burying the definition inside a quoted field
+- **A brief shape for large instances** — the per-package breakdown is the only part of the user export whose size is unbounded, and it is what puts a large instance at risk of exhausting memory. `brief` collects per-user counts and curated repositories and skips the package aggregation entirely; both shapes list every active user with identical counts, verified against a live instance. Curated repositories are kept in both, since a handful of repo names per user is bounded and it is the one field that says where the activity happened
+- **The export tables are built from a per-user list, not the package cross-product** — table 1 previously derived its users from the package activity rows, which meant no packages implied no users. It now comes from `curation.user_summary`, so the user table is complete regardless of shape
+
+*Prompt-driven output modes*
+- **PDF and user-detail shape are chosen from the prompt** — both were environment variables only, so the shapes existed but nobody asked for them in the way the rest of the skill is driven. `executive pdf`, `full pdf`, `both pdfs`, `html only`, `brief users` and `with package detail` now resolve in Phase 0 alongside server and date range, and the resolved values are printed before collection starts
+- **`CISO_PDF_MODE=none`** — every PDF consumer in the runner was already conditional, so HTML-only needed nothing but a case branch and a validation fix. The browser preflight is skipped in this mode, which is what makes the option worth having on WSL2 and bare CI images where installing a Linux browser is the whole difficulty
+- **The volume question is asked before it costs anything** — a single request returns the period's exact event count in about three seconds and 1.1 KB, without downloading any events. Above 250,000 the skill reports the count and asks which shape you want; below it, it proceeds. User count cannot be known before collection, and it is not what drives the cost anyway
 
 *Documentation and repository*
 - **Interpreting the report** — the interpretation material was ~60 lines buried at the end of a 515-line operator manual, mixed in with permissions and agent-compliance detail. It is now [its own guide](docs/INTERPRETING-THE-REPORT.md) aimed at whoever reads the finished report, ordered to match the dashboard, and extended to cover the v4 panels the old section never described

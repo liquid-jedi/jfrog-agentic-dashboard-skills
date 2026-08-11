@@ -88,9 +88,9 @@ PDF_FULL_TEMPLATE_PATH="$SKILL_DIR/references/dashboard-pdf-full.html"
 PDF_RENDERER_PATH="$SKILL_DIR/bin/generate-ciso-pdf.js"
 CISO_PDF_MODE="$(printf '%s' "${CISO_PDF_MODE:-executive}" | tr '[:upper:]' '[:lower:]')"
 case "$CISO_PDF_MODE" in
-  executive|full|both) ;;
+  executive|full|both|none) ;;
   *)
-    echo "ERROR: CISO_PDF_MODE must be executive, full, or both (got: $CISO_PDF_MODE)" >&2
+    echo "ERROR: CISO_PDF_MODE must be executive, full, both, or none (got: $CISO_PDF_MODE)" >&2
     exit 1
     ;;
 esac
@@ -143,11 +143,16 @@ if [[ ! -f "$PDF_TEMPLATE_PATH" || ! -f "$PDF_FULL_TEMPLATE_PATH" || ! -f "$PDF_
   echo "ERROR: missing PDF template or renderer under $SKILL_DIR" >&2
   exit 1
 fi
-if ! command -v node >/dev/null 2>&1; then
-  echo "ERROR: node is required to generate PDF exports" >&2
-  exit 1
+# Only a run that will actually render a PDF needs node and a browser. Checking
+# unconditionally would block an HTML-only run on a host without one, which is
+# the common case on WSL2 and bare CI images.
+if [[ "$CISO_PDF_MODE" != "none" ]]; then
+  if ! command -v node >/dev/null 2>&1; then
+    echo "ERROR: node is required to generate PDF exports. Set CISO_PDF_MODE=none for HTML only." >&2
+    exit 1
+  fi
+  node "$PDF_RENDERER_PATH" --check
 fi
-node "$PDF_RENDERER_PATH" --check
 
 if [[ -z "${DATE_FROM:-}" ]]; then
   case "$REPORT_TYPE_LOWER" in
@@ -220,6 +225,7 @@ rm -f /tmp/ciso-data.json /tmp/ciso-platform.json /tmp/ciso-curation.json \
   /tmp/ciso-curation-policies.json /tmp/ciso-curation-policies-raw.json \
   /tmp/ciso-curation-waivers.json \
   /tmp/ciso-indexed-repos.json /tmp/ciso-indexed.json /tmp/ciso-indexed.json.err \
+  /tmp/ciso-retention-health.json \
   /tmp/ciso-watches.json /tmp/ciso-policies.json /tmp/ciso-repos-all.json \
   /tmp/ciso-repos-remote.json /tmp/ciso-version.json /tmp/ciso-violations-page-*.json \
   /tmp/ciso-violations.json \
@@ -231,6 +237,7 @@ rm -f /tmp/ciso-track-platform.log /tmp/ciso-track-curation.log /tmp/ciso-track-
 # ── Track 1: platform metadata ────────────────────────────────────────────────
 (python3 - <<'PY'
 import json, os, subprocess
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 server = os.environ["SERVER_ID"]
 
@@ -255,7 +262,65 @@ json.dump(jf_rt("/api/repositories") or [], open("/tmp/ciso-repos-all.json", "w"
 json.dump(jf_rt("/api/repositories?type=remote") or [], open("/tmp/ciso-repos-remote.json", "w"), indent=2)
 json.dump(jf_xr("/api/v2/watches") or [], open("/tmp/ciso-watches.json", "w"), indent=2)
 json.dump(jf_xr("/api/v2/policies") or [], open("/tmp/ciso-policies.json", "w"), indent=2)
-json.dump(jf_xr("/api/v1/binMgr/default/repos") or {}, open("/tmp/ciso-indexed-repos.json", "w"), indent=2)
+indexed_payload = jf_xr("/api/v1/binMgr/default/repos") or {}
+json.dump(indexed_payload, open("/tmp/ciso-indexed-repos.json", "w"), indent=2)
+
+# Repository scan data expires according to each indexed resource's retention
+# configuration (90 days by default). Reporting this belongs to the separate
+# re-index workstream, so the report no longer renders it and the per-repository
+# fan-out (one call per indexed repository) is off unless explicitly requested.
+indexed_names = [
+    row.get("name")
+    for row in (indexed_payload.get("indexed_repos") or [])
+    if isinstance(row, dict) and row.get("name")
+]
+if os.environ.get("CISO_RETENTION_HEALTH", "0").lower() not in ("1", "true", "yes"):
+    indexed_names = []
+retention_concurrency = max(1, min(int(os.environ.get("CISO_RETENTION_CONCURRENCY", "12")), 24))
+
+def retention_for(repo):
+    proc = subprocess.run(
+        ["jf", "xr", "curl", "-s", "--http1.1", "--server-id", server,
+         "-XGET", f"/api/v1/repos_config/{repo}"],
+        capture_output=True, text=True,
+    )
+    if proc.returncode != 0:
+        return repo, None
+    try:
+        payload = json.loads(proc.stdout or "{}")
+    except Exception:
+        return repo, None
+    config = payload.get("repo_config") if isinstance(payload, dict) else None
+    days = config.get("retention_in_days") if isinstance(config, dict) else None
+    try:
+        return repo, int(days)
+    except (TypeError, ValueError):
+        return repo, None
+
+retention_values = {}
+if indexed_names:
+    with ThreadPoolExecutor(max_workers=retention_concurrency) as pool:
+        futures = [pool.submit(retention_for, repo) for repo in indexed_names]
+        for future in as_completed(futures):
+            repo, days = future.result()
+            retention_values[repo] = days
+
+known_days = [days for days in retention_values.values() if days is not None]
+default_days = 90
+retention_health = {
+    "available": bool(known_days),
+    "default_repo_days": default_days,
+    "default_build_days": 15,
+    "max_days": 1000,
+    "repositories_checked": len(known_days),
+    "repos_on_default": sum(1 for days in known_days if days == default_days),
+    "repos_custom": sum(1 for days in known_days if days != default_days),
+    "repos_below_default": sum(1 for days in known_days if days < default_days),
+    "unknown_repos": max(0, len(indexed_names) - len(known_days)),
+    "minimum_days": min(known_days) if known_days else None,
+    "maximum_days": max(known_days) if known_days else None,
+}
+json.dump(retention_health, open("/tmp/ciso-retention-health.json", "w"), indent=2)
 print("track: platform done")
 PY
 ) > /tmp/ciso-track-platform.log 2>&1 &
@@ -264,6 +329,7 @@ PID_PLATFORM=$!
 # ── Track 2: curation (policies + audit) ─────────────────────────────────────
 (python3 - <<'PY'
 import json, os, subprocess
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 
 server = os.environ["SERVER_ID"]
@@ -305,7 +371,12 @@ if report_type == "weekly" and (end - start).total_seconds() > 168 * 3600:
     date_from = fmt(start)
 
 def month_windows():
-    if report_type != "monthly":
+    # The curation audit API rejects any range longer than 168 hours with
+    # {"errors":[{"message":"Maximum allowed duration is 168 hours"}]}. Chunking
+    # was applied to monthly only, so a custom window such as Aug 1-11 was sent
+    # whole, refused, and silently produced zero events and zero active users.
+    # Every window longer than the limit is now chunked, whatever the report type.
+    if (end - start).total_seconds() <= 168 * 3600:
         return [(date_from, date_to)]
     out, cur = [], start
     while cur < end:
@@ -327,12 +398,13 @@ while True:
     offset += len(batch)
 json.dump({"data": policies, "meta": {"total_count": total_policies}}, open("/tmp/ciso-curation-policies.json", "w"), indent=2)
 
-# Waiver workflow counts. This endpoint can be unavailable by entitlement or
-# permission; preserve that as available=false instead of failing the report.
-waiver_counts, waivers_available = {}, False
+# Waiver workflow counts and pending-request age. This endpoint can be
+# unavailable by entitlement or permission; preserve that as available=false
+# instead of failing the report.
+waiver_counts, waivers_available, pending_waivers = {}, False, []
 for waiver_status in ("pending", "approved", "rejected"):
     status, body = get_xr_with_status(
-        f"/api/v1/curation/waiver_requests?status={waiver_status}&num_of_rows=1&page_num=1"
+        f"/api/v1/curation/waiver_requests?status={waiver_status}&num_of_rows=100&page_num=1"
     )
     if status == 200 and isinstance(body, dict):
         waivers_available = True
@@ -340,54 +412,160 @@ for waiver_status in ("pending", "approved", "rejected"):
         waiver_counts[waiver_status] = int(
             meta.get("total_count") or body.get("total_count") or len(body.get("data") or [])
         )
+        if waiver_status == "pending":
+            pending_waivers.extend(body.get("data") or [])
+            total_pages = max(1, (waiver_counts[waiver_status] + 99) // 100)
+            for page_num in range(2, total_pages + 1):
+                next_status, next_body = get_xr_with_status(
+                    f"/api/v1/curation/waiver_requests?status=pending&num_of_rows=100&page_num={page_num}"
+                )
+                if next_status != 200 or not isinstance(next_body, dict):
+                    break
+                pending_waivers.extend(next_body.get("data") or [])
     else:
         waiver_counts[waiver_status] = 0
+
+age_buckets = {"0-7 days": 0, "8-30 days": 0, "31-90 days": 0, "90+ days": 0}
+oldest_pending_days = 0
+oldest_pending = []
+for waiver in pending_waivers:
+    if not isinstance(waiver, dict):
+        continue
+    try:
+        created = parse_time(str(waiver.get("created_at") or ""))
+    except Exception:
+        continue
+    age_days = max(0, (end - created).days)
+    oldest_pending_days = max(oldest_pending_days, age_days)
+    bucket = "0-7 days" if age_days <= 7 else "8-30 days" if age_days <= 30 else "31-90 days" if age_days <= 90 else "90+ days"
+    age_buckets[bucket] += 1
+    oldest_pending.append({
+        "id": waiver.get("id"),
+        "package": waiver.get("pkg_name") or "",
+        "version": waiver.get("pkg_version") or "",
+        "repo": waiver.get("repo_key") or "",
+        "created_at": waiver.get("created_at") or "",
+        "age_days": age_days,
+    })
+oldest_pending.sort(key=lambda row: (-row["age_days"], str(row["id"])))
 json.dump(
-    {"available": waivers_available, **waiver_counts},
+    {
+        "available": waivers_available,
+        **waiver_counts,
+        "pending_aging": {
+            "available": waivers_available and bool(pending_waivers),
+            "oldest_pending_days": oldest_pending_days,
+            "buckets": [{"label": label, "count": count} for label, count in age_buckets.items()],
+            "oldest": oldest_pending[:10],
+        },
+    },
     open("/tmp/ciso-curation-waivers.json", "w"),
     indent=2,
 )
 
 # Curation audit
+# Pages go out in concurrent waves rather than one at a time. Sequential paging
+# measures ~500 events/sec, so an instance holding a million audit events spent
+# half an hour here; the same offsets fetched concurrently return identical pages
+# at roughly 4x the rate. Override with CISO_AUDIT_CONCURRENCY.
 print("track: curation audit")
 all_rows, pages_fetched, reported_total, http_status = [], 0, 0, 200
 limit = 2000
-for wstart, wend in month_windows():
-    offset = 0
-    while True:
-        path = (
-            "/api/v1/curation/audit/packages"
-            f"?order_by=id&direction=desc&num_of_rows={limit}"
-            f"&created_at_start={wstart}&created_at_end={wend}"
-            f"&include_total=true&dry_run=false&offset={offset}"
-        )
-        http_status, page = get_xr_with_status(path)
-        if http_status in (403, 404):
-            all_rows, reported_total = [], 0
-            break
-        batch = page.get("data") or []
-        all_rows.extend(batch)
-        pages_fetched += 1
-        if report_type == "monthly" and offset == 0:
-            reported_total += int((page.get("meta") or {}).get("total_count") or 0)
-        else:
-            reported_total = max(reported_total, int((page.get("meta") or {}).get("total_count") or 0))
-        if len(batch) < limit:
-            break
-        offset += limit
+audit_concurrency = max(1, min(int(os.environ.get("CISO_AUDIT_CONCURRENCY", "4")), 8))
+
+def audit_page(wstart, wend, offset):
+    path = (
+        "/api/v1/curation/audit/packages"
+        f"?order_by=id&direction=desc&num_of_rows={limit}"
+        f"&created_at_start={wstart}&created_at_end={wend}"
+        f"&include_total=true&dry_run=false&offset={offset}"
+    )
+    status, page = get_xr_with_status(path)
+    return offset, status, page
+
+audit_windows = month_windows()
+audit_errors = []
+for wstart, wend in audit_windows:
+    # The first page carries the window total, which sizes the remaining fan-out.
+    _off, http_status, page = audit_page(wstart, wend, 0)
     if http_status in (403, 404):
+        all_rows, reported_total = [], 0
         break
+    # A rejected range returns 200 with an errors array and no data. Left
+    # unchecked that reads as "no curation activity" instead of a failed call.
+    if isinstance(page, dict) and page.get("errors") and not page.get("data"):
+        audit_errors.append({
+            "window": [wstart, wend],
+            "messages": [str((e or {}).get("message") or e) for e in page["errors"]],
+        })
+        continue
+    window_pages = {0: page}
+    pages_fetched += 1
+    window_total = int((page.get("meta") or {}).get("total_count") or 0)
+    if len(audit_windows) > 1:
+        reported_total += window_total
+    else:
+        reported_total = max(reported_total, window_total)
+
+    if len(page.get("data") or []) >= limit:
+        next_offset = limit
+        done = False
+        while not done:
+            offsets = [next_offset + (i * limit) for i in range(audit_concurrency)]
+            # A page of slack past the reported total, in case events landed while
+            # we were paging. A short page is still what actually ends the drain,
+            # so a missing or stale total cannot truncate the window.
+            if window_total:
+                offsets = [off for off in offsets if off < window_total + limit]
+            if not offsets:
+                break
+            got = {}
+            with ThreadPoolExecutor(max_workers=audit_concurrency) as pool:
+                futures = [pool.submit(audit_page, wstart, wend, off) for off in offsets]
+                for fut in as_completed(futures):
+                    off, status, pg = fut.result()
+                    got[off] = (status, pg)
+            for off in sorted(got):
+                status, pg = got[off]
+                if status in (403, 404):
+                    http_status = status
+                    done = True
+                    break
+                window_pages[off] = pg
+                pages_fetched += 1
+                batch = pg.get("data") or []
+                if len(batch) < limit or (window_total and off + len(batch) >= window_total):
+                    done = True
+                    break
+            if done:
+                break
+            next_offset = offsets[-1] + limit
+
+    if http_status in (403, 404):
+        all_rows, reported_total = [], 0
+        break
+    for off in sorted(window_pages):
+        all_rows.extend(window_pages[off].get("data") or [])
 json.dump({"data": all_rows, "meta": {"total_count": reported_total}}, open("/tmp/ciso-curation.json", "w"), indent=2)
 json.dump({
     "http_status": http_status,
-    "mode": "monthly_chunked" if report_type == "monthly" else "weekly",
+    "mode": "chunked" if len(audit_windows) > 1 else "single_window",
+    "windows": len(audit_windows),
+    "window_errors": audit_errors,
     "pages_fetched": pages_fetched,
+    "page_size": limit,
+    "concurrency": audit_concurrency,
     "rows_fetched": len(all_rows),
     "total_count_reported": reported_total,
     "date_from": date_from,
     "date_to": date_to,
 }, open("/tmp/ciso-curation-diagnostics.json", "w"), indent=2)
-print(f"track: curation done rows={len(all_rows)} pages={pages_fetched} status={http_status}")
+print(f"track: curation done rows={len(all_rows)} pages={pages_fetched} status={http_status} windows={len(audit_windows)}")
+if audit_errors:
+    # Refuse a partial window rather than letting it read as "no curation activity".
+    for err in audit_errors:
+        print(f"ERROR: curation audit window {err['window'][0]}..{err['window'][1]} rejected: {'; '.join(err['messages'])}")
+    raise SystemExit("ERROR: curation audit collection incomplete")
 PY
 ) > /tmp/ciso-track-curation.log 2>&1 &
 PID_CURATION=$!
@@ -426,47 +604,50 @@ def fetch(offset):
     return offset, page
 
 pages = {}
-offset, first = fetch(0)
-pages[offset] = first
+# Xray's `offset` is a one-based page number, not a row offset. Using
+# 0, 500, 1000 fetched only page 1 and distant/empty pages, which made the API
+# total disagree with every severity/type breakdown.
+page_number, first = fetch(1)
+pages[page_number] = first
 total_violations = int(first.get("total_violations") or 0)
 
 if len(first.get("violations") or []) >= limit:
-    next_offset = limit
-    stop_offset = None
-    while stop_offset is None:
-        offsets = [next_offset + (i * limit) for i in range(concurrency)]
-        if total_violations:
-            offsets = [off for off in offsets if off < total_violations + limit]
+    total_pages = max(1, (total_violations + limit - 1) // limit) if total_violations else 1
+    next_page = 2
+    while next_page <= total_pages:
+        page_numbers = list(range(next_page, min(next_page + concurrency, total_pages + 1)))
         got = {}
         with ThreadPoolExecutor(max_workers=concurrency) as pool:
-            futures = {pool.submit(fetch, off): off for off in offsets}
+            futures = {pool.submit(fetch, page): page for page in page_numbers}
             for fut in as_completed(futures):
-                off, page = fut.result()
-                got[off] = page
-        for off in sorted(got):
-            pages[off] = got[off]
-            batch_len = len(got[off].get("violations") or [])
-            page_total = int(got[off].get("total_violations") or 0)
+                page, payload = fut.result()
+                got[page] = payload
+        for page in sorted(got):
+            pages[page] = got[page]
+            page_total = int(got[page].get("total_violations") or 0)
             total_violations = max(total_violations, page_total)
-            if batch_len < limit or (total_violations and off + batch_len >= total_violations):
-                stop_offset = off
-                break
-        if stop_offset is not None:
-            break
-        next_offset = offsets[-1] + limit
-
-if total_violations:
-    pages = {off: page for off, page in pages.items() if off <= total_violations}
+            total_pages = max(total_pages, (total_violations + limit - 1) // limit)
+        next_page = page_numbers[-1] + 1
 
 violations = []
-for off in sorted(pages):
-    page = pages[off]
+for page_number in sorted(pages):
+    page = pages[page_number]
     if debug_pages:
-        json.dump(page, open(f"/tmp/ciso-violations-page-{off}.json", "w"), separators=(",", ":"))
+        json.dump(page, open(f"/tmp/ciso-violations-page-{page_number}.json", "w"), separators=(",", ":"))
     violations.extend(page.get("violations") or [])
 if total_violations == 0 and violations:
     total_violations = len(violations)
-json.dump({"violations": violations, "total_violations": total_violations}, open("/tmp/ciso-violations.json", "w"), separators=(",", ":"))
+json.dump({
+    "violations": violations,
+    "total_violations": total_violations,
+    "collection_meta": {
+        "rows_fetched": len(violations),
+        "total_reported": total_violations,
+        "pages_fetched": len(pages),
+        "page_size": limit,
+        "complete": len(violations) == total_violations,
+    },
+}, open("/tmp/ciso-violations.json", "w"), separators=(",", ":"))
 print(f"track: violations done rows={len(violations)} total={total_violations} pages={len(pages)} concurrency={concurrency}")
 PY
 ) > /tmp/ciso-track-violations.log 2>&1 &
@@ -509,6 +690,13 @@ http_status = int(diag.get("http_status") or 200)
 viol_data = json.load(open("/tmp/ciso-violations.json")) if os.path.isfile("/tmp/ciso-violations.json") else {"violations": [], "total_violations": 0}
 violations = viol_data.get("violations") or []
 total_violations = int(viol_data.get("total_violations") or len(violations))
+violations_collection = viol_data.get("collection_meta") or {
+    "rows_fetched": len(violations),
+    "total_reported": total_violations,
+    "pages_fetched": 0,
+    "page_size": 0,
+    "complete": len(violations) == total_violations,
+}
 
 def sev_key(value):
     v = str(value or "").lower()
@@ -516,7 +704,7 @@ def sev_key(value):
     if v.startswith("high"): return "high"
     if v.startswith("med"): return "medium"
     if v.startswith("low"): return "low"
-    return None
+    return "unknown"
 
 def type_key(value):
     v = str(value or "").lower()
@@ -532,8 +720,7 @@ critical = defaultdict(lambda: {"hits": 0, "description": "", "component": "unkn
 details = []
 for item in violations:
     sk = sev_key(item.get("severity"))
-    if sk:
-        sev[sk] += 1
+    sev[sk] += 1
     typ[type_key(item.get("type"))] += 1
     watch = (item.get("watch_name") or "").strip()
     if watch:
@@ -558,7 +745,8 @@ for item in violations:
         "description": str(item.get("description") or "")[:150],
     })
 
-severity_total = sum(sev[k] for k in ("critical", "high", "medium", "low"))
+severity_keys = ("critical", "high", "medium", "low", "unknown")
+severity_total = sum(sev[k] for k in severity_keys)
 risk_score = 0.0  # placeholder — recalculated after enrich using 3-factor formula
 
 def display_date(value):
@@ -610,12 +798,14 @@ data = {
         "observation": f"What changed: Curation processed {reported_total or len(all_rows)} package requests and blocked {cur_blocked}. Why it matters: Gate enforcement is active before download. Action: Review top blocking policies and expand connected remotes.",
     },
     "violations": {
-        "total": total_violations or len(violations),
+        "total": len(violations),
+        "total_reported": total_violations,
+        "collection_meta": violations_collection,
         "risk_score": risk_score,
         "risk_score_previous": 0,
         "by_type": {k: int(typ[k]) for k in ("security", "operational", "license")},
-        "by_severity": {k: int(sev[k]) for k in ("critical", "high", "medium", "low")},
-        "severity_pct": {k: round((int(sev[k]) / max(severity_total, 1)) * 100, 1) for k in ("critical", "high", "medium", "low")},
+        "by_severity": {k: int(sev[k]) for k in severity_keys},
+        "severity_pct": {k: round((int(sev[k]) / max(severity_total, 1)) * 100, 1) for k in severity_keys},
         "violation_details": sorted(details, key=lambda x: {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}.get(x["severity"], 9))[:20],
         "critical_issues": [
             {
@@ -638,7 +828,7 @@ data = {
             {"policy": name, "type": "security", "hits": hits, "delta_pct": 0}
             for name, hits in watch_hits.most_common(15)
         ],
-        "observation": f"What changed: Xray reported {total_violations or len(violations)} violations, including {sev['critical']} critical. Why it matters: Critical concentration drives executive risk. Action: Prioritize the highest-hit XRAY IDs.",
+        "observation": f"What changed: Xray reported {len(violations)} violations, including {sev['critical']} critical. Why it matters: Critical concentration drives executive risk. Action: Prioritize the highest-hit XRAY IDs.",
     },
     "license": {"total": int(typ["license"]), "licenses": [], "observation": "What changed: License signal was collected from Xray violations. Why it matters: Policy violations may block release paths. Action: Review license rows in Xray for remediation ownership."},
     "operational": {"total": int(typ["operational"]), "top_components": [], "observation": "What changed: Operational risk signal was collected from Xray violations. Why it matters: Deprecated or risky components affect reliability. Action: Prioritize operational-risk packages with active usage."},
@@ -735,6 +925,78 @@ def first_text(row, keys):
             if isinstance(val, (int, float)):
                 return str(val)
     return ""
+
+def applicability_status(row):
+    """Normalize JFrog Advanced Security contextual analysis on a violation row.
+
+    The violations API exposes this as either:
+      - applicability: [{applicability: true|false|null, ...}, ...]
+      - applicability_details: [{result: applicable|not_applicable|..., ...}, ...]
+    Older code looked only for string exploit_status fields, so every issue
+    rendered as NOT CAPTURED even when JAS had already scored the row.
+    """
+    app = row.get("applicability")
+    details = row.get("applicability_details")
+    statuses = []
+
+    if isinstance(app, list):
+        for item in app:
+            if not isinstance(item, dict):
+                continue
+            if item.get("scanner_available") is False and item.get("applicability") is None:
+                continue
+            val = item.get("applicability")
+            if val is True:
+                statuses.append("applicable")
+            elif val is False:
+                statuses.append("not_applicable")
+            elif item.get("scanner_available") or "applicability" in item:
+                statuses.append("undetermined")
+    elif isinstance(app, bool):
+        statuses.append("applicable" if app else "not_applicable")
+    elif isinstance(app, str) and app.strip():
+        key = app.strip().lower().replace("-", "_").replace(" ", "_")
+        if key in ("applicable", "true", "active", "exploited"):
+            statuses.append("applicable")
+        elif key in ("not_applicable", "false", "none", "not_exploitable"):
+            statuses.append("not_applicable")
+        elif key in ("poc", "proof_of_concept"):
+            statuses.append("poc")
+        else:
+            statuses.append("undetermined")
+
+    if isinstance(details, list):
+        for item in details:
+            if not isinstance(item, dict):
+                continue
+            result = str(item.get("result") or "").strip().lower().replace("-", "_").replace(" ", "_")
+            if result in ("applicable", "direct_paths"):
+                statuses.append("applicable")
+            elif result in ("not_applicable", "not_applicable_to_artifact"):
+                statuses.append("not_applicable")
+            elif result:
+                statuses.append("undetermined")
+
+    # Also accept legacy string exploit fields if present.
+    legacy = first_text(row, ("exploit_status", "exploitStatus", "exploitability")).lower()
+    if legacy:
+        key = legacy.replace("-", "_").replace(" ", "_")
+        if "active" in key or "exploit" in key and "not" not in key:
+            statuses.append("applicable")
+        elif "poc" in key or "proof" in key:
+            statuses.append("poc")
+        elif key in ("none", "not_exploitable", "not_applicable"):
+            statuses.append("not_applicable")
+
+    if "applicable" in statuses:
+        return "applicable"
+    if "poc" in statuses:
+        return "poc"
+    if "not_applicable" in statuses:
+        return "not_applicable"
+    if "undetermined" in statuses:
+        return "undetermined"
+    return "unknown"
 
 def values_for_keys(row, keys):
     vals = []
@@ -942,11 +1204,7 @@ for row in violations:
         fstate, fvers = fix_state(row)
         stat["fix_statuses"][fstate] += 1
         stat["fix_versions"].update(fvers)
-        exploit = first_text(row, ("exploit_status", "exploitStatus", "exploitability", "applicability")).lower()
-        if exploit:
-            exploit_key = exploit.replace("-", "_").replace(" ", "_")
-            normalized_exploit = "active" if "active" in exploit_key or "exploited" in exploit_key else "poc" if "poc" in exploit_key or "proof" in exploit_key else "none" if exploit_key in ("none", "not_exploitable", "not_applicable") else "unknown"
-            stat["exploit_statuses"][normalized_exploit] += 1
+        stat["exploit_statuses"][applicability_status(row)] += 1
         stat["affected_environments"].update(values_for_keys(row, {"affected_environments", "affectedenvironments", "environment", "environments"}))
         stat["playbook_link"] = stat["playbook_link"] or first_text(row, ("playbook_link", "playbookLink", "runbook_url", "runbookUrl"))
         component_stats[comp]["critical_issues"].add(rid)
@@ -959,6 +1217,11 @@ buckets = {label: {"label": label, "issues": 0, "hits": 0} for label, _, _ in bu
 fix_counts = Counter()
 fix_hits = Counter()
 new_issues = new_hits = existing_issues = 0
+# Same pagination-era gate as comparison: a prior snapshot with collector_version < 2
+# only stored a thin critical_id set, so almost every issue would look "new".
+COLLECTOR_VERSION = 2
+prev_version = int(prev.get("collector_version") or 1)
+new_critical_comparable = bool(prev_critical_ids) and prev_version >= COLLECTOR_VERSION
 
 for rid, stat in issue_stats.items():
     first = stat["first_seen"]
@@ -976,22 +1239,25 @@ for rid, stat in issue_stats.items():
         fstatus = "none"
     else:
         fstatus = "unknown"
-    if stat["exploit_statuses"].get("active"):
-        exploit_status = "active"
+    if stat["exploit_statuses"].get("applicable"):
+        exploit_status = "applicable"
     elif stat["exploit_statuses"].get("poc"):
         exploit_status = "poc"
-    elif stat["exploit_statuses"].get("none"):
-        exploit_status = "none"
+    elif stat["exploit_statuses"].get("not_applicable"):
+        exploit_status = "not_applicable"
+    elif stat["exploit_statuses"].get("undetermined"):
+        exploit_status = "undetermined"
     else:
         exploit_status = "unknown"
     fix_counts[fstatus] += 1
     fix_hits[fstatus] += stat["hits"]
-    is_new = bool(prev_critical_ids) and rid not in prev_critical_ids
-    if is_new:
-        new_issues += 1
-        new_hits += stat["hits"]
-    else:
-        existing_issues += 1
+    if new_critical_comparable:
+        is_new = rid not in prev_critical_ids
+        if is_new:
+            new_issues += 1
+            new_hits += stat["hits"]
+        else:
+            existing_issues += 1
     critical_issues.append({
         "id": rid,
         "description": stat["description"],
@@ -1048,6 +1314,20 @@ v = data.setdefault("violations", {})
 v["critical_issues"] = critical_issues[:50]
 v["unique_critical_issue_count"] = len(issue_stats)
 v["unique_issue_count"] = len({issue_id(row) for row in violations if issue_id(row) != "unknown"})
+exploit_counts = Counter(row.get("exploit_status") or "unknown" for row in critical_issues)
+scored = int(exploit_counts.get("applicable", 0)) + int(exploit_counts.get("poc", 0)) + int(exploit_counts.get("not_applicable", 0)) + int(exploit_counts.get("undetermined", 0))
+v["exploitability_summary"] = {
+    "data_available": scored > 0,
+    "source": "violations.applicability",
+    "applicable_issues": int(exploit_counts.get("applicable", 0)),
+    "poc_issues": int(exploit_counts.get("poc", 0)),
+    "not_applicable_issues": int(exploit_counts.get("not_applicable", 0)),
+    "undetermined_issues": int(exploit_counts.get("undetermined", 0)),
+    "unknown_issues": int(exploit_counts.get("unknown", 0)),
+    # Legacy aliases kept so older templates keep rendering until sync catches up.
+    "active_issues": int(exploit_counts.get("applicable", 0)),
+    "none_issues": int(exploit_counts.get("not_applicable", 0)),
+}
 v["top_repos"] = [
     {
         "repo": repo,
@@ -1073,7 +1353,21 @@ v["executive_insights"] = {
         "unknown_issues": fix_counts.get("unknown", 0),
     },
     "highest_impact_fixes": highest_impact[:10],
-    "new_critical_introductions": {"new_issues": new_issues, "new_hits": new_hits, "existing_issues": existing_issues, "baseline_available": bool(prev_critical_ids)},
+    "new_critical_introductions": {
+        "new_issues": new_issues if new_critical_comparable else None,
+        "new_hits": new_hits if new_critical_comparable else None,
+        "existing_issues": existing_issues if new_critical_comparable else None,
+        "baseline_available": new_critical_comparable,
+        "comparable": new_critical_comparable,
+        "incomparable_reason": (
+            "" if new_critical_comparable else
+            "Prior snapshot predates the violation pagination fix, so its critical-ID baseline is incomplete. New-vs-existing resumes after the next comparable snapshot."
+            if prev_critical_ids else
+            "Baseline becomes available after the next snapshot."
+        ),
+        "previous_date": prev.get("date") or "",
+        "previous_critical_ids": len(prev_critical_ids) if new_critical_comparable else None,
+    },
     "watch_blind_spots": blind_spots[:25],
     "watch_blind_spots_meta": {"available": watch_assignment_exposed, "reason": "Watch payload did not expose repository assignments" if not watch_assignment_exposed else ""},
     "blast_radius": blast[:10],
@@ -1101,7 +1395,11 @@ c = data.setdefault("curation", {})
 p = data.get("platform") or {}
 cur_state = (p.get("curation_state") or c.get("curation_state") or {})
 by_type = cur_state.get("by_package_type") or []
-supported_names = {"docker", "maven", "npm", "pypi", "go", "nuget", "conan", "composer", "debian", "rpm", "rubygems"}
+supported_names = {
+    str(row.get("package_type") or row.get("type") or "").lower()
+    for row in by_type
+    if isinstance(row, dict) and row.get("supported") is True
+}
 gate_gaps = []
 type_violations = Counter()
 for repo, stat in repo_stats.items():
@@ -1114,9 +1412,7 @@ for row in by_type:
     if not isinstance(row, dict):
         continue
     ptype = str(row.get("package_type") or row.get("type") or "Unknown")
-    supported = row.get("supported")
-    is_supported = supported is True or (supported is None and ptype.lower() in supported_names)
-    if not is_supported:
+    if row.get("supported") is not True:
         continue
     total = int(row.get("supported_remote_total") or row.get("remote_total") or row.get("total") or 0)
     connected = int(row.get("supported_connected") or row.get("connected") or 0)
@@ -1152,7 +1448,7 @@ for row in audit_rows:
         pkg = first_text(row, ("package_name", "packageName", "package", "name")) or "unknown"
         malicious_pkgs[pkg] += 1
 c["executive_insights"] = {
-    "gate_coverage_gaps": gate_gaps[:15],
+    "gate_coverage_gaps": gate_gaps,
     "enforcement_opportunity": {
         "dry_run_policies": int(p.get("curation_policies_dry_run") or len(set(dry_run_names))),
         "would_have_blocked": int((c.get("request_results") or {}).get("dry_run") or 0),
@@ -1163,6 +1459,52 @@ c["executive_insights"] = {
         "malicious_policies": malicious_policies,
         "top_packages": [{"package": pkg, "blocks": count} for pkg, count in malicious_pkgs.most_common(5)],
     },
+}
+
+active_users = int(c.get("unique_users") or 0)
+active_users_approved = int(c.get("unique_users_approved") or 0)
+# Optional planning baseline supplied by the customer. This is an observed
+# activity count compared against a number the customer chose; it is not a
+# license position and must never be presented as one.
+try:
+    baseline_users = int(os.environ.get("CISO_CURATION_USER_BASELINE", "0") or 0)
+except ValueError:
+    baseline_users = 0
+usage_vs_baseline_pct = round(active_users / baseline_users * 100, 1) if baseline_users else None
+if not baseline_users:
+    baseline_status = "not_configured"
+elif active_users > baseline_users:
+    baseline_status = "above_baseline"
+elif usage_vs_baseline_pct >= 90:
+    baseline_status = "near_baseline"
+else:
+    baseline_status = "within_baseline"
+c["active_user_context"] = {
+    "active_users": active_users,
+    "active_users_approved": active_users_approved,
+    "baseline_available": baseline_users > 0,
+    "baseline_users": baseline_users if baseline_users > 0 else None,
+    "usage_vs_baseline_pct": usage_vs_baseline_pct,
+    "remaining_to_baseline": baseline_users - active_users if baseline_users else None,
+    "status": baseline_status,
+    "source": "CISO_CURATION_USER_BASELINE" if baseline_users else "",
+    "note": "Observed distinct requester identities in the reporting period, compared against a customer-supplied planning baseline. Not a license count or contractual position.",
+    "trend": {"available": False, "previous": None, "delta": None},
+}
+
+ai_type_names = {"aieditorextensions", "agentpackages", "agentplugins", "huggingfaceml"}
+ai_rows = [
+    row for row in by_type
+    if isinstance(row, dict)
+    and str(row.get("package_type") or "").replace("_", "").replace("-", "").lower() in ai_type_names
+]
+p["ai_ecosystem"] = {
+    "available": bool(ai_rows),
+    "package_types": [row.get("package_type") for row in ai_rows],
+    "remote_total": sum(int(row.get("remote_total") or 0) for row in ai_rows),
+    "connected": sum(int(row.get("connected") or 0) for row in ai_rows),
+    "unconnected": sum(max(0, int(row.get("remote_total") or 0) - int(row.get("connected") or 0)) for row in ai_rows),
+    "blocks_period": sum(int(row.get("blocked_packages_period") or 0) for row in ai_rows),
 }
 
 benefit = data.setdefault("benefit", {})
@@ -1356,6 +1698,8 @@ if scan_dir.is_dir():
     if candidates:
         prior_snap_path = candidates[-1]
 
+COLLECTOR_VERSION = 2
+
 data = json.load(open('/tmp/ciso-data.json'))
 if prior_snap_path:
     prev = json.load(open(prior_snap_path))
@@ -1363,13 +1707,26 @@ if prior_snap_path:
     pv = prev.get('violations', {})
     dc = data.get('curation', {})
     dv = data.get('violations', {})
+    # A snapshot written before the pagination fix stored violation figures
+    # built from a single page. Comparing against it would report the fix as a
+    # change in posture, so those deltas are withheld rather than shown.
+    prev_version = int(prev.get('collector_version') or 1)
+    violations_comparable = prev_version >= COLLECTOR_VERSION
     def delta(a, b):
         return (a - b) if (a is not None and b is not None) else None
     def pct(a, b):
         return round((a - b) / b * 100, 1) if b else None
+    def vdelta(a, b):
+        return delta(a, b) if violations_comparable else None
     data['comparison'] = {
         'available': True,
         'previous_date': prev.get('date', ''),
+        'violations_comparable': violations_comparable,
+        'incomparable_reason': '' if violations_comparable else (
+            'Violation figures in the prior snapshot were collected before the '
+            'pagination fix and covered only the first page of results. '
+            'Period-over-period violation deltas resume with the next report.'
+        ),
         'curation': {
             'total': dc.get('total', 0),
             'total_previous': pc.get('total', 0),
@@ -1378,14 +1735,17 @@ if prior_snap_path:
             'blocked_previous': pc.get('blocked', 0),
             'blocked_delta': delta(dc.get('blocked'), pc.get('blocked')),
             'blocked_pct': pct(dc.get('blocked'), pc.get('blocked')),
+            'active_users': dc.get('unique_users', 0),
+            'active_users_previous': pc.get('unique_users'),
+            'active_users_delta': delta(dc.get('unique_users'), pc.get('unique_users')),
         },
         'violations': {
             'total': dv.get('total', 0),
-            'total_previous': pv.get('total', 0),
-            'total_delta': delta(dv.get('total'), pv.get('total')),
+            'total_previous': pv.get('total') if violations_comparable else None,
+            'total_delta': vdelta(dv.get('total'), pv.get('total')),
             'critical': (dv.get('by_severity') or {}).get('critical', 0),
-            'critical_previous': pv.get('critical', 0),
-            'critical_delta': delta((dv.get('by_severity') or {}).get('critical', 0), pv.get('critical', 0)),
+            'critical_previous': pv.get('critical') if violations_comparable else None,
+            'critical_delta': vdelta((dv.get('by_severity') or {}).get('critical', 0), pv.get('critical')),
         },
     }
     # Signal deltas — compare posture signals against prior snapshot if stored.
@@ -1414,12 +1774,23 @@ if prior_snap_path:
         if curr is None or prev_v is None: return None
         return round(curr - prev_v, 1)
     data['comparison']['signal_deltas'] = {
-        'severity_mix':     sig_delta(curr_signals.get('severity_mix'),     prev_signals.get('severity_mix')),
-        'violation_volume': sig_delta(curr_signals.get('violation_volume'), prev_signals.get('violation_volume')),
+        # Severity mix and volume both come from violation counts, so they
+        # inherit the prior snapshot's comparability. Coverage gap is derived
+        # from repository indexing and is unaffected.
+        'severity_mix':     sig_delta(curr_signals.get('severity_mix'),     prev_signals.get('severity_mix')) if violations_comparable else None,
+        'violation_volume': sig_delta(curr_signals.get('violation_volume'), prev_signals.get('violation_volume')) if violations_comparable else None,
         'coverage_gap':     sig_delta(curr_signals.get('coverage_gap'),     prev_signals.get('coverage_gap')),
         'coverage_gap_prev': prev_signals.get('coverage_gap'),
     }
-    print(f"comparison: prior={prev.get('date')} blocked_delta={data['comparison']['curation']['blocked_delta']} viol_delta={data['comparison']['violations']['total_delta']}")
+    user_context = dc.get('active_user_context') or {}
+    prev_users = pc.get('unique_users')
+    user_context['trend'] = {
+        'available': prev_users is not None,
+        'previous': int(prev_users) if prev_users is not None else None,
+        'delta': data['comparison']['curation']['active_users_delta'],
+    }
+    dc['active_user_context'] = user_context
+    print(f"comparison: prior={prev.get('date')} collector_version={prev_version} violations_comparable={violations_comparable} blocked_delta={data['comparison']['curation']['blocked_delta']} viol_delta={data['comparison']['violations']['total_delta']}")
     print(f"signal deltas: sev_mix={data['comparison']['signal_deltas']['severity_mix']} vol={data['comparison']['signal_deltas']['violation_volume']} gap={data['comparison']['signal_deltas']['coverage_gap']}")
     json.dump(data, open('/tmp/ciso-data.json', 'w'), indent=2)
 else:
@@ -1430,6 +1801,8 @@ echo "=== build threat velocity ==="
 python3 - <<'PY'
 import json, os
 from pathlib import Path
+
+COLLECTOR_VERSION = 2
 
 data = json.load(open("/tmp/ciso-data.json"))
 local_root = os.environ.get("LOCAL_ROOT", "")
@@ -1449,26 +1822,67 @@ if scan_dir.is_dir():
             continue
         cur = snap.get("curation") or {}
         vio = snap.get("violations") or {}
+        plat = snap.get("platform") or {}
+        signals = snap.get("posture_signals") or {}
+        repos_indexed = int(plat.get("repos_indexed") or 0)
+        repos_total = int(plat.get("repos_total") or 0)
+        violations_total = int(vio.get("total") or 0)
+        # Snapshots older than the pagination fix hold single-page violation
+        # counts. Their curation and coverage history is still sound, so the
+        # period is kept with the violation series left empty.
+        comparable = int(snap.get("collector_version") or 1) >= COLLECTOR_VERSION
+        prior_users = cur.get("unique_users")
         periods.append({
             "label": snap.get("date") or path.parent.name,
+            "comparable": comparable,
             "blocked": int(cur.get("blocked") or 0),
-            "violations": int(vio.get("total") or 0),
-            "critical": int(vio.get("critical") or (vio.get("by_severity") or {}).get("critical") or 0),
+            "block_rate": round(int(cur.get("blocked") or 0) / int(cur.get("total") or 1) * 100, 1),
+            "active_users": int(prior_users) if prior_users is not None else None,
+            "violations": violations_total if comparable else None,
+            "critical": int(vio.get("critical") or (vio.get("by_severity") or {}).get("critical") or 0) if comparable else None,
+            "severity_mix": signals.get("severity_mix") if comparable else None,
+            "coverage_gap": signals.get("coverage_gap") if signals.get("coverage_gap") is not None else (
+                round((1 - repos_indexed / repos_total) * 100, 1) if repos_total else None
+            ),
+            "violations_per_indexed_repo": (round(violations_total / repos_indexed, 1) if repos_indexed else None) if comparable else None,
         })
 
 c = data.get("curation") or {}
 v = data.get("violations") or {}
+p = data.get("platform") or {}
+sev = v.get("by_severity") or {}
+severity_total = sum(int(sev.get(key) or 0) for key in ("critical", "high", "medium", "low", "unknown"))
+severity_mix = round(
+    (int(sev.get("critical") or 0) * 4 + int(sev.get("high") or 0) * 2 + int(sev.get("medium") or 0))
+    / (severity_total * 4) * 100,
+    1,
+) if severity_total else None
+repos_indexed = int(p.get("repos_indexed") or 0)
+repos_total = int(p.get("repos_total") or 0)
+violations_total = int(v.get("total") or 0)
 periods.append({
     "label": report_date,
+    "comparable": True,
     "blocked": int(c.get("blocked") or 0),
-    "violations": int(v.get("total") or 0),
+    "block_rate": round(int(c.get("blocked") or 0) / int(c.get("total") or 1) * 100, 1),
+    "active_users": int(c.get("unique_users") or 0),
+    "violations": violations_total,
     "critical": int((v.get("by_severity") or {}).get("critical") or 0),
+    "severity_mix": severity_mix,
+    "coverage_gap": round((1 - repos_indexed / repos_total) * 100, 1) if repos_total else None,
+    "violations_per_indexed_repo": round(violations_total / repos_indexed, 1) if repos_indexed else None,
 })
 periods = periods[-8:]
 
 summary = "Trend comparison will be available after another validated run."
-if len(periods) >= 2:
-    first, last = periods[0], periods[-1]
+
+def fmt_users(period):
+    value = period.get("active_users")
+    return "not recorded" if value is None else str(value)
+
+comparable_periods = [p for p in periods if p.get("comparable")]
+if len(comparable_periods) >= 2:
+    first, last = comparable_periods[0], comparable_periods[-1]
     critical_direction = "rose" if last["critical"] > first["critical"] else "fell" if last["critical"] < first["critical"] else "held steady"
     violation_direction = "rose" if last["violations"] > first["violations"] else "fell" if last["violations"] < first["violations"] else "held steady"
     action = (
@@ -1477,9 +1891,16 @@ if len(periods) >= 2:
         else "Sustain remediation while closing indexing and watch-coverage gaps."
     )
     summary = (
-        f"Across {len(periods)} reports, critical findings {critical_direction} from {first['critical']} to {last['critical']}; "
+        f"Across {len(comparable_periods)} reports, critical findings {critical_direction} from {first['critical']} to {last['critical']}; "
         f"total violations {violation_direction} from {first['violations']} to {last['violations']}, while gate blocks moved "
-        f"from {first['blocked']} to {last['blocked']}. {action}"
+        f"from {first['blocked']} to {last['blocked']} and active Curation users moved from {fmt_users(first)} to {fmt_users(last)}. {action}"
+    )
+elif len(periods) >= 2:
+    first, last = periods[0], periods[-1]
+    summary = (
+        f"Gate blocks moved from {first['blocked']} to {last['blocked']} across {len(periods)} reports. "
+        "Violation trend restarts from this report: earlier snapshots were collected before the pagination "
+        "fix and counted only the first page of results, so they are not comparable."
     )
 data["threat_velocity"] = {
     "available": len(periods) >= 2,
@@ -1505,7 +1926,8 @@ crit  = int(sev.get("critical", 0))
 high  = int(sev.get("high",     0))
 med   = int(sev.get("medium",   0))
 low   = int(sev.get("low",      0))
-total = crit + high + med + low
+unknown = int(sev.get("unknown", 0))
+total = crit + high + med + low + unknown
 
 repos_total   = int(p.get("repos_total",   0))
 repos_indexed = int(p.get("repos_indexed", 0))
@@ -1578,6 +2000,21 @@ if n(v, "total") > 0 and not v.get("top_watch_policies"):
     errors.append("violations.top_watch_policies missing")
 if n(v, "total") > 0 and n(v, "unique_issue_count") <= 0:
     errors.append("violations.unique_issue_count missing")
+severity = v.get("by_severity") or {}
+severity_sum = sum(int(severity.get(key) or 0) for key in ("critical", "high", "medium", "low", "unknown"))
+if n(v, "total") != severity_sum:
+    errors.append(f"violations.total={v.get('total')} does not match by_severity sum={severity_sum}")
+type_sum = sum(int((v.get("by_type") or {}).get(key) or 0) for key in ("security", "operational", "license"))
+if n(v, "total") != type_sum:
+    errors.append(f"violations.total={v.get('total')} does not match by_type sum={type_sum}")
+collection_meta = v.get("collection_meta") or {}
+if collection_meta and not collection_meta.get("complete"):
+    errors.append(
+        f"violations collection incomplete: fetched={collection_meta.get('rows_fetched')} "
+        f"reported={collection_meta.get('total_reported')}"
+    )
+if collection_meta and n(v, "total") != int(collection_meta.get("rows_fetched") or 0):
+    errors.append("violations.total must equal collection_meta.rows_fetched")
 if n(v, "total") > 0 and not g.get("xray_policy_effectiveness"):
     errors.append("governance.xray_policy_effectiveness missing")
 if n(c, "blocked") > 0 and not g.get("curation_policy_effectiveness"):
@@ -1585,6 +2022,22 @@ if n(c, "blocked") > 0 and not g.get("curation_policy_effectiveness"):
 cs = p.get("curation_state") or c.get("curation_state") or {}
 if n(cs, "supported_remote_total") > 0 and n(cs, "supported_connected") == 0:
     errors.append("curation supported_connected is 0 while supported remotes exist")
+coverage_gaps = ((c.get("executive_insights") or {}).get("gate_coverage_gaps") or [])
+gap_sum = sum(int(row.get("unconnected") or 0) for row in coverage_gaps if isinstance(row, dict))
+if gap_sum != n(cs, "supported_not_connected"):
+    errors.append(
+        f"curation gate gap sum={gap_sum} does not match "
+        f"supported_not_connected={cs.get('supported_not_connected')}"
+    )
+pass_through = p.get("pass_through_repos") or []
+supported_pass_through = sum(1 for row in pass_through if isinstance(row, dict) and row.get("supported") is True)
+if supported_pass_through != n(cs, "supported_not_connected"):
+    errors.append(
+        f"supported pass-through repos={supported_pass_through} does not match "
+        f"supported_not_connected={cs.get('supported_not_connected')}"
+    )
+if n(cs, "pass_through_total") != len(pass_through):
+    errors.append("curation_state.pass_through_total does not match pass_through_repos")
 for i, rec in enumerate(d.get("recommendations") or []):
     if not rec.get("title") or rec.get("score") is None:
         errors.append(f"recommendations[{i}] missing title or score")
@@ -1610,43 +2063,135 @@ python3 - <<'PY'
 import csv
 import json
 import os
+import random
 
 data = json.load(open("/tmp/ciso-data.json"))
 curation = data.setdefault("curation", {})
 activity = curation.get("user_package_activity") or []
 csv_path = os.environ["CURATION_USER_CSV_PATH"]
 
-# Collection emits a user x package cross-product, so every user total is
-# repeated once per package that user requested. Collapse to one row per user
-# and carry the package detail as a ranked summary column.
+# The file carries a per-user table, and in full mode the underlying detail rows
+# including the curated remote that served each request. Table 1 is built from
+# user_summary rather than from the activity cross-product, so it lists every
+# active user even in brief mode where no package activity is collected.
 TOP_PACKAGES = 10
+DETAIL_ROW_CAP = 50000
+
+summary = curation.get("user_summary") or []
+detail_mode = str(curation.get("user_detail_mode") or "full").strip().lower()
+brief = detail_mode == "brief"
+
+meta_for_note = data.get("meta") or {}
+period = " to ".join(x for x in (meta_for_note.get("date_from"), meta_for_note.get("date_to")) if x)
+
+# One-line definition kept as a single spreadsheet cell. The previous version
+# emitted this as several "#"-prefixed lines, which a spreadsheet renders as
+# junk rows spread across columns wherever the text contained a comma.
+ACTIVE_USER_DEFINITION = (
+    "Distinct requester identities (email address or username, as recorded by JFrog) "
+    "in Curation events during the reporting period. A practical yardstick for adoption "
+    "and usage trends. It is an observed activity count, not a license count or a "
+    "contractual position."
+)
+
+# Optional masked export: same shape, real identities replaced with stable
+# random name+email so the file can be shared without exposing who requested what.
+mask_enabled = str(os.environ.get("CISO_CURATION_USER_MASKED", "")).strip().lower() in ("1", "true", "yes", "on")
+_MASK_FIRST = [
+    "Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Jamie", "Avery", "Quinn", "Rowan",
+    "Sage", "Devon", "Harper", "Emerson", "Finley", "Hayden", "Kendall", "Logan", "Parker", "Reese",
+    "Skyler", "Blake", "Cameron", "Dakota", "Elliot", "Frankie", "Gray", "Hollis", "Indigo", "Jesse",
+    "Kai", "Lane", "Marlowe", "Nico", "Oakley", "Perry", "Remy", "Shiloh", "Tatum", "Wren",
+]
+_MASK_LAST = [
+    "Rivera", "Chen", "Patel", "Okoro", "Nguyen", "Silva", "Kim", "Haddad", "Novak", "Reyes",
+    "Ferrari", "Sato", "Ali", "Costa", "Larsen", "Mehta", "Dubois", "Ivanov", "Santos", "Walsh",
+    "Bauer", "Cruz", "Diaz", "Ellis", "Fischer", "Gomez", "Hansen", "Ito", "Jansen", "Klein",
+    "Lopez", "Meyer", "Ono", "Park", "Roy", "Suzuki", "Tanaka", "Vidal", "Weber", "Yilmaz",
+]
+_MASK_DOMAINS = ["example.com", "acme.example", "contoso.example", "globex.example", "initech.example"]
+
+def build_mask_map(names):
+    # Deterministic within a run so Table 1 and Table 2 agree, and so re-masking
+    # the same population is stable. Not reversible: no real value is stored.
+    rng = random.Random(20260731)
+    used_handles = set()
+    mapping = {}
+    for real in names:
+        for _ in range(200):
+            first = rng.choice(_MASK_FIRST)
+            last = rng.choice(_MASK_LAST)
+            handle = "%s.%s" % (first.lower(), last.lower())
+            if handle not in used_handles:
+                break
+            handle = "%s.%s%d" % (first.lower(), last.lower(), rng.randint(2, 99))
+            if handle not in used_handles:
+                break
+        used_handles.add(handle)
+        mapping[real] = "%s@%s" % (handle, rng.choice(_MASK_DOMAINS))
+    return mapping
+
+def new_entry(name):
+    return {
+        "user": name,
+        "total_requests": 0,
+        "request_share_pct": 0,
+        "blocked": 0,
+        "clean_approved": 0,
+        "packages": [],
+        "ecosystems": set(),
+        "repos": set(),
+    }
 
 users = {}
 order = []
+detail = []
+
+# Seed from the authoritative per-user list first. Older payloads predate
+# user_summary, so the activity loop below still fills in any user it misses.
+for row in summary:
+    if not isinstance(row, dict):
+        continue
+    name = row.get("user", "")
+    entry = users.setdefault(name, new_entry(name))
+    if name not in order:
+        order.append(name)
+    entry["total_requests"] = row.get("events") or 0
+    entry["request_share_pct"] = row.get("events_pct") or 0
+    entry["blocked"] = row.get("blocked") or 0
+    entry["clean_approved"] = row.get("approved") or 0
+    entry["repos"].update(r for r in (row.get("repos") or []) if r)
+
 for row in activity:
     if not isinstance(row, dict):
         continue
     name = row.get("user", "")
     entry = users.get(name)
     if entry is None:
-        entry = users[name] = {
-            "user": name,
-            "total_requests": row.get("user_events") or 0,
-            "request_share_pct": row.get("user_events_pct") or 0,
-            "blocked": row.get("user_blocked") or 0,
-            "clean_approved": row.get("user_approved") or 0,
-            "packages": [],
-            "ecosystems": set(),
-        }
+        entry = users[name] = new_entry(name)
+        entry["total_requests"] = row.get("user_events") or 0
+        entry["request_share_pct"] = row.get("user_events_pct") or 0
+        entry["blocked"] = row.get("user_blocked") or 0
+        entry["clean_approved"] = row.get("user_approved") or 0
         order.append(name)
     ecosystem = row.get("ecosystem") or ""
     package = row.get("package") or ""
+    repo = row.get("repo") or ""
+    requests = row.get("requests") or 0
     if package:
-        entry["packages"].append((row.get("requests") or 0, package, ecosystem))
+        entry["packages"].append((requests, package, ecosystem))
+        detail.append((name, repo, ecosystem, package, requests))
     if ecosystem:
         entry["ecosystems"].add(ecosystem)
+    if repo:
+        entry["repos"].add(repo)
 
-headers = [
+# distinct_packages must count packages, not package-repo pairs: the same package
+# pulled through two curated remotes is one package to the person reading this.
+for entry in users.values():
+    entry["distinct_packages"] = len({(pkg, eco) for _c, pkg, eco in entry["packages"]})
+
+BASE_HEADERS = [
     "rank",
     "user",
     "total_requests",
@@ -1654,46 +2199,124 @@ headers = [
     "blocked",
     "clean_approved",
     "block_rate_pct",
+    "curated_repos",
+]
+PACKAGE_HEADERS = [
     "distinct_packages",
     "ecosystems",
     "top_packages",
 ]
-with open(csv_path, "w", newline="") as handle:
-    writer = csv.writer(handle)
-    writer.writerow(headers)
-    ranked = sorted(order, key=lambda n: (-(users[n]["total_requests"] or 0), n))
-    for rank, name in enumerate(ranked, start=1):
-        entry = users[name]
-        total = entry["total_requests"] or 0
-        top = sorted(entry["packages"], key=lambda p: (-p[0], p[1]))[:TOP_PACKAGES]
-        writer.writerow([
-            rank,
-            entry["user"],
-            total,
-            entry["request_share_pct"],
-            entry["blocked"],
-            entry["clean_approved"],
-            round(entry["blocked"] / total * 100, 1) if total else 0,
-            len(entry["packages"]),
-            "; ".join(sorted(entry["ecosystems"])),
-            "; ".join("%s (%s)" % (pkg, count) for count, pkg, _ in top),
-        ])
+# Brief mode omits the package columns rather than emitting them empty, so a
+# reader is never left wondering whether a blank cell means "no packages".
+summary_headers = BASE_HEADERS if brief else BASE_HEADERS + PACKAGE_HEADERS
+detail_headers = [
+    "user",
+    "curated_repo",
+    "ecosystem",
+    "package",
+    "requests",
+]
+
+ranked = sorted(order, key=lambda n: (-(users[n]["total_requests"] or 0), n))
+detail.sort(key=lambda r: (-r[4], r[0], r[3], r[1]))
+detail_written = detail[:DETAIL_ROW_CAP]
+
+def write_user_csv(path, name_of, masked=False):
+    with open(path, "w", newline="") as handle:
+        writer = csv.writer(handle)
+
+        # Clean metadata block: two columns (field, value) so a spreadsheet shows
+        # tidy rows instead of "#"-prefixed text bleeding across columns.
+        writer.writerow(["Report", "Curation active-user package activity"])
+        writer.writerow(["Metric", "Active Curation Users"])
+        writer.writerow(["Definition", ACTIVE_USER_DEFINITION])
+        writer.writerow(["Reporting period", period or "not recorded"])
+        writer.writerow(["Active users in this period", len(users)])
+        if masked:
+            writer.writerow([
+                "Privacy",
+                "Identities are masked with randomly generated names and emails. "
+                "The mapping to real users is not stored and is not reversible.",
+            ])
+        if brief:
+            writer.writerow([
+                "Note",
+                "Package detail omitted (brief mode): per-user request counts and "
+                "curated repositories only. Re-run 'with package detail' for the "
+                "per-package breakdown and full request list.",
+            ])
+        writer.writerow([])
+
+        writer.writerow(["TABLE 1 of %d - Active Users in this period (one row per user)"
+                         % (1 if brief else 2)])
+        writer.writerow(summary_headers)
+        for rank, name in enumerate(ranked, start=1):
+            entry = users[name]
+            total = entry["total_requests"] or 0
+            row = [
+                rank,
+                name_of(entry["user"]),
+                total,
+                entry["request_share_pct"],
+                entry["blocked"],
+                entry["clean_approved"],
+                round(entry["blocked"] / total * 100, 1) if total else 0,
+                "; ".join(sorted(entry["repos"])),
+            ]
+            if not brief:
+                top = sorted(entry["packages"], key=lambda p: (-p[0], p[1]))[:TOP_PACKAGES]
+                row += [
+                    entry["distinct_packages"],
+                    "; ".join(sorted(entry["ecosystems"])),
+                    "; ".join("%s (%s)" % (pkg, count) for count, pkg, _ in top),
+                ]
+            writer.writerow(row)
+
+        if not brief:
+            writer.writerow([])
+            label = "TABLE 2 of 2 - Full request detail (one row per user / curated repo / package)"
+            if len(detail) > len(detail_written):
+                label += " - top %d of %d rows by request count" % (len(detail_written), len(detail))
+            writer.writerow([label])
+            writer.writerow(detail_headers)
+            for name, repo, ecosystem, package, requests in detail_written:
+                writer.writerow([name_of(name), repo, ecosystem, package, requests])
+
+write_user_csv(csv_path, lambda name: name)
+
+masked_csv_path = ""
+if mask_enabled:
+    mask_map = build_mask_map(ranked)
+    masked_csv_path = csv_path[:-4] + "-masked.csv" if csv_path.endswith(".csv") else csv_path + ".masked.csv"
+    write_user_csv(masked_csv_path, lambda name: mask_map.get(name, name), masked=True)
 
 meta = data.setdefault("meta", {})
 exports = meta.setdefault("export_files", {})
 exports["curation_user_package_activity_csv"] = os.path.basename(csv_path)
+if masked_csv_path:
+    exports["curation_user_package_activity_masked_csv"] = os.path.basename(masked_csv_path)
 export_counts = meta.setdefault("export_counts", {})
 export_counts["curation_user_package_activity_rows"] = len(users)
 export_counts["curation_user_package_pairs"] = len(activity)
+export_counts["curation_user_detail_rows"] = len(detail_written)
+export_counts["curation_user_detail_rows_available"] = len(detail)
+export_counts["curation_user_detail_mode"] = detail_mode
 
 # Keep the HTML and saved data compact for customers with thousands of users.
+# Both of these are export inputs that the CSV has already consumed; embedding
+# them would put every user back into the HTML the export exists to keep out.
 curation["top_users"] = (curation.get("top_users") or [])[:20]
 curation["user_package_activity_embedded"] = False
 curation["user_package_activity_rows"] = len(activity)
 curation["user_package_activity"] = []
+curation["user_summary_rows"] = len(summary)
+curation["user_summary"] = []
 
 json.dump(data, open("/tmp/ciso-data.json", "w"), indent=2)
-print("curation user activity csv:", csv_path, "users=", len(users), "package pairs=", len(activity))
+print("curation user activity csv:", csv_path, "mode=", detail_mode, "users=", len(users),
+      "package pairs=", len(activity), "detail rows=", len(detail_written))
+if masked_csv_path:
+    print("curation user activity csv (masked):", masked_csv_path)
 PY
 
 echo "=== render ==="
@@ -1761,6 +2384,9 @@ case "$CISO_PDF_MODE" in
     render_pdf_from_template "$PDF_TEMPLATE_PATH" "$PRINT_HTML_PATH" "$PDF_OUTPUT_PATH" "executive"
     render_pdf_from_template "$PDF_FULL_TEMPLATE_PATH" "$PRINT_HTML_FULL_PATH" "$PDF_FULL_OUTPUT_PATH" "full"
     ;;
+  none)
+    echo "PDF export skipped (CISO_PDF_MODE=none)"
+    ;;
 esac
 
 if [[ "$SAVE_DATA_JSON" == "true" ]]; then
@@ -1774,6 +2400,10 @@ import os
 
 d = json.load(open("/tmp/ciso-data.json"))
 snap = {
+    # Bumped whenever a collection change makes stored values incomparable with
+    # earlier snapshots. 2 = violations drained across all pages; snapshots
+    # written before this counted only the first page into every breakdown.
+    "collector_version": 2,
     "date": d.get("meta", {}).get("generated"),
     "type": str(d.get("meta", {}).get("report_type") or "weekly").lower(),
     "server_id": d.get("meta", {}).get("server_id"),
@@ -1784,15 +2414,25 @@ snap = {
         "clean_packages": d.get("curation", {}).get("clean_packages", 0),
         "without_inspection": d.get("curation", {}).get("without_inspection", 0),
         "passed": d.get("curation", {}).get("passed", 0),
+        "unique_users": d.get("curation", {}).get("unique_users", 0),
+        "unique_users_approved": d.get("curation", {}).get("unique_users_approved", 0),
     },
     "violations": {
         "total": d.get("violations", {}).get("total", 0),
+        "total_reported": d.get("violations", {}).get("total_reported", 0),
+        "collection_complete": d.get("violations", {}).get("collection_meta", {}).get("complete", False),
         "critical": d.get("violations", {}).get("by_severity", {}).get("critical", 0),
         "high": d.get("violations", {}).get("by_severity", {}).get("high", 0),
         "medium": d.get("violations", {}).get("by_severity", {}).get("medium", 0),
         "low": d.get("violations", {}).get("by_severity", {}).get("low", 0),
         "unique_issue_count": d.get("violations", {}).get("unique_issue_count", 0),
         "critical_ids": [row.get("id") for row in d.get("violations", {}).get("critical_issues", []) if row.get("id")],
+    },
+    "platform": {
+        "repos_total": d.get("platform", {}).get("repos_total", 0),
+        "repos_indexed": d.get("platform", {}).get("repos_indexed", 0),
+        "supported_remote_total": d.get("platform", {}).get("curation_state", {}).get("supported_remote_total", 0),
+        "supported_connected": d.get("platform", {}).get("curation_state", {}).get("supported_connected", 0),
     },
     # Posture signals stored for period-over-period delta computation
     "posture_signals": d.get("violations", {}).get("posture_signals", {}),

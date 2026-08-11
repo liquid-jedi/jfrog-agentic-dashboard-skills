@@ -123,7 +123,7 @@ h3 { font-family: var(--display); font-weight: 500; font-size: 16px; margin: 20p
 .trend.dn-good { border-left-color: var(--green); }
 .trend strong { color: var(--ink); }
 
-/* ─── DEVELOPER TABLE ─── */
+/* ─── USER TABLE ───── */
 .dev-section { margin-bottom: 32px; page-break-inside: avoid; }
 .dev-header {
   display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px;
@@ -314,7 +314,7 @@ function computeActions(){
 
   /* POSTURE STRIP */
   const critDelta=cmp.available&&cmp.violations?cmp.violations.critical_delta:null;
-  const critSub=critDelta==null?'No prior period':critDelta===0?'Unchanged vs prior':`${fmt(Math.abs(critDelta))} ${critDelta>0?'more':'fewer'} vs prior`;
+  const critSub=critDelta==null?(cmp.violations_comparable===false?'Prior period not comparable':'No prior period'):critDelta===0?'Unchanged vs prior':`${fmt(Math.abs(critDelta))} ${critDelta>0?'more':'fewer'} vs prior`;
   const posture=`<div class="posture">
     <div class="posture-title">Security posture at a glance</div>
     <div class="posture-grid">
@@ -324,7 +324,7 @@ function computeActions(){
       <div class="posture-stat"><div class="posture-val">${pctOf(p.repos_indexed,p.repos_total)}<small>%</small></div><div class="posture-label">Xray indexed<br><b>${fmt(p.repos_indexed)}</b> of <b>${fmt(p.repos_total)}</b> repos</div></div>
     </div>
     <div class="posture-sub">
-      <div class="ps-item"><strong>${fmt(c.unique_users||0)}</strong>Active developers</div>
+      <div class="ps-item"><strong>${fmt(c.unique_users||0)}</strong>Active users${(c.active_user_context||{}).baseline_available?' · '+fmt((c.active_user_context||{}).usage_vs_baseline_pct)+'% of planning baseline':''}</div>
       <div class="ps-item"><strong>${cn.pct}%</strong>Curation coverage</div>
       <div class="ps-item"><strong>${fmt(p.watches_active)}</strong>Active watches</div>
       <div class="ps-item"><strong>${fmt(p.curation_policies_block||0)}</strong>Enforcing policies</div>
@@ -334,6 +334,7 @@ function computeActions(){
   /* TREND */
   let trendCls='',trendText='';
   if(!cmp.available){trendText='<strong>Baseline established.</strong> Next report will compare against this snapshot.';}
+  else if(cmp.violations_comparable===false){trendText=`<strong>Violation baseline reset.</strong> ${esc(cmp.incomparable_reason||'')}`;}
   else if(critDelta>0){trendCls='up-bad';trendText=`<strong>Critical violations increased</strong> from ${fmt(cmp.violations.critical_previous)} to ${fmt(cmp.violations.critical)} (+${fmt(critDelta)}) since the prior period.`;}
   else if(critDelta<0){trendCls='dn-good';trendText=`<strong>Critical violations decreased</strong> from ${fmt(cmp.violations.critical_previous)} to ${fmt(cmp.violations.critical)} (${fmt(critDelta)}) since the prior period.`;}
   else{trendText=`<strong>${fmt(sev.critical)} critical violations</strong> this period, ${fmt(v.total)} total. ${fmt(c.blocked||0)} packages blocked at the Curation gate.`;}
@@ -348,15 +349,16 @@ function computeActions(){
       const color=val===0?'var(--muted)':((goodDown&&val<0)||(!goodDown&&val>0))?'var(--green-dark)':'var(--red)';
       return`<span class="num" style="color:${color}">${val>0?'+':''}${fmt(val)}</span>`;
     };
+    const cell=(val,suffix='')=>val==null?'\u2014':fmt(val)+suffix;
     compTable=`<table><thead><tr><th>Metric</th><th class="r">Current</th><th class="r">Previous</th><th class="r">Change</th></tr></thead><tbody>
-      <tr><td>Critical violations</td><td class="r num">${fmt(cv.critical)}</td><td class="r num">${fmt(cv.critical_previous)}</td><td class="r">${dc(cv.critical_delta,true)}</td></tr>
-      <tr><td>Total violations</td><td class="r num">${fmt(cv.total)}</td><td class="r num">${fmt(cv.total_previous)}</td><td class="r">${dc(cv.total_delta,true)}</td></tr>
-      <tr><td>Packages blocked</td><td class="r num">${fmt(cc.blocked)}</td><td class="r num">${fmt(cc.blocked_previous)}</td><td class="r">${dc(cc.blocked_delta,false)}</td></tr>
-      <tr><td>Packages screened</td><td class="r num">${fmt(cc.total)}</td><td class="r num">${fmt(cc.total_previous)}</td><td class="r">${dc(cc.total_delta,false)}</td></tr>
-    </tbody></table>`;
+      <tr><td>Critical violations</td><td class="r num">${cell(cv.critical)}</td><td class="r num">${cell(cv.critical_previous)}</td><td class="r">${dc(cv.critical_delta,true)}</td></tr>
+      <tr><td>Total violations</td><td class="r num">${cell(cv.total)}</td><td class="r num">${cell(cv.total_previous)}</td><td class="r">${dc(cv.total_delta,true)}</td></tr>
+      <tr><td>Packages blocked</td><td class="r num">${cell(cc.blocked)}</td><td class="r num">${cell(cc.blocked_previous)}</td><td class="r">${dc(cc.blocked_delta,false)}</td></tr>
+      <tr><td>Active Curation users</td><td class="r num">${cell(cc.active_users)}</td><td class="r num">${cell(cc.active_users_previous)}</td><td class="r">${dc(cc.active_users_delta,false)}</td></tr>
+    </tbody></table>${cmp.violations_comparable===false?`<p class="subtle">${esc(cmp.incomparable_reason||'')}</p>`:''}`;
   }
 
-  /* DEVELOPER ACTIVITY */
+  /* USER ACTIVITY */
   const users=c.top_users||[];
   const maxEv=Math.max(1,...users.map(u=>u.events||0));
   const userRows=users.slice(0,15).map(u=>{
@@ -365,9 +367,9 @@ function computeActions(){
     return`<tr><td class="mono">${esc(u.user||'')}</td><td class="r num">${fmt(u.events)}</td><td class="r num">${fmt(u.approved)}</td><td class="r num" style="${u.blocked>0?'color:var(--red)':''}">${fmt(u.blocked)}</td><td class="r num">${blockPct>0?blockPct+'%':'\u2014'}</td></tr>`;
   }).join('');
   const devSection=`<div class="dev-section">
-    <div class="dev-header"><div class="dev-count">${fmt(c.unique_users||0)}</div><div class="dev-label">active developers using the Curation gate<br><span style="font-size:12px;color:var(--muted-2)">${fmt(c.total||0)} package requests screened this period</span></div></div>
-    <table><thead><tr><th>Developer</th><th class="r">Requests</th><th class="r">Approved</th><th class="r">Blocked</th><th class="r">Block rate</th></tr></thead><tbody>${userRows}</tbody></table>
-    ${users.length>15?`<div style="font-size:11px;color:var(--muted);margin-top:4px">and ${users.length-15} additional developers</div>`:''}
+    <div class="dev-header"><div class="dev-count">${fmt(c.unique_users||0)}</div><div class="dev-label">active users observed in Curation activity<br><span style="font-size:12px;color:var(--muted-2)">${fmt(c.total||0)} package requests screened this period</span></div></div>
+    <table><thead><tr><th>User</th><th class="r">Requests</th><th class="r">Approved</th><th class="r">Blocked</th><th class="r">Block rate</th></tr></thead><tbody>${userRows}</tbody></table>
+    ${users.length>15?`<div style="font-size:11px;color:var(--muted);margin-top:4px">and ${users.length-15} additional active users</div>`:''}
   </div>`;
 
   /* COVERAGE */
@@ -401,12 +403,13 @@ function computeActions(){
   const reasonLegend=blockReasons.map(r=>`<div class="legend-item"><span class="swatch" style="background:${r[2]}"></span><span class="l-val">${fmt(r[1])}</span><span class="l-label">${r[0]} (${pctOf(r[1],totalB)}%)</span></div>`).join('');
 
   const byPkg=(p.curation_state&&p.curation_state.by_package_type)||(c.curation_state&&c.curation_state.by_package_type)||[];
-  const ecoRows=byPkg.filter(e=>e.remote_total>0).sort((a,b)=>b.remote_total-a.remote_total).slice(0,8).map(e=>{
+  const ecoRows=byPkg.filter(e=>e.remote_total>0&&e.supported===true).sort((a,b)=>((b.remote_total||0)-(b.connected||0))-((a.remote_total||0)-(a.connected||0))||b.remote_total-a.remote_total).map(e=>{
     const pc=pctOf(e.connected,e.remote_total);
     return`<div class="bar-row"><span class="bar-label" style="width:100px;font-size:11px">${esc(e.package_type)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2,pc)}%;background:${pc>=100?'var(--green)':pc>0?'var(--amber)':'var(--red)'}"></div></div><span class="bar-val" style="width:50px">${e.connected}/${e.remote_total}</span></div>`;
   }).join('');
 
   const waivers=c.waiver_requests||{};
+  const waiverAging=waivers.pending_aging||{};
   const topBlockedRows=(c.top_blocked||[]).slice(0,15).map(r=>`<tr>
     <td class="mono">${esc(r.package)}</td><td>${esc(r.ecosystem||'unknown')}</td>
     <td>${r.malicious?'<span class="sev sev-critical">MALICIOUS</span>':'Policy violation'}</td>
@@ -426,8 +429,9 @@ function computeActions(){
     ${sev.high?`<span style="width:${pctOf(sev.high,v.total)}%;background:#EF4444">${sev.high}</span>`:''}
     ${sev.medium?`<span style="width:${pctOf(sev.medium,v.total)}%;background:var(--amber)">${sev.medium}</span>`:''}
     ${sev.low?`<span style="width:${pctOf(sev.low,v.total)}%;background:#FACC15;color:#78350F">${sev.low}</span>`:''}
+    ${sev.unknown?`<span style="width:${pctOf(sev.unknown,v.total)}%;background:#94A3B8">${sev.unknown}</span>`:''}
   </div>`;
-  const sevLegend=[['Critical',sev.critical||0,'var(--red)'],['High',sev.high||0,'#EF4444'],['Medium',sev.medium||0,'var(--amber)'],['Low',sev.low||0,'#FACC15']].map(r=>`<div class="legend-item"><span class="swatch" style="background:${r[2]}"></span><span class="l-val">${fmt(r[1])}</span><span class="l-label">${r[0]}</span></div>`).join('');
+  const sevLegend=[['Critical',sev.critical||0,'var(--red)'],['High',sev.high||0,'#EF4444'],['Medium',sev.medium||0,'var(--amber)'],['Low',sev.low||0,'#FACC15'],['Unknown / info',sev.unknown||0,'#94A3B8']].map(r=>`<div class="legend-item"><span class="swatch" style="background:${r[2]}"></span><span class="l-val">${fmt(r[1])}</span><span class="l-label">${r[0]}</span></div>`).join('');
 
   const byType=v.by_type||{};const typeTotal=v.total||1;
   const typeBar=`<div class="sbar">
@@ -463,8 +467,10 @@ function computeActions(){
     <td class="r num">${fmt(r.critical_count)}</td><td>${esc(r.risk_level||'covered')}</td></tr>`).join('');
   const velocity=DATA.threat_velocity||{};
   const velocityRows=(velocity.periods||[]).map(r=>`<tr><td class="mono">${esc(r.label)}</td>
-    <td class="r num">${fmt(r.critical)}</td><td class="r num">${fmt(r.violations)}</td>
-    <td class="r num">${fmt(r.blocked)}</td></tr>`).join('');
+    <td class="r num">${r.critical==null?'\u2014':fmt(r.critical)}</td><td class="r num">${r.violations==null?'\u2014':fmt(r.violations)}</td>
+    <td class="r num">${r.violations_per_indexed_repo==null?'\u2014':fmt(r.violations_per_indexed_repo)}</td>
+    <td class="r num">${r.block_rate==null?'\u2014':fmt(r.block_rate)+'%'}</td><td class="r num">${r.active_users==null?'\u2014':fmt(r.active_users)}</td></tr>`).join('');
+  const exploit=v.exploitability_summary||{};
 
   /* ACTIONS */
   const actionItems=acts.map((a,i)=>`<div class="action ${(a.pri||'p3').toLowerCase()}">
@@ -485,7 +491,6 @@ function computeActions(){
     hero,
     posture,
     trend,
-    compTable ? `<h2><span class="lbl">Period comparison</span>Change from prior report</h2>${compTable}` : '',
 
     `<h2><span class="lbl">01 \u00B7 Curation</span>Supply chain gate</h2>`,
     `<h3>Package screening</h3>`,
@@ -494,7 +499,7 @@ function computeActions(){
     `<div class="metric-grid">
       <div class="metric-card"><strong>${fmt(cleanPackages)}</strong><span>Clean packages allowed after policy evaluation</span></div>
       <div class="metric-card"><strong style="color:var(--red)">${fmt(withoutInspection)}</strong><span>Requests without inspection</span></div>
-      <div class="metric-card"><strong>${waivers.available?fmt(waivers.pending):'\u2014'}</strong><span>Pending waiver requests</span></div>
+      <div class="metric-card"><strong>${waivers.available?fmt(waivers.pending):'\u2014'}</strong><span>Pending waivers${waiverAging.available?' · oldest '+fmt(waiverAging.oldest_pending_days)+' days':''}</span></div>
       <div class="metric-card"><strong>${benefit.upgrade_rate_computed?fmt(benefit.upgrade_rate)+'%':'\u2014'}</strong><span>Upgrade-after-block rate</span></div>
     </div>`,
     devSection,
@@ -544,6 +549,9 @@ function computeActions(){
       <b>${fmt(p.policies_total)}</b> Xray policies (<b>${fmt(p.policies_security)}</b> security, <b>${fmt(p.policies_license)}</b> license, <b>${fmt(p.policies_operational)}</b> operational risk)
     </div>`,
     covSection,
+    `<div class="panel-row">
+      <div class="panel"><div class="panel-title">Exploitability context</div>${exploit.data_available?`<b>${fmt(exploit.active_issues)}</b> active · <b>${fmt(exploit.poc_issues)}</b> PoC · <b>${fmt(exploit.unknown_issues)}</b> unknown`:'Not exposed by collected violations; severity remains the fallback.'}</div>
+    </div>`,
 
     `<h3>Top exposure</h3>`,
     topRows ? `<table><thead><tr><th>Issue</th><th>Component</th><th>Severity</th><th class="r">Artifact hits</th></tr></thead><tbody>${topRows}</tbody></table>` : '<div style="font-size:12px;color:var(--muted)">No critical findings this period.</div>',
@@ -559,9 +567,10 @@ function computeActions(){
 
     `<h2 class="page-break"><span class="lbl">03 \u00B7 Action plan</span>Prioritized remediation</h2>`,
     actionItems,
-    `<h2><span class="lbl">04 \u00B7 Trend</span>Threat velocity</h2>`,
+    `<h2><span class="lbl">04 \u00B7 Trend</span>Threat velocity & prior-period comparison</h2>`,
+    compTable,
     velocity.available && velocityRows
-      ? `<table><thead><tr><th>Period</th><th class="r">Critical</th><th class="r">Violations</th><th class="r">Gate blocks</th></tr></thead><tbody>${velocityRows}</tbody></table><p class="subtle">${esc(velocity.trend_summary||'')}</p>`
+      ? `<table><thead><tr><th>Period</th><th class="r">Critical</th><th class="r">Violations</th><th class="r">Per indexed repo</th><th class="r">Block rate</th><th class="r">Active users</th></tr></thead><tbody>${velocityRows}</tbody></table><p class="subtle">${esc(velocity.trend_summary||'')}</p>`
       : `<div class="trend"><strong>Baseline required.</strong> Threat velocity will be available after two validated report runs.</div>`,
 
     footer

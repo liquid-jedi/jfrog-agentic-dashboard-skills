@@ -31,8 +31,11 @@ field. Neither changes the other's job.
       "curation_user_package_activity_csv": "string — relative CSV path next to report.html"
     },
     "export_counts": {
-      "curation_user_package_activity_rows": "number — one row per user in the CSV",
-      "curation_user_package_pairs": "number — user/package pairs those rows aggregate"
+      "curation_user_package_activity_rows": "number — users in the CSV's table 1",
+      "curation_user_package_pairs": "number — user/package/repo pairs those rows aggregate; 0 in brief mode",
+      "curation_user_detail_rows": "number — rows written to the CSV's table 2; 0 in brief mode",
+      "curation_user_detail_rows_available": "number — detail rows before the 50k cap",
+      "curation_user_detail_mode": "string — full | brief"
     }
   },
 
@@ -95,6 +98,27 @@ field. Neither changes the other's job.
         "supported": "boolean — whether the package type is supported by Curation"
       }
     ],
+    "retention_health": {
+      "available": "boolean — true when at least one indexed repository configuration was readable",
+      "default_repo_days": "number — Xray default is 90 days unless administrators override it",
+      "default_build_days": "number — Xray default is 15 days unless administrators override it",
+      "max_days": "number — documented maximum retention setting",
+      "repositories_checked": "number",
+      "repos_on_default": "number",
+      "repos_custom": "number",
+      "repos_below_default": "number",
+      "unknown_repos": "number — indexed repos whose configuration could not be read",
+      "minimum_days": "number|null",
+      "maximum_days": "number|null"
+    },
+    "ai_ecosystem": {
+      "available": "boolean — true when AI/agent package repository types exist",
+      "package_types": ["string — AIEditorExtensions | AgentPackages | AgentPlugins | HuggingFaceML"],
+      "remote_total": "number",
+      "connected": "number",
+      "unconnected": "number",
+      "blocks_period": "number"
+    },
     "repo_criticality": [
       {
         "repo": "string",
@@ -147,7 +171,15 @@ field. Neither changes the other's job.
       "available": "boolean",
       "pending": "number",
       "approved": "number",
-      "rejected": "number"
+      "rejected": "number",
+      "pending_aging": {
+        "available": "boolean",
+        "oldest_pending_days": "number",
+        "buckets": [{ "label": "string — 0-7 days | 8-30 days | 31-90 days | 90+ days", "count": "number" }],
+        "oldest": [
+          { "id": "number|string", "package": "string", "version": "string", "repo": "string", "created_at": "string", "age_days": "number" }
+        ]
+      }
     },
     "curation_state": {
       "remote_total": "number",
@@ -158,13 +190,17 @@ field. Neither changes the other's job.
       "supported_connected": "number",
       "supported_not_connected": "number",
       "supported_connected_pct": "number",
+      "pass_through_total": "number — all ungated remote repositories",
+      "pass_through_supported": "number — ungated remotes in policy-supported ecosystems",
+      "pass_through_unsupported": "number — ungated remotes in unsupported ecosystems",
       "package_types_total": "number",
       "by_package_type": [
         {
           "package_type": "string",
           "remote_total": "number",
           "connected": "number",
-          "blocked_period": "number"
+          "supported": "boolean — derived from Curation policy supported_pkg_types",
+          "blocked_packages_period": "number"
         }
       ],
       "note": "string"
@@ -248,6 +284,30 @@ field. Neither changes the other's job.
     ],
     "unique_users": "number — distinct username or user_mail across all audit events in period",
     "unique_users_approved": "number — subset of unique_users with >=1 allowed request (approved + passed > 0), i.e. identities that actually received a package; <= unique_users",
+    "active_user_context": {
+      "active_users": "number — same period-based identity count as unique_users",
+      "active_users_approved": "number",
+      "baseline_available": "boolean — true only when CISO_CURATION_USER_BASELINE was explicitly configured",
+      "baseline_users": "number|null — customer-supplied planning baseline; never a license count",
+      "usage_vs_baseline_pct": "number|null",
+      "remaining_to_baseline": "number|null — negative means observed activity exceeds the baseline",
+      "status": "string — not_configured | within_baseline | near_baseline | above_baseline",
+      "source": "string",
+      "note": "string — states that this is observed activity, not a license position",
+      "trend": { "available": "boolean", "previous": "number|null", "delta": "number|null" }
+    },
+    "user_detail_mode": "string — full | brief; brief skips per-package aggregation, so packages[], distinct_packages, ecosystems, and user_package_activity are absent or empty",
+    "user_summary": [
+      {
+        "user": "string — username or user_mail",
+        "events": "number",
+        "events_pct": "number",
+        "blocked": "number",
+        "approved": "number",
+        "repos": ["string — curated repositories this user pulled through"]
+      }
+    ],
+    "user_summary_rows": "number — users in user_summary before the export emptied it",
     "top_users": [
       {
         "user": "string — username or user_mail",
@@ -263,8 +323,9 @@ field. Neither changes the other's job.
             "requests": "number"
           }
         ],
-        "distinct_packages": "number — distinct packages across the whole period, not capped by packages[]",
-        "ecosystems": ["string — every ecosystem the user pulled from in the period"]
+        "distinct_packages": "number — distinct packages across the whole period, not capped by packages[]; absent in brief mode",
+        "ecosystems": ["string — every ecosystem the user pulled from in the period; absent in brief mode"],
+        "repos": ["string — every curated repository the user pulled through in the period; present in both modes"]
       }
     ],
     "user_package_activity": [
@@ -276,7 +337,8 @@ field. Neither changes the other's job.
         "user_approved": "number",
         "package": "string",
         "ecosystem": "string",
-        "requests": "number — full aggregated user/package export data"
+        "repo": "string — curated repository that served the request, empty when the event omits it",
+        "requests": "number — full aggregated user/package/repo export data; empty in brief mode"
       }
     ],
     "audit_events": [
@@ -326,7 +388,15 @@ field. Neither changes the other's job.
   },
 
   "violations": {
-    "total": "number",
+    "total": "number — fully collected violation rows; equals by_severity and by_type sums",
+    "total_reported": "number — total_violations reported by the Xray API",
+    "collection_meta": {
+      "rows_fetched": "number",
+      "total_reported": "number",
+      "pages_fetched": "number",
+      "page_size": "number",
+      "complete": "boolean — hard validation requires true"
+    },
     "unique_issue_count": "number — distinct Xray issue/CVE IDs",
     "unique_critical_issue_count": "number — distinct critical Xray issue/CVE IDs",
     "posture_signals": {
@@ -343,13 +413,26 @@ field. Neither changes the other's job.
       "critical": "number",
       "high": "number",
       "medium": "number",
-      "low": "number"
+      "low": "number",
+      "unknown": "number — unknown and informational severities"
     },
     "severity_pct": {
       "critical": "number — percentage of security violations",
       "high": "number",
       "medium": "number",
-      "low": "number"
+      "low": "number",
+      "unknown": "number"
+    },
+    "exploitability_summary": {
+      "data_available": "boolean — true when any critical issue carried JAS applicability / legacy exploit status",
+      "source": "string — e.g. violations.applicability",
+      "applicable_issues": "number — contextual analysis concluded reachable/applicable",
+      "poc_issues": "number",
+      "not_applicable_issues": "number — present but not reachable in scanned context",
+      "undetermined_issues": "number — scanner ran without a conclusive result",
+      "unknown_issues": "number — no applicability payload on the violation row",
+      "active_issues": "number — legacy alias of applicable_issues",
+      "none_issues": "number — legacy alias of not_applicable_issues"
     },
     "critical_issues": [
       {
@@ -364,7 +447,7 @@ field. Neither changes the other's job.
         "fix_status": "string — available | none | unknown",
         "fix_available": "boolean",
         "fix_versions": ["string"],
-        "exploit_status": "string — active | poc | none | unknown",
+        "exploit_status": "string — applicable | poc | not_applicable | undetermined | unknown",
         "affected_environments": ["string — prod | build | dev | transitive"],
         "playbook_link": "string — optional URL to response runbook"
       }
@@ -410,10 +493,14 @@ field. Neither changes the other's job.
         { "component": "string", "critical_issues": "number", "hits": "number", "hit_share_pct": "number" }
       ],
       "new_critical_introductions": {
-        "new_issues": "number",
-        "new_hits": "number",
-        "existing_issues": "number",
-        "baseline_available": "boolean"
+        "new_issues": "number|null",
+        "new_hits": "number|null",
+        "existing_issues": "number|null",
+        "baseline_available": "boolean",
+        "comparable": "boolean — false when prior snapshot predates collector_version 2",
+        "incomparable_reason": "string",
+        "previous_date": "string",
+        "previous_critical_ids": "number|null"
       },
       "watch_blind_spots": [
         { "repo": "string", "violation_count": "number", "critical_count": "number", "watch_count": "number", "watch_names": ["string"], "risk_level": "string" }
@@ -484,8 +571,8 @@ field. Neither changes the other's job.
         "delta_pct": "number"
       }
     ],
-    "xray_policy_effectiveness": "array — same shape as policy_effectiveness, rendered on the Xray tab",
-    "curation_policy_effectiveness": "array — same shape as policy_effectiveness, rendered on the Curation tab",
+    "xray_policy_effectiveness": "array — enriched display alias of violations.top_watch_policies; canonical Xray watch/policy hit table",
+    "curation_policy_effectiveness": "array — derived compatibility alias of curation.blocking_events_per_policy; the report renders curation.policies_enforced.by_policy",
     "repo_watch_coverage": [
       {
         "repo": "string",
@@ -509,8 +596,14 @@ field. Neither changes the other's job.
       {
         "label": "string — e.g., 2026-W19",
         "blocked": "number",
-        "violations": "number",
-        "critical": "number"
+        "block_rate": "number — blocked / total Curation requests",
+        "comparable": "boolean — false for snapshots written before the violation pagination fix; their violation series is null",
+        "active_users": "number|null",
+        "violations": "number|null",
+        "critical": "number|null",
+        "severity_mix": "number|null",
+        "coverage_gap": "number|null",
+        "violations_per_indexed_repo": "number|null"
       }
     ],
     "trend_summary": "string"
@@ -519,16 +612,34 @@ field. Neither changes the other's job.
   "comparison": {
     "available": "boolean — true if previous snapshot exists",
     "previous_date": "string — date of previous snapshot",
-    "metrics": [
-      {
-        "label": "string — e.g., Packages Blocked",
-        "previous": "number",
-        "current": "number",
-        "change_pct": "number — signed percentage",
-        "direction": "string — up | down | flat",
-        "good": "boolean — true if this direction is positive"
-      }
-    ]
+    "violations_comparable": "boolean — false when the prior snapshot has collector_version < 2, i.e. it predates the violation pagination fix",
+    "incomparable_reason": "string — empty when violations_comparable is true",
+    "curation": {
+      "total": "number",
+      "total_previous": "number",
+      "total_delta": "number|null",
+      "blocked": "number",
+      "blocked_previous": "number",
+      "blocked_delta": "number|null",
+      "blocked_pct": "number|null",
+      "active_users": "number",
+      "active_users_previous": "number|null — null when the prior snapshot did not record it",
+      "active_users_delta": "number|null"
+    },
+    "violations": {
+      "total": "number",
+      "total_previous": "number|null — null when violations_comparable is false",
+      "total_delta": "number|null",
+      "critical": "number",
+      "critical_previous": "number|null — null when violations_comparable is false",
+      "critical_delta": "number|null"
+    },
+    "signal_deltas": {
+      "severity_mix": "number|null",
+      "violation_volume": "number|null",
+      "coverage_gap": "number|null",
+      "coverage_gap_prev": "number|null"
+    }
   },
 
   "recommendations": [

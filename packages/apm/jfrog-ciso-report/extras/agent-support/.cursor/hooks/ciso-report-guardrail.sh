@@ -113,12 +113,24 @@ if re.search(r"\bjf\s+rt\s+(del|delete|rm|move|copy|set-props|sp|upload|u)\b", l
         "CISO report generation should use read-only JFrog commands unless the user explicitly requests publication.",
     )
 
+# Everything under /tmp is scratch space. Restricting deletes there to
+# /tmp/ciso-* blocked ordinary cleanup — test fixtures, scratch renders, staging
+# dirs — without protecting anything worth protecting. /tmp is now unrestricted
+# apart from the directory itself. On macOS /tmp is a symlink to /private/tmp,
+# so both spellings name the same place.
+TMP_ROOTS = ("/tmp", "/private/tmp")
+
+def under_tmp(arg):
+    # normpath resolves "..", so /tmp/../etc is not treated as a /tmp path.
+    norm = os.path.normpath(arg)
+    return any(norm.startswith(root + os.sep) and norm != root for root in TMP_ROOTS)
+
 def safe_rm_target(arg):
+    if under_tmp(arg):
+        return True
     if "*" in arg or "?" in arg or "[" in arg:
         return False
     base = os.path.basename(arg)
-    if arg.startswith("/tmp/ciso-"):
-        return True
     if base in {"executive-report.pdf", "full-report.pdf"}:
         return True
     return bool(re.fullmatch(r"jfrog-ciso-report-v\d+(?:\.\d+){1,2}(?:[-.\w]*)?\.zip", base))
@@ -147,7 +159,7 @@ def rm_is_scoped(command_text):
             targets.append(part)
         if not targets:
             return False
-        if recursive and not all(t.startswith("/tmp/ciso-") for t in targets):
+        if recursive and not all(under_tmp(t) for t in targets):
             return False
         if not all(safe_rm_target(t) for t in targets):
             return False
@@ -158,7 +170,7 @@ if re.search(r"\brm\s+-", lower):
         respond(
             "deny",
             "Blocked broad file deletion during a CISO report workflow.",
-            "Cleanup should be scoped to /tmp/ciso-*, explicit report artifacts, or the versioned offline APM zip only.",
+            "Cleanup outside /tmp should be scoped to explicit report artifacts or the versioned offline APM zip.",
         )
 
 respond("allow")

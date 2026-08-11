@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>CISO Report Prototype — Priority Modules (M1–M5)</title>
+<style>
+  :root {
+    --navy:#0b1f33; --navy-600:#16324f; --green:#40be46; --green-700:#2f9a36;
+    --crit:#e11d48; --med:#d97706; --info:#2563eb; --low:#64748b;
+    --bg:#f4f7fb; --card:#fff; --line:#d7e0ec; --muted:#5b6b7c; --text:#132033;
+    --side:#0d2137; --side2:#132b44;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",ui-sans-serif,system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.45}
+  .shell{display:grid;grid-template-columns:270px 1fr;min-height:100vh}
+  .side{background:linear-gradient(180deg,var(--side),var(--side2));color:#fff;padding:22px 18px;position:sticky;top:0;height:100vh;overflow:auto}
+  .brand b{display:block;font-size:15px}
+  .brand span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#93a4b8}
+  .proto{margin:14px 0;padding:10px 12px;border-radius:10px;background:rgba(64,190,70,.12);border:1px solid rgba(64,190,70,.35);font-size:11px;color:#d7f5d9}
+  .side h4{margin:18px 0 8px;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:#7f91a8}
+  .nav a{display:block;color:#a9b7c9;text-decoration:none;font-size:12px;font-weight:600;padding:7px 8px;border-radius:8px;margin-bottom:2px}
+  .nav a:hover,.nav a.on{background:rgba(255,255,255,.08);color:#fff}
+  .nav a small{display:block;font-weight:500;color:#7f91a8;font-size:10px}
+  .preset{display:grid;gap:6px}
+  .preset button{appearance:none;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#dbe5f0;border-radius:8px;padding:8px 10px;text-align:left;cursor:pointer;font-size:11px}
+  .preset button.on{border-color:var(--green);background:rgba(64,190,70,.16);color:#fff}
+  .preset button b{display:block;font-size:12px;margin-bottom:2px}
+  .main{padding:0 0 48px}
+  .top{display:flex;justify-content:space-between;gap:16px;align-items:end;padding:22px 28px 10px;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:5}
+  .top .host{font-weight:700;font-size:14px}
+  .top .period{color:var(--muted);font-size:12px}
+  .content{padding:18px 28px}
+  .page-title{font-size:22px;margin:8px 0 4px}
+  .subtitle{color:var(--muted);font-size:13px;margin:0 0 18px}
+  .module{scroll-margin-top:78px;margin-bottom:22px}
+  .module-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
+  .module-head h2{margin:0;font-size:16px}
+  .module-head .tag{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--green-700)}
+  .hero{background:linear-gradient(135deg,#0b1f33,#16324f 55%,#1c4d3a);color:#fff;border-radius:16px;padding:22px 24px;margin-bottom:16px}
+  .hero h1{margin:0 0 10px;font-size:20px;font-weight:700;line-height:1.35}
+  .hero h1 .g{color:#7dff86}.hero h1 .r{color:#ff8aa1}
+  .hero .cap{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:#c5d2e0}
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px}
+  .kpis.four{grid-template-columns:repeat(4,1fr)}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .kpi .n{font-size:22px;font-weight:750;letter-spacing:-.02em}
+  .kpi .l{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+  .kpi .d{font-size:11px;color:var(--muted);margin-top:6px}
+  .kpi.warn .n{color:var(--crit)}.kpi.good .n{color:var(--green-700)}.kpi.info .n{color:var(--info)}.kpi.med .n{color:var(--med)}
+  .grid-2{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .panel .ph{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .panel .ph h3{margin:0;font-size:13px}.panel .ph .meta{font-size:11px;color:var(--muted)}
+  .panel .pb{padding:12px 14px}
+  .note{background:#eef6ff;border:1px solid #c9def0;border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:12px;color:#1e3a5f}
+  .note.concept{background:#fff8eb;border-color:#f0d7a3;color:#6b4e12}
+  .note b{font-weight:700}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left}
+  th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  td.r,th.r{text-align:right}
+  .pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px}
+  .pill.p1{background:#ffe4e8;color:#be123c}.pill.p2{background:#ffedd5;color:#c2410c}.pill.p3{background:#e2e8f0;color:#334155}
+  .act{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}
+  .act h3{margin:6px 0;font-size:13px}.act p{margin:0;font-size:12px;color:var(--muted)}
+  .bar{height:8px;background:#e8eef6;border-radius:99px;overflow:hidden;margin:6px 0}
+  .bar > i{display:block;height:100%;background:var(--green)}
+  .spark{display:flex;align-items:end;gap:8px;height:72px;padding-top:8px}
+  .spark .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .spark .col .b{width:100%;border-radius:6px 6px 2px 2px;background:#94a3b8;min-height:4px}
+  .spark .col .b.crit{background:var(--crit)}.spark .col .b.block{background:var(--green)}
+  .spark .col span{font-size:10px;color:var(--muted)}
+  .hidden{display:none !important}
+  .footer{margin-top:24px;color:var(--muted);font-size:11px}
+  @media (max-width:1100px){
+    .shell{grid-template-columns:1fr}.side{position:relative;height:auto}
+    .kpis,.kpis.four,.grid-2,.grid-3{grid-template-columns:1fr 1fr}
+  }
+  @media (max-width:700px){.kpis,.kpis.four,.grid-2,.grid-3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><b>CISO Report</b><span>Priority modules prototype</span></div>
+    <div class="proto">Prototype of the agreed M1–M5 layout using solenglatest monthly data. SBOM deferred. Retention panel is conceptual.</div>
+    <h4>Run as</h4>
+    <div class="preset" id="presets"></div>
+    <h4>Modules</h4>
+    <nav class="nav" id="nav"></nav>
+    <h4>At a glance</h4>
+    <div id="glance" style="font-size:12px;color:#c5d2e0;display:grid;gap:6px"></div>
+  </aside>
+  <main class="main">
+    <div class="top">
+      <div>
+        <div class="host" id="host"></div>
+        <div class="period" id="period"></div>
+      </div>
+      <div class="period" id="presetLabel"></div>
+    </div>
+    <div class="content" id="content"></div>
+  </main>
+</div>
+<script>
+const DATA = {"meta": {"host": "solenglatest.jfrog.io", "url": "https://solenglatest.jfrog.io", "report_type": "Monthly", "date_from": "Jul 1, 2026", "date_to": "Jul 31, 2026", "generated": "2026-07-31", "window_days": 31, "preset": "full", "prototype_note": "M1\u2013M5 priority layout prototype \u2014 SBOM deferred"}, "platform": {"repos_total": 1121, "repos_indexed": 854, "repos_unindexed": 267, "watches_total": 34, "watches_active": 18, "curation_policies_block": 124, "curation_policies_dry_run": 28, "curation_state": {"supported_remote_total": 304, "supported_connected": 250, "supported_not_connected": 54, "supported_connected_pct": 82.24, "by_package_type": [{"package_type": "npm", "remote_total": 75, "connected": 75}, {"package_type": "Docker", "remote_total": 74, "connected": 29}, {"package_type": "HuggingFaceML", "remote_total": 43, "connected": 43}, {"package_type": "PyPI", "remote_total": 37, "connected": 31}, {"package_type": "Maven", "remote_total": 33, "connected": 32}, {"package_type": "AIEditorExtensions", "remote_total": 16, "connected": 14}]}, "retention_prototype": {"default_repo_days": 90, "default_build_days": 15, "max_days": 1000, "note": "Conceptual panel. Live collection of per-repo retention is not in today's skill yet.", "repos_on_default_90_estimate": "unknown \u2014 needs Indexed Resources API", "risk": "Scan metadata can age out after retention; downloads reset the clock. Repos can look 'indexed' while historical artifact coverage decays."}}, "curation": {"available": true, "blocked": 711, "total": 39921, "without_inspection": 0, "unique_users": 17, "unique_users_approved": 17, "policy_inventory": {"total_registered": 159}, "executive_insights": {"gate_coverage_gaps": [{"package_type": "Docker", "unconnected": 45, "connected": 29, "total": 74, "priority": "P1"}, {"package_type": "PyPI", "unconnected": 6, "connected": 31, "total": 37, "priority": "P1"}, {"package_type": "Maven", "unconnected": 1, "connected": 32, "total": 33, "priority": "P2"}], "enforcement_opportunity": {"dry_run_policies": 28, "would_have_blocked": 0}, "malicious_package_defense": {"malicious_blocks": 10, "malicious_policies": 24, "top_packages": [{"package": "cors.js", "blocks": 5}, {"package": "abuden2", "blocks": 3}, {"package": "strapi-plugin-config", "blocks": 2}]}}, "top_users": [{"user": "ci-bot@example.com", "events": 8200, "blocked": 12, "approved": 8188, "block_rate_pct": 0.1}, {"user": "dev-alice", "events": 410, "blocked": 88, "approved": 322, "block_rate_pct": 21.5}, {"user": "dev-bob", "events": 260, "blocked": 4, "approved": 256, "block_rate_pct": 1.5}]}, "violations": {"total": 27886, "unique_critical_issue_count": 37, "by_severity": {"critical": 500, "high": 0, "medium": 0, "low": 0}, "posture_signals": {"severity_mix": 100.0, "violation_volume": 27886, "coverage_gap": 23.8}, "executive_insights": {"sla_risk_backlog": {"sla_breach_issues": 0, "sla_days": 30, "buckets": [{"label": "0-7 days", "issues": 0, "hits": 0}, {"label": "8-30 days", "issues": 37, "hits": 500}, {"label": "31-90 days", "issues": 0, "hits": 0}, {"label": "90+ days", "issues": 0, "hits": 0}]}, "remediation_readiness": {"fix_available_issues": 11, "fix_available_hits": 190, "unknown_issues": 26}, "watch_blind_spots": [{"repo": "example-unguarded-repo"}]}, "top_cves": [{"id": "XRAY-936478", "severity": "Critical", "hits": 120}, {"id": "XRAY-979649", "severity": "Critical", "hits": 85}, {"id": "XRAY-104518", "severity": "Critical", "hits": 24}]}, "benefit": {"compare_line": "Curation allowed 39210 clean packages and blocked 157 unique packages. Xray found 27886 violation instances inside.", "upgrade_rate": 21.0, "unique_blocked_packages": 157}, "comparison": {"available": true, "previous_date": "2026-06-30", "violations": {"critical": 500, "critical_previous": 3, "critical_delta": 497, "total": 27886, "total_previous": 94, "total_delta": 27792}, "curation": {"blocked": 711, "blocked_previous": 127, "blocked_delta": 584, "total": 39921, "total_previous": 1957, "total_delta": 37964}}, "threat_velocity": {"available": true, "trend_summary": "Across 2 reports, critical findings rose from 3 to 500; total violations rose from 94 to 27886, while gate blocks moved from 127 to 711.", "periods": [{"label": "2026-06-30", "blocked": 127, "violations": 94, "critical": 3}, {"label": "2026-07-31", "blocked": 711, "violations": 27886, "critical": 500}]}, "recommendations": [{"priority": "P1", "title": "Patch 11 critical issues with known fixes", "detail": "190 artifact hits have a known fix version \u2014 highest leverage remediation this period.", "effort": "Medium"}, {"priority": "P1", "title": "Assign watches to 1 repository with violations", "detail": "Violations exist without watch mapping \u2014 detection gap that makes posture look cleaner than it is.", "effort": "Low"}, {"priority": "P2", "title": "Connect 53 supported remotes to the Curation gate", "detail": "Docker alone has 45 supported-but-unconnected remotes \u2014 silent bypass of the perimeter.", "effort": "Low"}, {"priority": "P2", "title": "Promote 28 dry-run Curation policies to block", "detail": "Protection already designed; enforcement not yet realized.", "effort": "Low"}, {"priority": "P1", "title": "Remediate vm2:3.9.17 concentration", "detail": "Single component drives a large share of critical hits \u2014 one upgrade programme, not 200 tickets.", "effort": "Medium"}]};
+
+const PRESETS = {
+  full: {
+    label: 'Full posture',
+    blurb: 'M1–M5 — default generic skill',
+    modules: ['brief','m1','m2','m3','m4','m5'],
+    usersDetail: 'brief'
+  },
+  'prevention-first': {
+    label: 'Prevention-first',
+    blurb: 'Gate + coverage + actions + trend',
+    modules: ['brief','m1','m3','m4','m5'],
+    usersDetail: 'counts'
+  },
+  'exposure-first': {
+    label: 'Exposure-first',
+    blurb: 'Inventory risk + watches + actions',
+    modules: ['brief','m2','m3','m4','m5'],
+    usersDetail: 'counts'
+  },
+  executive: {
+    label: 'Executive',
+    blurb: 'Thin KPIs + decisions + trend',
+    modules: ['brief','m4','m5'],
+    usersDetail: 'counts'
+  },
+  'coverage-audit': {
+    label: 'Coverage audit',
+    blurb: 'Are controls actually on?',
+    modules: ['brief','m3','m4'],
+    usersDetail: 'counts'
+  }
+};
+
+const MODULE_META = {
+  brief: ['brief', 'Executive brief', 'Prevention vs residual'],
+  m1: ['m1', 'M1 · Prevention', 'Supply-chain gate'],
+  m2: ['m2', 'M2 · Exposure', 'What’s already inside'],
+  m3: ['m3', 'M3 · Coverage', 'Controls on the estate'],
+  m4: ['m4', 'M4 · Actions', 'What to do next'],
+  m5: ['m5', 'M5 · Trend', 'Are we improving?']
+};
+
+let current = 'full';
+const fmt = n => (n==null||n==='') ? '—' : Number(n).toLocaleString();
+const pct = (a,b) => !b ? 0 : Math.round((a/b)*100);
+
+function delta(v, goodWhenDown){
+  if (v==null) return '—';
+  const up = v>0, good = goodWhenDown ? !up : up;
+  const color = v===0 ? 'var(--muted)' : good ? 'var(--green-700)' : 'var(--crit)';
+  return `<span style="color:${color};font-weight:700">${v>0?'+':''}${fmt(v)}</span>`;
+}
+
+function render(){
+  const p = PRESETS[current];
+  const m = DATA.meta, plat = DATA.platform, c = DATA.curation, v = DATA.violations;
+  const cs = plat.curation_state || {};
+  document.getElementById('host').textContent = m.host;
+  document.getElementById('period').textContent = `${m.report_type} · ${m.window_days}-day window · ${m.date_from} – ${m.date_to}`;
+  document.getElementById('presetLabel').textContent = `Preset: ${p.label}`;
+
+  document.getElementById('presets').innerHTML = Object.entries(PRESETS).map(([id,cfg]) =>
+    `<button class="${id===current?'on':''}" data-preset="${id}"><b>${cfg.label}</b>${cfg.blurb}</button>`
+  ).join('');
+
+  document.getElementById('nav').innerHTML = p.modules.map(id => {
+    const [anchor, title, sub] = MODULE_META[id];
+    return `<a href="#${anchor}"><span>${title}</span><small>${sub}</small></a>`;
+  }).join('');
+
+  document.getElementById('glance').innerHTML = `
+    <div style="display:flex;justify-content:space-between"><span>Repos indexed</span><b>${fmt(plat.repos_indexed)} / ${fmt(plat.repos_total)}</b></div>
+    <div style="display:flex;justify-content:space-between"><span>Remotes gated</span><b>${fmt(cs.supported_connected)} / ${fmt(cs.supported_remote_total)}</b></div>
+    <div style="display:flex;justify-content:space-between"><span>Active users</span><b>${fmt(c.unique_users)}</b></div>
+    <div style="display:flex;justify-content:space-between"><span>Xray watches</span><b>${fmt(plat.watches_active)} / ${fmt(plat.watches_total)}</b></div>
+  `;
+
+  const show = id => p.modules.includes(id);
+  const parts = [];
+  if (show('brief')) parts.push(buildBrief());
+  if (show('m1')) parts.push(buildM1(p.usersDetail));
+  if (show('m2')) parts.push(buildM2());
+  if (show('m3')) parts.push(buildM3());
+  if (show('m4')) parts.push(buildM4());
+  if (show('m5')) parts.push(buildM5());
+  parts.push(`<div class="footer">Prototype only — not the shipping template. Data from solenglatest monthly 2026-07-31. SBOM deliberately omitted. Retention panel is illustrative until Indexed Resources retention is collected.</div>`);
+  document.getElementById('content').innerHTML = parts.join('');
+
+  document.querySelectorAll('[data-preset]').forEach(btn => btn.onclick = () => { current = btn.dataset.preset; render(); });
+}
+
+function buildBrief(){
+  const c = DATA.curation, v = DATA.violations, sev = v.by_severity, cmp = DATA.comparison;
+  const cs = DATA.platform.curation_state;
+  const vei = v.executive_insights, cei = c.executive_insights;
+  const gapCount = (cei.gate_coverage_gaps||[]).reduce((s,r)=>s+(r.unconnected||0),0);
+  return `<section class="module" id="brief">
+    <div class="module-head"><h2>Executive brief</h2><span class="tag">Always on</span></div>
+    <div class="hero">
+      <h1>Curation blocked <span class="g">${fmt(c.blocked)}</span> risky package requests this period while Xray reports <span class="r">${fmt(v.total)}</span> violation instances already inside repositories.</h1>
+      <div class="cap">
+        <span><b>${fmt(sev.critical)}</b> critical occurrences · <b>${fmt(v.unique_critical_issue_count)}</b> unique issues</span>
+        <span><b>${pct(c.blocked,c.total)}%</b> of requests blocked at gate</span>
+        <span>Prior: ${cmp.previous_date}</span>
+      </div>
+    </div>
+    <div class="note"><b>Prevention and residual risk.</b> ${DATA.benefit.compare_line} <b>${DATA.benefit.upgrade_rate}%</b> of uniquely blocked packages were later approved at a higher version.</div>
+    <div class="kpis">
+      <div class="kpi warn"><div class="n">${fmt(sev.critical)}</div><div class="l">Critical occurrences</div><div class="d">${fmt(v.unique_critical_issue_count)} unique · ${delta(cmp.violations.critical_delta,true)} vs prior</div></div>
+      <div class="kpi good"><div class="n">${fmt(c.blocked)}</div><div class="l">Blocked at gate</div><div class="d">${pct(c.blocked,c.total)}% of ${fmt(c.total)} requests</div></div>
+      <div class="kpi"><div class="n">${fmt(c.unique_users)}</div><div class="l">Active users</div><div class="d">Curation adoption signal · ${fmt(c.unique_users_approved)} received a package</div></div>
+      <div class="kpi info"><div class="n">${pct(DATA.platform.repos_indexed,DATA.platform.repos_total)}%</div><div class="l">Repos indexed</div><div class="d">${fmt(DATA.platform.repos_indexed)} / ${fmt(DATA.platform.repos_total)}</div></div>
+      <div class="kpi med"><div class="n">${Math.round(cs.supported_connected_pct)}%</div><div class="l">Remotes gated</div><div class="d">${fmt(cs.supported_connected)} / ${fmt(cs.supported_remote_total)} supported</div></div>
+    </div>
+    <div class="kpis four">
+      <div class="kpi"><div class="n">${fmt(vei.sla_risk_backlog.sla_breach_issues)}</div><div class="l">Critical SLA breach</div><div class="d">older than ${vei.sla_risk_backlog.sla_days} days</div></div>
+      <div class="kpi good"><div class="n">${fmt(vei.remediation_readiness.fix_available_issues)}</div><div class="l">Fixable exposure</div><div class="d">${fmt(vei.remediation_readiness.fix_available_hits)} artifact hits</div></div>
+      <div class="kpi med"><div class="n">${fmt((vei.watch_blind_spots||[]).length)}</div><div class="l">Watch blind spots</div><div class="d">repos with violations, no watch</div></div>
+      <div class="kpi info"><div class="n">${fmt(gapCount)}</div><div class="l">Gate coverage gaps</div><div class="d">supported remotes not gated</div></div>
+    </div>
+  </section>`;
+}
+
+function buildM1(usersDetail){
+  const c = DATA.curation, cei = c.executive_insights, mal = cei.malicious_package_defense, dry = cei.enforcement_opportunity;
+  const gaps = (cei.gate_coverage_gaps||[]).map(g =>
+    `<tr><td>${g.package_type}</td><td class="r">${fmt(g.connected)}</td><td class="r">${fmt(g.unconnected)}</td><td class="r"><span class="pill ${g.priority.toLowerCase()}">${g.priority}</span></td></tr>`
+  ).join('');
+  const malRows = (mal.top_packages||[]).map(x => `<tr><td>${x.package}</td><td class="r">${fmt(x.blocks)}</td></tr>`).join('');
+
+  let usersPanel = '';
+  if (usersDetail === 'counts') {
+    usersPanel = `<div class="panel"><div class="ph"><h3>Active users (adoption)</h3><span class="meta">counts only</span></div>
+      <div class="pb"><div class="n" style="font-size:28px;font-weight:750">${fmt(c.unique_users)}</div>
+      <div class="d" style="color:var(--muted);font-size:12px;margin-top:6px">Distinct requesters in the period. ${fmt(c.unique_users_approved)} received at least one package. Full user/package export is optional per customer.</div></div></div>`;
+  } else {
+    const rows = (c.top_users||[]).map((u,i) => `<tr><td>${i+1}</td><td>${u.user}</td><td class="r">${fmt(u.events)}</td><td class="r">${fmt(u.blocked)}</td><td class="r">${u.block_rate_pct}%</td></tr>`).join('');
+    usersPanel = `<div class="panel"><div class="ph"><h3>Active users</h3><span class="meta">${fmt(c.unique_users)} active users · brief table</span></div>
+      <div class="pb"><table><thead><tr><th>#</th><th>User</th><th class="r">Requests</th><th class="r">Blocked</th><th class="r">Block %</th></tr></thead><tbody>${rows}</tbody></table>
+      <div style="margin-top:8px;font-size:11px;color:var(--muted)">Sort by block % for risk signal; volume is often CI. Full CSV remains an optional customer module.</div></div></div>`;
+  }
+
+  return `<section class="module" id="m1">
+    <div class="module-head"><h2>M1 · Prevention</h2><span class="tag">Supply-chain gate</span></div>
+    <div class="grid-3">
+      <div class="panel"><div class="ph"><h3>Malicious package defense</h3><span class="meta">pre-download</span></div>
+        <div class="pb"><div style="font-size:24px;font-weight:750;color:var(--green-700)">${fmt(mal.malicious_blocks)}</div>
+        <div style="font-size:12px;color:var(--muted);margin:4px 0 10px">${fmt(mal.malicious_policies)} malicious policies in force</div>
+        <table><thead><tr><th>Package</th><th class="r">Blocks</th></tr></thead><tbody>${malRows}</tbody></table></div></div>
+      <div class="panel"><div class="ph"><h3>Enforcement opportunity</h3><span class="meta">dry-run → block</span></div>
+        <div class="pb"><div style="font-size:24px;font-weight:750;color:var(--med)">${fmt(dry.dry_run_policies)}</div>
+        <div style="font-size:12px;color:var(--muted)">policies still in dry-run — protection designed, not yet enforced</div>
+        <div style="margin-top:12px;font-size:12px">Block-mode policies: <b>${fmt(DATA.platform.curation_policies_block)}</b></div></div></div>
+      <div class="panel"><div class="ph"><h3>Without inspection</h3><span class="meta">cache / bypass</span></div>
+        <div class="pb"><div style="font-size:24px;font-weight:750">${fmt(c.without_inspection)}</div>
+        <div style="font-size:12px;color:var(--muted)">requests served without policy evaluation this period</div></div></div>
+    </div>
+    <div class="grid-2" style="margin-top:12px">
+      <div class="panel"><div class="ph"><h3>Gate coverage gaps</h3><span class="meta">supported remotes not connected</span></div>
+        <div class="pb"><table><thead><tr><th>Ecosystem</th><th class="r">Gated</th><th class="r">Gap</th><th class="r">Pri</th></tr></thead><tbody>${gaps}</tbody></table></div></div>
+      ${usersPanel}
+    </div>
+  </section>`;
+}
+
+function buildM2(){
+  const v = DATA.violations, sev = v.by_severity, vei = v.executive_insights, sig = v.posture_signals;
+  const buckets = (vei.sla_risk_backlog.buckets||[]).map(b =>
+    `<tr><td>${b.label}</td><td class="r">${fmt(b.issues)}</td><td class="r">${fmt(b.hits)}</td></tr>`).join('');
+  const top = (v.top_cves||[]).map(r =>
+    `<tr><td>${r.id}</td><td><span class="pill p1">${r.severity}</span></td><td class="r">${fmt(r.hits)}</td></tr>`).join('');
+  return `<section class="module" id="m2">
+    <div class="module-head"><h2>M2 · Exposure</h2><span class="tag">Inventory inside repos</span></div>
+    <div class="note"><b>Read occurrences carefully.</b> ${fmt(sev.critical)} critical occurrences map to ${fmt(v.unique_critical_issue_count)} unique issues — concentration means fewer root upgrades, not hundreds of unrelated programmes.</div>
+    <div class="kpis four">
+      <div class="kpi warn"><div class="n">${fmt(sig.violation_volume)}</div><div class="l">Violation occurrences</div><div class="d">inside indexed repositories</div></div>
+      <div class="kpi"><div class="n">${sig.severity_mix}</div><div class="l">Severity mix</div><div class="d">independent posture signal</div></div>
+      <div class="kpi good"><div class="n">${fmt(vei.remediation_readiness.fix_available_issues)}</div><div class="l">Fix available</div><div class="d">${fmt(vei.remediation_readiness.unknown_issues)} unknown fix status</div></div>
+      <div class="kpi med"><div class="n">${fmt(sig.coverage_gap)}%</div><div class="l">Indexing gap</div><div class="d">unseen risk, not absent risk</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="panel"><div class="ph"><h3>SLA aging (critical)</h3><span class="meta">target ${vei.sla_risk_backlog.sla_days} days</span></div>
+        <div class="pb"><table><thead><tr><th>Age</th><th class="r">Issues</th><th class="r">Hits</th></tr></thead><tbody>${buckets}</tbody></table></div></div>
+      <div class="panel"><div class="ph"><h3>Highest-impact issues</h3><span class="meta">by hits</span></div>
+        <div class="pb"><table><thead><tr><th>Issue</th><th>Sev</th><th class="r">Hits</th></tr></thead><tbody>${top}</tbody></table></div></div>
+    </div>
+  </section>`;
+}
+
+function buildM3(){
+  const plat = DATA.platform, cs = plat.curation_state, ret = plat.retention_prototype;
+  const types = (cs.by_package_type||[]).slice(0,6).map(t => {
+    const pc = pct(t.connected, t.remote_total);
+    return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px"><b>${t.package_type}</b><span>${fmt(t.connected)}/${fmt(t.remote_total)}</span></div>
+      <div class="bar"><i style="width:${pc}%;background:${pc<50?'var(--crit)':pc<85?'var(--med)':'var(--green)'}"></i></div></div>`;
+  }).join('');
+  return `<section class="module" id="m3">
+    <div class="module-head"><h2>M3 · Coverage & governance</h2><span class="tag">Are controls actually on?</span></div>
+    <div class="grid-3">
+      <div class="panel"><div class="ph"><h3>Xray indexing</h3></div><div class="pb">
+        <div style="font-size:24px;font-weight:750">${pct(plat.repos_indexed,plat.repos_total)}%</div>
+        <div style="font-size:12px;color:var(--muted)">${fmt(plat.repos_indexed)} indexed · ${fmt(plat.repos_unindexed)} not</div>
+        <div class="bar" style="margin-top:10px"><i style="width:${pct(plat.repos_indexed,plat.repos_total)}%;background:var(--info)"></i></div>
+      </div></div>
+      <div class="panel"><div class="ph"><h3>Watch coverage</h3></div><div class="pb">
+        <div style="font-size:24px;font-weight:750">${fmt(plat.watches_active)} / ${fmt(plat.watches_total)}</div>
+        <div style="font-size:12px;color:var(--muted)">active watches · ${(DATA.violations.executive_insights.watch_blind_spots||[]).length} blind spot repo(s)</div>
+      </div></div>
+      <div class="panel"><div class="ph"><h3>Policy enforcement</h3></div><div class="pb">
+        <div style="font-size:24px;font-weight:750">${fmt(plat.curation_policies_block)}</div>
+        <div style="font-size:12px;color:var(--muted)">block-mode · ${fmt(plat.curation_policies_dry_run)} still dry-run</div>
+      </div></div>
+    </div>
+    <div class="grid-2" style="margin-top:12px">
+      <div class="panel"><div class="ph"><h3>Curation connectivity by ecosystem</h3><span class="meta">supported remotes</span></div>
+        <div class="pb">${types}</div></div>
+      <div class="panel"><div class="ph"><h3>Index retention health</h3><span class="meta">new · conceptual</span></div>
+        <div class="pb">
+          <div class="note concept"><b>Not “reindex every 90 days.”</b> ${ret.risk} Defaults: repos <b>${ret.default_repo_days} days</b>, builds <b>${ret.default_build_days} days</b> (max ${ret.max_days}). Downloads reset retention.</div>
+          <div style="font-size:12px;color:var(--muted)">${ret.note}</div>
+          <div style="margin-top:10px;font-size:12px">Live skill today reports indexed vs not. Next: collect per-repo retention days and flag estates still on default 90.</div>
+        </div></div>
+    </div>
+  </section>`;
+}
+
+function buildM4(){
+  const cards = (DATA.recommendations||[]).map(r =>
+    `<div class="act"><span class="pill ${String(r.priority).toLowerCase()}">${r.priority}</span>
+      <h3>${r.title}</h3><p>${r.detail}</p>
+      <div style="margin-top:8px;font-size:10px;font-weight:700;color:var(--muted)">EFFORT · ${r.effort}</div></div>`
+  ).join('');
+  return `<section class="module" id="m4">
+    <div class="module-head"><h2>M4 · Actions</h2><span class="tag">Ranked decisions</span></div>
+    <div class="note"><b>Skill, not tool:</b> these actions are derived from live signals (fixability, blind spots, gate gaps, dry-run). Config wins can outrank large remediation.</div>
+    <div class="grid-3">${cards}</div>
+  </section>`;
+}
+
+function buildM5(){
+  const tv = DATA.threat_velocity, cmp = DATA.comparison;
+  const maxV = Math.max(...tv.periods.map(p => p.violations), 1);
+  const maxB = Math.max(...tv.periods.map(p => p.blocked), 1);
+  const spark = tv.periods.map(p => `
+    <div class="col">
+      <div class="b crit" style="height:${Math.max(8, (p.critical/Math.max(p.critical,500))*64)}px" title="critical ${p.critical}"></div>
+      <div class="b" style="height:${Math.max(8,(p.violations/maxV)*64)}px;background:#64748b" title="violations ${p.violations}"></div>
+      <div class="b block" style="height:${Math.max(8,(p.blocked/maxB)*64)}px" title="blocked ${p.blocked}"></div>
+      <span>${p.label.slice(5)}</span>
+    </div>`).join('');
+  return `<section class="module" id="m5">
+    <div class="module-head"><h2>M5 · Trend</h2><span class="tag">Trajectory</span></div>
+    <div class="grid-2">
+      <div class="panel"><div class="ph"><h3>Compared with previous report</h3><span class="meta">baseline ${cmp.previous_date}</span></div>
+        <div class="pb"><table><thead><tr><th>Metric</th><th class="r">Current</th><th class="r">Previous</th><th class="r">Delta</th></tr></thead><tbody>
+          <tr><td>Critical findings</td><td class="r">${fmt(cmp.violations.critical)}</td><td class="r">${fmt(cmp.violations.critical_previous)}</td><td class="r">${delta(cmp.violations.critical_delta,true)}</td></tr>
+          <tr><td>Total violations</td><td class="r">${fmt(cmp.violations.total)}</td><td class="r">${fmt(cmp.violations.total_previous)}</td><td class="r">${delta(cmp.violations.total_delta,true)}</td></tr>
+          <tr><td>Blocked at gate</td><td class="r">${fmt(cmp.curation.blocked)}</td><td class="r">${fmt(cmp.curation.blocked_previous)}</td><td class="r">${delta(cmp.curation.blocked_delta,false)}</td></tr>
+          <tr><td>Requests screened</td><td class="r">${fmt(cmp.curation.total)}</td><td class="r">${fmt(cmp.curation.total_previous)}</td><td class="r">${delta(cmp.curation.total_delta,false)}</td></tr>
+        </tbody></table></div></div>
+      <div class="panel"><div class="ph"><h3>Threat velocity</h3><span class="meta">critical · volume · blocks</span></div>
+        <div class="pb"><div class="spark">${spark}</div>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted)">${tv.trend_summary}</div>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted)">Indexing expansion can raise violation counts while improving real coverage — read deltas with M3.</div></div></div>
+    </div>
+  </section>`;
+}
+
+render();
+</script>
+</body>
+</html>
