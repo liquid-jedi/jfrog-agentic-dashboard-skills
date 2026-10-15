@@ -132,7 +132,9 @@ mkdir -p ~/ciso-reporting && cd ~/ciso-reporting
 apm init -y --target claude,codex,cursor
 
 # 3. Install the skill
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.3.0
+# --target is required in a new folder, or APM stops with "No harness detected"
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.3.0 \
+  --target claude,cursor,codex
 ```
 
 Need an older tagged release instead? Use `#v3.0.0`, not `#v4.0.0` — the
@@ -140,7 +142,8 @@ Claude guardrail in v4.0.0 shipped with an invalid `settings.json` and never
 loaded, which is what v4.0.1 fixes.
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v3.0.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v3.0.0 \
+  --target claude,cursor,codex
 ```
 
 Verify with `find .agents/skills/jfrog-ciso-report -maxdepth 2 -type f | sort` —

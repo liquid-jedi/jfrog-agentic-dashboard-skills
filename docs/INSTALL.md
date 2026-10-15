@@ -43,6 +43,13 @@ sudo apt-get install -y chromium-browser   # Debian / Ubuntu
 Headless rendering needs no X server or desktop. Full matrix in the
 [compatibility table](TROUBLESHOOTING.md#compatibility).
 
+For a customer-ready WSL2 write-up with recommended versions and the
+offline zip path, see
+[WSL2 Windows customer setup](WSL2-WINDOWS-CUSTOMER-SETUP.md).
+
+For native Linux (including how PDF export works headlessly), see
+[Linux customer setup](LINUX-CUSTOMER-SETUP.md).
+
 ### Install JFrog CLI
 
 ```bash
@@ -134,8 +141,11 @@ Install the CISO report package from the published repository:
 mkdir -p ~/ciso-reporting
 cd ~/ciso-reporting
 apm init -y --target claude,codex,cursor
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.3.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.3.0 \
+  --target claude,cursor,codex
 ```
+
+`--target` is required when the folder has no agent markers (`.claude/`, `.cursor/`, `.codex/`, and similar). APM used to assume Copilot; it now stops with **No harness detected** instead. `apm init --target` writes those markers; passing `--target` on `apm install` does the same thing in one step. Use one harness if you only need it, for example `--target claude`.
 
 Run project-local APM skills from the same folder:
 

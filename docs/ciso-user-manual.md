@@ -29,10 +29,11 @@ If you are reading the finished report rather than running it, start with
 
 See **[INSTALL.md](INSTALL.md)** for prerequisites, APM install, generic Skills install, prechecks, and verification.
 
-Quick reference — APM install:
+Quick reference — APM install. `--target` is required in a new folder; without it APM stops with `No harness detected`:
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.3.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.3.0 \
+  --target claude,cursor,codex
 ```
 
 Quick reference — local development install:

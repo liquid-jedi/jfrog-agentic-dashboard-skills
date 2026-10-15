@@ -155,7 +155,12 @@ mkdir -p ~/ciso-reporting &amp;&amp; cd ~/ciso-reporting
 apm init -y --target claude,codex,cursor
 
 <span class="c"># 3. Install the skill</span>
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.3.0</code></pre>
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.3.0 \
+  --target claude,cursor,codex</code></pre>
+    <p class="lead">In a new folder, pass <code>--target</code>. APM no longer
+       assumes a harness and stops with <code>No harness detected</code> when
+       it cannot find <code>.claude/</code>, <code>.cursor/</code>, or
+       <code>.codex/</code>.</p>
     <p class="lead">Then ask your agent: <code>Generate a weekly CISO report for
        server &lt;id&gt;. Save under ~/ciso-reports.</code></p>
     <div class="note">

@@ -6,8 +6,14 @@ The skill generates a branded CISO Security and Curation HTML dashboard from a J
 
 ## Install
 
+APM no longer picks an agent harness for you. In a new folder with no
+`.claude/`, `.cursor/`, or `.codex/` markers it stops with `No harness detected`.
+Pass `--target`, or run `apm init --target` first.
+
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.3.0
+mkdir -p ~/ciso-reporting && cd ~/ciso-reporting
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v4.3.0 \
+  --target claude,cursor,codex
 ```
 
 To install an older repository release instead, use `#v3.0.0` rather than
@@ -15,7 +21,8 @@ To install an older repository release instead, use `#v3.0.0` rather than
 `settings.json` and never loaded, which is what v4.0.1 fixes.
 
 ```bash
-apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v3.0.0
+apm install liquid-jedi/jfrog-agentic-dashboard-skills/packages/apm/jfrog-ciso-report#v3.0.0 \
+  --target claude,cursor,codex
 ```
 
 For local testing from this repository:
